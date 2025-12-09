@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.coverage
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Analysis outputs (keep organized folders, ignore loose files)
+fantasy_analysis_*.json
+detailed_analysis_*.json
+roster_data_*.json
+power_rating_interactive_*.html
+roster_grades_interactive_*.html
+trade_analysis_*.html
+waiver_analysis_*.html
+manager_grades_*.html
+worst_trades_report_*.txt
+
+# Keep only the organized output folders
+# fantasy_analysis_output_*/ folders will be tracked
+
+# Build output
+dist/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
