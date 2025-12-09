@@ -5,6 +5,7 @@ Calculates and tracks team performance over time using power rating formula
 """
 
 import statistics
+import os
 from datetime import datetime
 from typing import Dict, List
 
@@ -33,7 +34,7 @@ def calculate_power_rating(scores, wins, losses, week_num):
     return round(power_rating, 1)
 
 
-def calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup):
+def calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup, output_dirs=None):
     """Calculate power ratings for each team week by week"""
     print("📊 Calculating weekly power rating progression...")
     
@@ -150,7 +151,7 @@ def calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup):
     return team_power_data
 
 
-def create_power_rating_plot(team_power_data):
+def create_power_rating_plot(team_power_data, output_dirs=None):
     """Create interactive Power Rating progression plot with toggleable trend lines"""
     try:
         from bokeh.plotting import figure, show, output_file
@@ -301,7 +302,10 @@ def create_power_rating_plot(team_power_data):
             return
         
         # Create the interactive figure
-        plot_filename = f"power_rating_interactive_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        if output_dirs:
+            plot_filename = os.path.join(output_dirs['html'], f"power_rating_interactive_{output_dirs['timestamp']}.html")
+        else:
+            plot_filename = f"power_rating_interactive_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         output_file(plot_filename)
         
         # Set up the figure with tools
