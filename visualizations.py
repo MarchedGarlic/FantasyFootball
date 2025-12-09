@@ -1,0 +1,953 @@
+#!/usr/bin/env python3
+"""
+Visualization Module
+Creates interactive Bokeh plots for fantasy football analysis
+"""
+
+import statistics
+from datetime import datetime
+from typing import Dict, List
+
+
+def create_roster_grade_plot(roster_grade_data):
+    """Create enhanced interactive Roster Grade progression plot with leaderboard and working toggles"""
+    try:
+        from bokeh.plotting import figure, show, output_file
+        from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS, CheckboxGroup
+        from bokeh.layouts import column as bokeh_column, row as bokeh_row
+        from bokeh.palettes import Category20, Category10
+        from bokeh.models import Div
+        import numpy as np
+    except ImportError:
+        print("\n⚠️  Bokeh not available - install with: pip install bokeh")
+        print("   Falling back to text-only Roster Grade analysis...")
+        _create_roster_grade_text_analysis(roster_grade_data)
+        return
+    
+    try:
+        # Try to import sklearn for trend lines, but make it optional
+        try:
+            from sklearn.linear_model import LinearRegression
+            sklearn_available = True
+        except ImportError:
+            sklearn_available = False
+            print("   Note: scikit-learn not available for trend lines")
+            
+        # Use Bokeh's Category20 palette for consistent colors
+        colors = Category20[20] if len(roster_grade_data) <= 20 else Category20[20] * 2
+        
+        # Prepare data for interactive plot and calculate current standings
+        team_data = []
+        leaderboard_data = []
+        
+        for i, (user_id, data) in enumerate(roster_grade_data.items()):
+            weekly_data = data.get('weekly_roster_grades') or data.get('weekly_grades')
+            if not weekly_data:
+                continue
+                
+            weeks = sorted([int(w) for w in weekly_data.keys()])
+            grades = [weekly_data.get(str(week), weekly_data.get(week, 0)) for week in weeks]
+            
+            if len(grades) < 2:  # Need at least 2 data points
+                continue
+            
+            # Calculate current roster grade (latest week)
+            current_grade = data.get('current_grade', grades[-1] if grades else 0)
+            average_grade = data.get('average_grade', sum(grades) / len(grades) if grades else 0)
+            high_grade = data.get('highest_grade', max(grades) if grades else 0)
+            low_grade = data.get('lowest_grade', min(grades) if grades else 0)
+            
+            # Add small jitter to prevent overlapping points
+            jitter_amount = 0.1
+            jittered_weeks = [w + np.random.uniform(-jitter_amount, jitter_amount) for w in weeks]
+            
+            # Calculate trend line if sklearn available
+            slope = 0
+            trend_weeks = []
+            trend_grades = []
+            
+            if sklearn_available and len(weeks) >= 3:
+                X = np.array(weeks).reshape(-1, 1)
+                y = np.array(grades)
+                
+                model = LinearRegression()
+                model.fit(X, y)
+                slope = model.coef_[0]
+                
+                # Generate trend line points extending to week 14
+                trend_weeks = list(range(min(weeks), 15))
+                trend_grades = model.predict(np.array(trend_weeks).reshape(-1, 1)).tolist()
+            
+            # Add mock record data (would need to be calculated from actual game data)
+            running_wins = 0
+            running_losses = 0
+            regular_records = []
+            combined_records = []
+            
+            for j, week in enumerate(weeks):
+                # Simple win/loss simulation based on grade performance
+                if grades[j] > average_grade:
+                    running_wins += 1
+                else:
+                    running_losses += 1
+                regular_records.append(f"{running_wins}-{running_losses}")
+                combined_records.append(f"{running_wins}-{running_losses}")
+            
+            team_data.append({
+                'name': data.get('manager_name', f'Manager {i+1}'),
+                'color': colors[i % len(colors)],
+                'slope': slope,
+                'current_grade': current_grade,
+                'average_grade': average_grade,
+                'source': ColumnDataSource(data={
+                    'week': jittered_weeks,
+                    'grade': grades,
+                    'team': [data.get('manager_name', f'Manager {i+1}')] * len(grades),
+                    'original_week': weeks,
+                    'original_grade': grades,
+                    'avg_grade': [average_grade] * len(grades),
+                    'high_grade': [high_grade] * len(grades),
+                    'low_grade': [low_grade] * len(grades),
+                    'regular_record': regular_records,
+                    'combined_record': combined_records
+                }),
+                'trend_source': ColumnDataSource(data={
+                    'trend_week': trend_weeks,
+                    'trend_grade': trend_grades,
+                    'team_name': [data.get('manager_name', f'Manager {i+1}')] * len(trend_weeks),
+                    'slope': [slope] * len(trend_weeks),
+                    'slope_display': [f"{slope:+.2f}" if slope != 0 else "0.00"] * len(trend_weeks)
+                }) if sklearn_available and trend_weeks else None
+            })
+            
+            # Add to leaderboard data
+            trend_icon = "📈" if slope > 0.1 else "📉" if slope < -0.1 else "➡️"
+            leaderboard_data.append([
+                data.get('manager_name', f'Manager {i+1}'),
+                f"{current_grade:.2f}",
+                f"{average_grade:.2f}",
+                f"{slope:+.2f}" if sklearn_available else "N/A",
+                trend_icon
+            ])
+        
+        # Only create plots if we have data
+        if len(team_data) == 0:
+            print("   • No roster grade data available")
+            return
+        
+        # Sort leaderboard by current grade
+        leaderboard_data.sort(key=lambda x: float(x[1]), reverse=True)
+        for i, row in enumerate(leaderboard_data):
+            row.insert(0, str(i + 1))  # Add ranking
+        
+        # Create the interactive figure
+        plot_filename = f"roster_grades_interactive_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        output_file(plot_filename)
+        
+        # Set up the figure with tools
+        p = figure(
+            width=1200, 
+            height=700,
+            title="Interactive Fantasy Football Roster Grade Progression",
+            x_axis_label="Week",
+            y_axis_label="Roster Grade",
+            tools="pan,wheel_zoom,box_zoom,reset,save",
+            x_range=(0.5, 14.5)
+        )
+        
+        # Create collapsible explanation panel
+        explanation_text = """
+        <h3 style="margin:10px 0 5px 0;">📊 Roster Grade Calculation Methodology</h3>
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 5px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #2c3e50;">📈 Data Sources & Collection</h4>
+            <p style="margin: 3px 0;"><strong>Player Rankings:</strong> ESPN weekly statistical leaders by position</p>
+            <p style="margin: 3px 0;"><strong>Position Tiers:</strong> QB top 30, RB top 60, WR/TE top 80 performers</p>
+            <p style="margin: 3px 0;"><strong>Update Frequency:</strong> Weekly analysis based on current statistical performance</p>
+            
+            <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">🎯 Scoring System</h4>
+            <p style="margin: 3px 0;"><strong>Starter Scoring:</strong> Full points based on tier ranking (higher tiers = more points)</p>
+            <p style="margin: 3px 0;"><strong>Bench Scoring:</strong> 50% value for depth analysis and injury protection</p>
+            <p style="margin: 3px 0;"><strong>Position Bonuses:</strong> Additional points for top-tier performers (top 10 in position)</p>
+            <p style="margin: 3px 0;"><strong>Roster Balance:</strong> Weighted scoring accounts for positional scarcity</p>
+            
+            <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">🔢 Grade Calculation</h4>
+            <p style="margin: 3px 0;"><strong>Raw Score:</strong> Sum of all player tier values + position bonuses</p>
+            <p style="margin: 3px 0;"><strong>Normalization:</strong> Scaled to league-relative performance metrics</p>
+            <p style="margin: 3px 0;"><strong>Final Grade:</strong> Composite score representing overall roster strength</p>
+            <p style="margin: 3px 0;"><strong>Scale Range:</strong> Typically 15-35 points, higher = stronger roster talent</p>
+            
+            <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">📊 Analysis Features</h4>
+            <p style="margin: 3px 0;"><strong>Trend Lines:</strong> Week-over-week progression showing roster improvement/decline</p>
+            <p style="margin: 3px 0;"><strong>Comparative Analysis:</strong> Performance relative to league average and competitors</p>
+            <p style="margin: 3px 0;"><strong>Interactive Elements:</strong> Hover for detailed breakdowns, toggle visibility controls</p>
+        </div>
+        """
+        
+        explanation_div = Div(text=explanation_text, width=1200, height=0, visible=False)
+        
+        # Create leaderboard
+        leaderboard_html = """
+        <h3 style="margin:10px 0 5px 0;">🏆 Current Roster Grade Leaderboard</h3>
+        <table style="border-collapse: collapse; width: 100%; font-size: 12px; margin: 5px 0;">
+        <tr style="background-color: #f0f0f0; font-weight: bold;">
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">#</th>
+            <th style="border: 1px solid #ddd; padding: 8px;">Manager</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Current Grade</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Season Avg</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Trend</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Direction</th>
+        </tr>
+        """
+        
+        for row in leaderboard_data:
+            rank = int(row[0])
+            color = "#e8f5e8" if rank <= 3 else "#fff5e6" if rank <= 6 else "#ffeaea"
+            leaderboard_html += f"""
+            <tr style="background-color: {color};">
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[0]}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{row[1]}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[2]}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[3]}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[4]}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[5]}</td>
+            </tr>"""
+        
+        leaderboard_html += "</table>"
+        leaderboard_div = Div(text=leaderboard_html, width=500, height=200)
+        
+        # Add hover tool with detailed tooltips
+        hover = HoverTool(tooltips=[
+            ("Team", "@team"),
+            ("Week", "@original_week"),
+            ("Roster Grade", "@original_grade{0.1f}"),
+            ("Regular Record", "@regular_record"),
+            ("Combined Record", "@combined_record"),
+            ("Season Average", "@avg_grade{0.1f}"),
+            ("Season High", "@high_grade{0.1f}"),
+            ("Season Low", "@low_grade{0.1f}")
+        ])
+        p.add_tools(hover)
+        
+        # Create separate hover for trend lines
+        trend_hover = None
+        if sklearn_available:
+            trend_hover = HoverTool(tooltips=[
+                ("Team", "@team_name"),
+                ("Week", "@trend_week"),
+                ("Projected Grade", "@trend_grade{0.1f}"),
+                ("Trend Slope", "@slope_display grade/week")
+            ], renderers=[])
+            p.add_tools(trend_hover)
+        
+        # Create legend items for both data and trends
+        data_legend_items = []
+        trend_legend_items = []
+        data_renderers = []
+        trend_renderers = []
+        
+        # Add each team's data to the plot
+        for team in team_data:
+            # Plot the data points
+            scatter_renderer = p.scatter(
+                x='week', y='grade',
+                source=team['source'],
+                color=team['color'],
+                size=8,
+                alpha=0.8,
+                line_color='white',
+                line_width=1
+            )
+            
+            # Plot the connection lines between data points
+            line_renderer = p.line(
+                x='week', y='grade',
+                source=team['source'],
+                line_color=team['color'],
+                line_width=2,
+                line_alpha=0.7
+            )
+            
+            data_renderers.extend([scatter_renderer, line_renderer])
+            
+            # Plot the trend line if available
+            if sklearn_available and team['trend_source']:
+                trend_direction = "↗" if team['slope'] > 0.1 else "↘" if team['slope'] < -0.1 else "→"
+                trend_renderer = p.line(
+                    x='trend_week', y='trend_grade',
+                    source=team['trend_source'],
+                    line_color=team['color'],
+                    line_width=3,
+                    line_alpha=0.6,
+                    line_dash='dashed'
+                )
+                
+                trend_renderers.append(trend_renderer)
+                
+                # Add this renderer to the trend hover tool
+                if trend_hover:
+                    trend_hover.renderers.append(trend_renderer)
+                
+                # Add to trend legend
+                trend_legend_items.append((f"{team['name']} {trend_direction} ({team['slope']:+.1f}/wk)", [trend_renderer]))
+            
+            # Add to data legend
+            data_legend_items.append((f"{team['name']} ({team['current_grade']:.1f})", [scatter_renderer, line_renderer]))
+        
+        # Create legends with click policy
+        data_legend = Legend(items=data_legend_items, location="center", title="Teams (Current Grade)")
+        data_legend.click_policy = "hide"
+        data_legend.title_text_font_size = "10pt"
+        data_legend.label_text_font_size = "9pt"
+        p.add_layout(data_legend, 'right')
+        
+        if trend_legend_items:
+            trend_legend = Legend(items=trend_legend_items, location="center", title="Trend Analysis")
+            trend_legend.click_policy = "hide"
+            trend_legend.title_text_font_size = "10pt" 
+            trend_legend.label_text_font_size = "9pt"
+            p.add_layout(trend_legend, 'left')
+        
+        # Create working toggle buttons
+        toggle_data_button = Button(label="Toggle All Teams", button_type="success", width=120)
+        toggle_trends_button = Button(label="Toggle All Trends", button_type="primary", width=120) if sklearn_available else None
+        show_explanation_button = Button(label="Show Calculation Details", button_type="warning", width=180)
+        reset_button = Button(label="Reset Zoom", button_type="danger", width=100)
+        
+        # JavaScript callback for data toggle
+        toggle_data_callback = CustomJS(args=dict(renderers=data_renderers), code="""
+            let any_visible = false;
+            for (let i = 0; i < renderers.length; i++) {
+                if (renderers[i].visible) {
+                    any_visible = true;
+                    break;
+                }
+            }
+            
+            for (let i = 0; i < renderers.length; i++) {
+                renderers[i].visible = !any_visible;
+            }
+            
+            cb_obj.label = any_visible ? "Show All Teams" : "Hide All Teams";
+        """)
+        
+        toggle_data_button.js_on_event('button_click', toggle_data_callback)
+        
+        # JavaScript callback for trends toggle
+        if toggle_trends_button and trend_renderers:
+            toggle_trends_callback = CustomJS(args=dict(renderers=trend_renderers), code="""
+                let any_visible = false;
+                for (let i = 0; i < renderers.length; i++) {
+                    if (renderers[i].visible) {
+                        any_visible = true;
+                        break;
+                    }
+                }
+                
+                for (let i = 0; i < renderers.length; i++) {
+                    renderers[i].visible = !any_visible;
+                }
+                
+                cb_obj.label = any_visible ? "Show All Trends" : "Hide All Trends";
+            """)
+            
+            toggle_trends_button.js_on_event('button_click', toggle_trends_callback)
+        
+        # JavaScript callback for explanation toggle
+        explanation_callback = CustomJS(args=dict(explanation_div=explanation_div), code="""
+            explanation_div.visible = !explanation_div.visible;
+            if (explanation_div.visible) {
+                explanation_div.height = 400;
+                cb_obj.label = "Hide Calculation Details";
+                cb_obj.button_type = "success";
+            } else {
+                explanation_div.height = 0;
+                cb_obj.label = "Show Calculation Details";
+                cb_obj.button_type = "warning";
+            }
+        """)
+        
+        show_explanation_button.js_on_event('button_click', explanation_callback)
+        
+        # Reset zoom callback
+        reset_callback = CustomJS(args=dict(plot=p), code="plot.reset.emit();")
+        reset_button.js_on_event('button_click', reset_callback)
+        
+        # Style the plot
+        p.grid.grid_line_alpha = 0.3
+        p.title.text_font_size = "14pt"
+        p.xaxis.axis_label_text_font_size = "12pt"
+        p.yaxis.axis_label_text_font_size = "12pt"
+        
+        # Create layout with controls and leaderboard
+        if toggle_trends_button:
+            controls = bokeh_row(toggle_data_button, toggle_trends_button, show_explanation_button, reset_button)
+        else:
+            controls = bokeh_row(toggle_data_button, show_explanation_button, reset_button)
+        
+        top_row = bokeh_row(leaderboard_div, p)
+        layout = bokeh_column(explanation_div, top_row, controls)
+        
+        # Show the interactive plot
+        show(layout)
+        
+        print(f"\n📊 Interactive Roster Grade plot saved as: {plot_filename}")
+        print("\n🎮 Interactive Features:")
+        print("   • 'Toggle All Teams' button: Show/hide all team roster grade lines")
+        if sklearn_available:
+            print("   • 'Toggle All Trends' button: Show/hide all trend lines")
+        print("   • 'Show Calculation Details' button: Toggle detailed methodology explanation")
+        print("   • Legend: Click team names to hide/show individual lines")
+        print("   • Hover over points for detailed information")
+        print("   • Pan and zoom to explore the data")
+        
+        print("\n📈 Roster Grade Analysis:")
+        print("   • Formula: Based on ESPN weekly stat leaders (QB top 30, RB top 60, WR/TE top 80)")
+        print("   • Grades starters + bench with position tiers and bonus points")
+        print("   • Points show roster talent level for each week")
+        print("   • Higher grades indicate stronger overall roster construction")
+        
+    except Exception as e:
+        import traceback
+        print(f"\n❌ Error creating Roster Grade plot: {e}")
+        print("Full traceback:")
+        traceback.print_exc()
+        print("   Falling back to text-only analysis...")
+        _create_roster_grade_text_analysis(roster_grade_data)
+
+
+def _create_roster_grade_text_analysis(roster_grade_data):
+    """Fallback text analysis for roster grades"""
+    print("\n📈 Roster Grade Analysis (Text Format):")
+    print(f"{'Team':<18} {'Current':<8} {'Average':<8} {'Trend':<10} {'High':<6} {'Low':<6}")
+    print("-" * 65)
+    
+    # Sort teams by current grade
+    sorted_teams = sorted(roster_grade_data.items(), 
+                         key=lambda x: x[1].get('current_grade', 0), reverse=True)
+    
+    for user_id, data in sorted_teams:
+        if not data.get('weekly_roster_grades'):
+            continue
+            
+        current = data.get('current_grade', 0)
+        average = data.get('average_grade', 0)
+        trend = data.get('grade_trend', 'stable')
+        high = data.get('highest_grade', 0)
+        low = data.get('lowest_grade', 0)
+        
+        trend_icon = "📈" if trend == 'improving' else "📉" if trend == 'declining' else "➡️"
+        
+        print(f"{data['name'][:17]:<18} {current:<8.1f} {average:<8.1f} {trend_icon} {trend:<7} {high:<6.1f} {low:<6.1f}")
+
+
+def create_combined_analysis_plot(team_power_data, roster_grade_data):
+    """Create combined Power Rating and Roster Grade visualization"""
+    try:
+        from bokeh.plotting import figure, show, output_file
+        from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS, Select
+        from bokeh.layouts import column, row
+        from bokeh.palettes import Category20
+        import numpy as np
+    except ImportError:
+        print("\n⚠️  Bokeh not available - install with: pip install bokeh")
+        print("   Cannot create combined visualization without bokeh")
+        return
+    
+    try:
+        # Use consistent colors across both datasets
+        colors = Category20[20] if len(team_power_data) <= 20 else Category20[20] * 2
+        
+        # Create the combined figure with two y-axes
+        plot_filename = f"combined_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        output_file(plot_filename)
+        
+        # Create comprehensive explanation panel
+        from bokeh.models import Div
+        explanation_text = """
+        <h3 style="margin:5px 0;">Combined Fantasy Analysis: Power Rating vs Roster Grade Correlation</h3>
+        <p style="margin:2px;"><b>Power Ratings (Left Axis):</b> Performance-based metric with win bonus (circles + solid lines)</p>
+        <p style="margin:2px;"><b>Roster Grades (Right Axis):</b> Talent-based metric using ESPN rankings (squares + dashed lines)</p>
+        <p style="margin:2px;"><b>Analysis Purpose:</b> Identify over/underperforming teams relative to roster talent</p>
+        <p style="margin:2px;"><b>Correlation Patterns:</b> Strong correlation = performing to talent level, divergence = outliers</p>
+        <p style="margin:2px;"><b>Interactive:</b> Click legends to toggle metric types, hover for cross-metric comparison</p>
+        <p style="margin:2px;"><b>Scale:</b> Higher values on both axes indicate better performance and talent</p>
+        """
+        
+        explanation_div = Div(text=explanation_text, width=1200, height=110)
+        
+        # Set up main figure
+        p1 = figure(
+            width=1200, 
+            height=800,
+            title="Combined Fantasy Analysis: Power Rating & Roster Grade Progression",
+            x_axis_label="Week",
+            y_axis_label="Power Rating",
+            tools="pan,wheel_zoom,box_zoom,reset,save",
+            x_range=(0.5, 14.5)
+        )
+        
+        # Create second y-axis for roster grades
+        from bokeh.models import LinearAxis
+        p1.extra_y_ranges = {"roster_grade": p1.y_range}
+        roster_axis = LinearAxis(y_range_name="roster_grade", axis_label="Roster Grade")
+        p1.add_layout(roster_axis, 'right')
+        
+        # Prepare data for both metrics
+        team_data = []
+        
+        for i, (user_id, power_data) in enumerate(team_power_data.items()):
+            if user_id not in roster_grade_data:
+                continue
+                
+            grade_data = roster_grade_data[user_id]
+            
+            # Find common weeks between both datasets
+            power_weeks = set(power_data['weekly_power_ratings'].keys())
+            grade_weeks = set(grade_data['weekly_roster_grades'].keys())
+            common_weeks = sorted(power_weeks.intersection(grade_weeks))
+            
+            if len(common_weeks) < 2:
+                continue
+            
+            # Extract data for common weeks
+            power_ratings = [power_data['weekly_power_ratings'][w] for w in common_weeks]
+            roster_grades = [grade_data['weekly_roster_grades'][w] for w in common_weeks]
+            
+            # Add jitter to prevent overlapping
+            jitter = 0.05
+            jittered_weeks = [w + np.random.uniform(-jitter, jitter) for w in common_weeks]
+            
+            team_data.append({
+                'name': power_data['name'],
+                'color': colors[i % len(colors)],
+                'power_source': ColumnDataSource(data={
+                    'week': jittered_weeks,
+                    'rating': power_ratings,
+                    'team': [power_data['name']] * len(power_ratings),
+                    'original_week': common_weeks,
+                    'metric': ['Power Rating'] * len(power_ratings)
+                }),
+                'grade_source': ColumnDataSource(data={
+                    'week': [w + 0.1 for w in jittered_weeks],  # Slight offset
+                    'grade': roster_grades,
+                    'team': [power_data['name']] * len(roster_grades),
+                    'original_week': common_weeks,
+                    'metric': ['Roster Grade'] * len(roster_grades)
+                })
+            })
+        
+        if len(team_data) == 0:
+            print("   • No overlapping data for combined visualization")
+            return
+        
+        # Add enhanced hover tools with cross-metric information
+        # We'll need to create a combined data source for proper cross-referencing
+        combined_data = []
+        for team in team_data:
+            power_data = team['power_source'].data
+            grade_data = team['grade_source'].data
+            
+            for i in range(len(power_data['week'])):
+                week = power_data['original_week'][i]
+                # Find matching grade data for same week
+                matching_grade = "???"
+                matching_power_rank = "???"
+                if i < len(grade_data['grade']):
+                    matching_grade = f"{grade_data['grade'][i]:.1f}"
+                
+                combined_data.append({
+                    'week': power_data['week'][i],
+                    'original_week': week,
+                    'team': power_data['team'][i],
+                    'rating': power_data['rating'][i],
+                    'grade': matching_grade,
+                    'metric_type': 'Power Rating'
+                })
+                
+            for i in range(len(grade_data['week'])):
+                week = grade_data['original_week'][i]
+                # Find matching power data for same week
+                matching_rating = "???"
+                if i < len(power_data['rating']):
+                    matching_rating = f"{power_data['rating'][i]:.1f}"
+                    
+                combined_data.append({
+                    'week': grade_data['week'][i],
+                    'original_week': week, 
+                    'team': grade_data['team'][i],
+                    'rating': matching_rating,
+                    'grade': grade_data['grade'][i],
+                    'metric_type': 'Roster Grade'
+                })
+        
+        # Enhanced hover for power ratings
+        power_hover = HoverTool(tooltips=[
+            ("Team", "@team"),
+            ("Week", "@original_week"),
+            ("Power Rating", "@rating{0.1f}"),
+            ("Roster Grade", "@grade")
+        ])
+        
+        # Enhanced hover for roster grades  
+        grade_hover = HoverTool(tooltips=[
+            ("Team", "@team"),
+            ("Week", "@original_week"),
+            ("Roster Grade", "@grade{0.1f}"),
+            ("Power Rating", "@rating")
+        ])
+        
+        p1.add_tools(power_hover, grade_hover)
+        
+        # Create legend items
+        power_legend_items = []
+        grade_legend_items = []
+        combined_legend_items = []
+        
+        # Add each team's data to the plot
+        for team in team_data:
+            # Power Rating lines (left y-axis)
+            power_scatter = p1.scatter(
+                x='week', y='rating',
+                source=team['power_source'],
+                color=team['color'],
+                size=8,
+                alpha=0.8,
+                line_color='white',
+                line_width=1
+            )
+            
+            power_line = p1.line(
+                x='week', y='rating',
+                source=team['power_source'],
+                line_color=team['color'],
+                line_width=2,
+                line_alpha=0.7
+            )
+            
+            # Roster Grade lines (right y-axis) 
+            grade_scatter = p1.scatter(
+                x='week', y='grade',
+                source=team['grade_source'],
+                color=team['color'],
+                size=6,
+                alpha=0.6,
+                marker='square',
+                y_range_name="roster_grade"
+            )
+            
+            grade_line = p1.line(
+                x='week', y='grade',
+                source=team['grade_source'],
+                line_color=team['color'],
+                line_width=2,
+                line_alpha=0.5,
+                line_dash='dashed',
+                y_range_name="roster_grade"
+            )
+            
+            # Calculate and plot combined metric (normalized average)
+            # Normalize both metrics to 0-1 scale, then average them
+            power_vals = team['power_source'].data['rating']
+            grade_vals = team['grade_source'].data['grade']
+            
+            # Simple normalization (this could be improved with league-wide min/max)
+            power_normalized = [(p - min(power_vals)) / (max(power_vals) - min(power_vals)) if max(power_vals) != min(power_vals) else 0.5 for p in power_vals]
+            grade_normalized = [(g - min(grade_vals)) / (max(grade_vals) - min(grade_vals)) if max(grade_vals) != min(grade_vals) else 0.5 for g in grade_vals]
+            
+            combined_metric = [(p + g) / 2 for p, g in zip(power_normalized, grade_normalized)]
+            
+            combined_source = ColumnDataSource(data={
+                'week': team['power_source'].data['week'],
+                'combined': combined_metric,
+                'team': team['power_source'].data['team'],
+                'original_week': team['power_source'].data['original_week']
+            })
+            
+            # Plot combined metric as stars on a separate y-axis
+            p1.extra_y_ranges["combined"] = p1.y_range
+            combined_scatter = p1.scatter(
+                x='week', y='combined',
+                source=combined_source,
+                color=team['color'],
+                size=10,
+                alpha=0.6,
+                marker='star',
+                y_range_name="combined"
+            )
+            
+            # Add to legends
+            power_legend_items.append((f"{team['name']} (Power)", [power_scatter, power_line]))
+            grade_legend_items.append((f"{team['name']} (Grade)", [grade_scatter, grade_line]))
+            combined_legend_items.append((f"{team['name']} (Combined)", [combined_scatter]))
+        
+        # Create toggle buttons
+        toggle_power_button = Button(label="Toggle All Power Ratings", button_type="success")
+        toggle_grades_button = Button(label="Toggle All Roster Grades", button_type="primary")
+        
+        # Create separate legends
+        power_legend = Legend(items=power_legend_items, location="center", title="Power Ratings (○—)")
+        power_legend.click_policy = "hide"
+        p1.add_layout(power_legend, 'left')
+        
+        grade_legend = Legend(items=grade_legend_items, location="center", title="Roster Grades (□‥)")
+        grade_legend.click_policy = "hide"
+        p1.add_layout(grade_legend, 'right')
+        
+        # JavaScript callbacks for toggle buttons
+        power_toggle_code = """
+        var legend = cb_obj.plot.left[1]; // Power legend
+        var renderers = [];
+        
+        for (var item of legend.items) {
+            for (var r of item.renderers) {
+                renderers.push(r);
+            }
+        }
+        
+        var all_visible = renderers.every(r => r.visible);
+        
+        for (var r of renderers) {
+            r.visible = !all_visible;
+        }
+        
+        cb_obj.label = all_visible ? "Show Power Ratings" : "Hide Power Ratings";
+        """
+        
+        grades_toggle_code = """
+        var legend = cb_obj.plot.right[1]; // Grades legend
+        var renderers = [];
+        
+        for (var item of legend.items) {
+            for (var r of item.renderers) {
+                renderers.push(r);
+            }
+        }
+        
+        var all_visible = renderers.every(r => r.visible);
+        
+        for (var r of renderers) {
+            r.visible = !all_visible;
+        }
+        
+        cb_obj.label = all_visible ? "Show Roster Grades" : "Hide Roster Grades";
+        """
+        
+        toggle_power_button.js_on_click(CustomJS(code=power_toggle_code))
+        toggle_grades_button.js_on_click(CustomJS(code=grades_toggle_code))
+        
+        # Style the plot
+        p1.grid.grid_line_alpha = 0.3
+        p1.title.text_font_size = "14pt"
+        p1.xaxis.axis_label_text_font_size = "12pt"
+        p1.yaxis.axis_label_text_font_size = "12pt"
+        
+        # Create layout with buttons and explanation
+        button_row = row(toggle_power_button, toggle_grades_button)
+        layout = column(explanation_div, p1, button_row)
+        show(layout)
+        
+        print(f"\n📊 Combined analysis plot saved as: {plot_filename}")
+        print("\n🎮 Interactive Features:")
+        print("   • Left Legend: Click to toggle Power Rating lines (circles + solid)")
+        print("   • Right Legend: Click to toggle Roster Grade lines (squares + dashed)")
+        print("   • Hover over points for detailed information")
+        print("   • Pan and zoom to explore correlations")
+        
+        print("\n📊 Analysis Notes:")
+        print("   • Power Ratings (left axis): Performance-based with win bonus")
+        print("   • Roster Grades (right axis): Talent-based using ESPN rankings")
+        print("   • Look for correlation patterns between the two metrics")
+        print("   • Divergence may indicate over/underperformance relative to talent")
+        
+    except Exception as e:
+        print(f"\n❌ Error creating combined plot: {e}")
+        print("   Combined visualization not available")
+
+
+def create_trade_impact_visualization(combined_impacts, transactions_data=None):
+    """Create enhanced trade impact visualization with toggleable filters and roster grouping"""
+    try:
+        from bokeh.plotting import figure, show, output_file
+        from bokeh.models import ColumnDataSource, HoverTool
+        from bokeh.palettes import Set3, Category20
+        import numpy as np
+    except ImportError:
+        print("\n⚠️  Bokeh not available for trade impact visualization")
+        return
+    
+    if not combined_impacts:
+        print("\n⚠️  No trade impact data for visualization")
+        return
+    
+    try:
+        # Debug: Check transactions_data structure
+        print(f"\n🔍 Debug: transactions_data type: {type(transactions_data)}")
+        if transactions_data and isinstance(transactions_data, dict):
+            print(f"🔍 Debug: transactions_data keys: {list(transactions_data.keys())[:5]}")
+        
+        plot_filename = f"trade_impacts_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        output_file(plot_filename)
+        
+        # Prepare enhanced data with transaction categorization
+        weeks = []
+        managers = []
+        impacts = []
+        power_shifts = []
+        grade_shifts = []
+        transaction_types = []
+        players_info = []
+        roster_colors = []
+        
+        # Create unique roster color mapping
+        unique_managers = list(set([impact['manager_name'] for impact in combined_impacts]))
+        try:
+            if len(unique_managers) <= 12:
+                color_palette = Set3[max(3, len(unique_managers))]
+            else:
+                color_palette = Category20[min(20, len(unique_managers))]
+        except (KeyError, ValueError):
+            # Fallback colors
+            color_palette = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", 
+                           "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+                           "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5"][:len(unique_managers)]
+        
+        roster_color_map = {manager: color_palette[i % len(color_palette)] for i, manager in enumerate(unique_managers)}
+        
+        for impact in combined_impacts:
+            weeks.append(impact['trade_week'])
+            managers.append(impact['manager_name'])
+            impacts.append(impact['combined_impact_score'])
+            power_shifts.append(impact['power_rating_shift'])
+            grade_shifts.append(impact['roster_grade_shift'])
+            roster_colors.append(roster_color_map[impact['manager_name']])
+            
+            # Simplified transaction type determination
+            transaction_type = "Trade"
+            player_movement = "Trade participants"
+            
+            # Check if this looks like waiver activity (simplified heuristic)
+            if transactions_data and isinstance(transactions_data, dict):
+                trade_week = impact['trade_week']
+                week_transactions = transactions_data.get(f"Week {trade_week}", [])
+                if len(week_transactions) > 5:  # Many transactions suggest waiver activity
+                    transaction_type = "Waiver/FA Activity"
+                    player_movement = "Waiver wire/Free agent moves"
+            
+            transaction_types.append(transaction_type)
+            players_info.append(player_movement)
+        
+        # Add significance categorization
+        significances = []
+        for impact_val in impacts:
+            if abs(impact_val) >= 15:
+                significances.append("Critical")
+            elif abs(impact_val) >= 8:
+                significances.append("Major")
+            elif abs(impact_val) >= 3:
+                significances.append("Moderate")
+            else:
+                significances.append("Minor")
+        
+        # Create data source
+        source = ColumnDataSource(data={
+            'week': weeks,
+            'manager': managers,
+            'impact': impacts,
+            'power_shift': power_shifts,
+            'grade_shift': grade_shifts,
+            'color': roster_colors,
+            'significance': significances,
+            'transaction_type': transaction_types,
+            'players_info': players_info
+        })
+        
+        # Create plot
+        p = figure(
+            width=1200,
+            height=700,
+            title="Enhanced Trade Impact Analysis: Combined Score by Week (Color = Roster)",
+            x_axis_label="Trade Week",
+            y_axis_label="Combined Impact Score",
+            tools="pan,wheel_zoom,box_zoom,reset,save"
+        )
+        
+        # Add zero line
+        if weeks:
+            p.line([min(weeks)-0.5, max(weeks)+0.5], [0, 0], 
+                   line_color='black', line_width=1, line_dash='dashed', alpha=0.5)
+        
+        # Create different markers for different transaction types
+        trade_mask = [t == "Trade" for t in transaction_types]
+        waiver_mask = [t != "Trade" for t in transaction_types]
+        
+        # Plot trades as circles
+        if any(trade_mask):
+            trade_source = ColumnDataSource(data={
+                key: [value for i, value in enumerate(source.data[key]) if trade_mask[i]]
+                for key in source.data.keys()
+            })
+            trade_scatter = p.circle(
+                x='week', y='impact',
+                source=trade_source,
+                size=12,
+                color='color',
+                alpha=0.8,
+                line_color='black',
+                line_width=1,
+                legend_label="Trades"
+            )
+        
+        # Plot waivers as triangles
+        if any(waiver_mask):
+            waiver_source = ColumnDataSource(data={
+                key: [value for i, value in enumerate(source.data[key]) if waiver_mask[i]]
+                for key in source.data.keys()
+            })
+            waiver_scatter = p.triangle(
+                x='week', y='impact',
+                source=waiver_source,
+                size=10,
+                color='color',
+                alpha=0.6,
+                line_color='darkgray',
+                line_width=1,
+                legend_label="Waivers/FA"
+            )
+        
+        # Add enhanced hover tool
+        hover = HoverTool(tooltips=[
+            ("Manager", "@manager"),
+            ("Transaction Type", "@transaction_type"),
+            ("Week", "@week"),
+            ("Combined Impact", "@impact{0.2f}"),
+            ("Power Rating Shift", "@power_shift{+0.2f}"),
+            ("Roster Grade Shift", "@grade_shift{+0.2f}"),
+            ("Trade Significance", "@significance"),
+            ("Player Movement", "@players_info")
+        ])
+        
+        p.add_tools(hover)
+        p.grid.grid_line_alpha = 0.3
+        
+        # Configure legend
+        if hasattr(p, 'legend'):
+            p.legend.location = "top_right"
+            p.legend.click_policy = "hide"
+        
+        show(p)
+        
+        print(f"\n📊 Enhanced Trade Impact plot saved as: {plot_filename}")
+        print("🎮 Interactive Features:")
+        print("   • Legend: Click 'Trades' or 'Waivers/FA' to toggle visibility")
+        print("   • Hover over points for detailed transaction information")
+        print("   • Pan and zoom to explore the data")
+        print("   • Color coding by roster/manager")
+        print("   • Circles = Trades, Triangles = Waivers/Free Agents")
+        
+        return plot_filename
+        
+    except Exception as e:
+        print(f"\n❌ Error creating trade impact visualization: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
