@@ -28,6 +28,32 @@ from visualizations import (
 )
 
 
+def create_output_directories():
+    """Create organized output directory structure"""
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    
+    # Create main output directory
+    output_dir = f"fantasy_analysis_output_{timestamp}"
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Create subdirectories
+    html_dir = os.path.join(output_dir, "html_reports")
+    json_dir = os.path.join(output_dir, "json_data")
+    text_dir = os.path.join(output_dir, "text_reports")
+    
+    os.makedirs(html_dir, exist_ok=True)
+    os.makedirs(json_dir, exist_ok=True)
+    os.makedirs(text_dir, exist_ok=True)
+    
+    return {
+        'base': output_dir,
+        'html': html_dir,
+        'json': json_dir,
+        'text': text_dir,
+        'timestamp': timestamp
+    }
+
+
 def get_user_leagues(sleeper_api, username, target_season=None):
     """Get all leagues for a user"""
     print(f"\n🔍 Finding leagues for user: {username}")
@@ -244,6 +270,14 @@ def main():
         
         print(f"   • Total trades found: {len(all_trades)}")
         
+        # Create organized output directories
+        print("\n📁 Creating organized output directories...")
+        output_dirs = create_output_directories()
+        print(f"   ✓ Created output directory: {output_dirs['base']}")
+        print(f"   ✓ HTML reports: {os.path.basename(output_dirs['html'])}")
+        print(f"   ✓ JSON data: {os.path.basename(output_dirs['json'])}")
+        print(f"   ✓ Text reports: {os.path.basename(output_dirs['text'])}")
+        
         # Calculate Power Ratings
         print("\n⚡ Calculating Power Ratings...")
         team_power_data = calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup)
@@ -350,13 +384,13 @@ def main():
         # Analyze Real Trades Only (exclude waiver moves)
         trade_impacts = analyze_real_trades_only(
             transactions_by_week, team_power_data, roster_grade_data,
-            user_lookup, roster_to_manager, all_players
+            user_lookup, roster_to_manager, all_players, output_dirs
         )
         
         # Analyze Waiver Wire & Free Agent Pickups
         waiver_impacts = analyze_waiver_pickups(
             transactions_by_week, team_power_data, roster_grade_data,
-            user_lookup, roster_to_manager, all_players
+            user_lookup, roster_to_manager, all_players, output_dirs
         )
         
         # Calculate Manager Performance Grades
@@ -373,20 +407,20 @@ def main():
         
         # Power Rating plot
         print("   • Creating Power Rating progression plot...")
-        create_power_rating_plot(team_power_data)
+        create_power_rating_plot(team_power_data, output_dirs)
         
         # Roster Grade plot
         print("   • Creating Roster Grade progression plot...")
-        create_roster_grade_plot(roster_grade_data)
+        create_roster_grade_plot(roster_grade_data, output_dirs)
         
         # New comprehensive visualizations
         if trade_impacts:
             print("   • Creating trade impact visualization...")
-            create_trade_visualization(trade_impacts, transactions_by_week)
+            create_trade_visualization(trade_impacts, transactions_by_week, output_dirs)
         
         if waiver_impacts:
             print("   • Creating waiver analysis visualization...")
-            create_waiver_visualization(waiver_impacts)
+            create_waiver_visualization(waiver_impacts, output_dirs)
             
         if manager_grades:
             print("   • Creating manager performance visualization...")
@@ -399,7 +433,7 @@ def main():
                     print(f"   ⚠️ Skipping manager {manager_id}: No weekly grade data")
             
             if valid_managers:
-                create_manager_grade_visualization(valid_managers)
+                create_manager_grade_visualization(valid_managers, output_dirs)
             else:
                 print("   • No managers with valid weekly grade data for visualization")
         else:
@@ -436,7 +470,7 @@ def main():
         
         # Generate JSON output files for sharing
         print("\n💾 Generating JSON output files for AI analysis...")
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = output_dirs['timestamp']
         
         # Create comprehensive output data structure
         output_data = {
@@ -526,15 +560,15 @@ def main():
         }
         
         # Save main analysis JSON file
-        main_json_file = f"fantasy_analysis_{timestamp}.json"
+        main_json_file = os.path.join(output_dirs['json'], f"fantasy_analysis_{timestamp}.json")
         with open(main_json_file, 'w', encoding='utf-8') as f:
             json.dump(output_data, f, indent=2, ensure_ascii=False)
         
-        print(f"   ✓ Main analysis saved: {main_json_file}")
+        print(f"   ✓ Main analysis saved: {os.path.relpath(main_json_file)}")
         
         # Save detailed analysis data separately
         if trade_impacts or waiver_impacts:
-            analysis_json_file = f"detailed_analysis_{timestamp}.json"
+            analysis_json_file = os.path.join(output_dirs['json'], f"detailed_analysis_{timestamp}.json")
             detailed_data = {
                 'analysis_info': output_data['analysis_info'],
                 'raw_trades': all_trades,
@@ -548,10 +582,10 @@ def main():
             with open(analysis_json_file, 'w', encoding='utf-8') as f:
                 json.dump(detailed_data, f, indent=2, ensure_ascii=False)
             
-            print(f"   ✓ Comprehensive analysis saved: {analysis_json_file}")
+            print(f"   ✓ Comprehensive analysis saved: {os.path.relpath(analysis_json_file)}")
         
         # Save league roster data
-        roster_json_file = f"roster_data_{timestamp}.json"
+        roster_json_file = os.path.join(output_dirs['json'], f"roster_data_{timestamp}.json")
         roster_data = {
             'analysis_info': output_data['analysis_info'],
             'managers': {user['user_id']: {
@@ -566,15 +600,18 @@ def main():
         with open(roster_json_file, 'w', encoding='utf-8') as f:
             json.dump(roster_data, f, indent=2, ensure_ascii=False)
         
-        print(f"   ✓ Roster data saved: {roster_json_file}")
+        print(f"   ✓ Roster data saved: {os.path.relpath(roster_json_file)}")
 
-        print(f"\n📁 Files Generated:")
-        print(f"   • Interactive HTML plots created in current directory")
+        print(f"\n📁 Files Generated in Organized Structure:")
+        print(f"   📂 Base Directory: {output_dirs['base']}")
+        print(f"   📂 HTML Reports: {os.path.basename(output_dirs['html'])}")
+        print(f"   📂 JSON Data: {os.path.basename(output_dirs['json'])}")
+        print(f"   📂 Text Reports: {os.path.basename(output_dirs['text'])}")
         print(f"   • JSON analysis files for AI sharing:")
-        print(f"     - {main_json_file} (comprehensive analysis)")
+        print(f"     - {os.path.basename(main_json_file)} (comprehensive analysis)")
         if trade_impacts or waiver_impacts:
-            print(f"     - {analysis_json_file} (detailed comprehensive analysis)")
-        print(f"     - {roster_json_file} (league roster data)")
+            print(f"     - {os.path.basename(analysis_json_file)} (detailed comprehensive analysis)")
+        print(f"     - {os.path.basename(roster_json_file)} (league roster data)")
         print(f"   • Analysis completed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         print("\n" + "="*60)

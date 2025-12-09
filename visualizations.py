@@ -5,11 +5,12 @@ Creates interactive Bokeh plots for fantasy football analysis
 """
 
 import statistics
+import os
 from datetime import datetime
 from typing import Dict, List
 
 
-def create_roster_grade_plot(roster_grade_data):
+def create_roster_grade_plot(roster_grade_data, output_dirs=None):
     """Create enhanced interactive Roster Grade progression plot with leaderboard and working toggles"""
     try:
         from bokeh.plotting import figure, show, output_file
@@ -141,7 +142,10 @@ def create_roster_grade_plot(roster_grade_data):
             row.insert(0, str(i + 1))  # Add ranking
         
         # Create the interactive figure
-        plot_filename = f"roster_grades_interactive_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        if output_dirs:
+            plot_filename = os.path.join(output_dirs['html'], f"roster_grades_interactive_{output_dirs['timestamp']}.html")
+        else:
+            plot_filename = f"roster_grades_interactive_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         output_file(plot_filename)
         
         # Set up the figure with tools
@@ -440,7 +444,7 @@ def _create_roster_grade_text_analysis(roster_grade_data):
         print(f"{data['name'][:17]:<18} {current:<8.1f} {average:<8.1f} {trend_icon} {trend:<7} {high:<6.1f} {low:<6.1f}")
 
 
-def create_combined_analysis_plot(team_power_data, roster_grade_data):
+def create_combined_analysis_plot(team_power_data, roster_grade_data, output_dirs=None):
     """Create combined Power Rating and Roster Grade visualization"""
     try:
         from bokeh.plotting import figure, show, output_file
@@ -458,7 +462,10 @@ def create_combined_analysis_plot(team_power_data, roster_grade_data):
         colors = Category20[20] if len(team_power_data) <= 20 else Category20[20] * 2
         
         # Create the combined figure with two y-axes
-        plot_filename = f"combined_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        if output_dirs:
+            plot_filename = os.path.join(output_dirs['html'], f"combined_analysis_{output_dirs['timestamp']}.html")
+        else:
+            plot_filename = f"combined_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         output_file(plot_filename)
         
         # Create comprehensive explanation panel
@@ -764,7 +771,7 @@ def create_combined_analysis_plot(team_power_data, roster_grade_data):
         print("   Combined visualization not available")
 
 
-def create_trade_impact_visualization(combined_impacts, transactions_data=None):
+def create_trade_impact_visualization(combined_impacts, transactions_data=None, output_dirs=None):
     """Create enhanced trade impact visualization with toggleable filters and roster grouping"""
     try:
         from bokeh.plotting import figure, show, output_file
@@ -785,7 +792,10 @@ def create_trade_impact_visualization(combined_impacts, transactions_data=None):
         if transactions_data and isinstance(transactions_data, dict):
             print(f"🔍 Debug: transactions_data keys: {list(transactions_data.keys())[:5]}")
         
-        plot_filename = f"trade_impacts_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        if output_dirs:
+            plot_filename = os.path.join(output_dirs['html'], f"trade_impacts_{output_dirs['timestamp']}.html")
+        else:
+            plot_filename = f"trade_impacts_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         output_file(plot_filename)
         
         # Prepare enhanced data with transaction categorization

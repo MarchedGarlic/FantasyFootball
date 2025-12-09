@@ -6,6 +6,7 @@ Analyzes trades, waivers, and manager performance using multiple metrics
 
 import statistics
 import numpy as np
+import os
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional
 
@@ -27,7 +28,7 @@ def get_player_name_from_id(player_id, all_players=None):
     return f"Player_{player_id}"
 
 
-def analyze_real_trades_only(transactions_data, team_power_data, roster_grade_data, user_lookup, roster_to_manager, all_players=None):
+def analyze_real_trades_only(transactions_data, team_power_data, roster_grade_data, user_lookup, roster_to_manager, all_players=None, output_dirs=None):
     """Analyze only actual trades (not waivers) with detailed player movement tracking"""
     print("🔄 Analyzing Real Trade Impacts Only...")
     
@@ -122,7 +123,7 @@ def analyze_real_trades_only(transactions_data, team_power_data, roster_grade_da
     return trade_impacts
 
 
-def analyze_waiver_pickups(transactions_data, team_power_data, roster_grade_data, user_lookup, roster_to_manager, all_players=None):
+def analyze_waiver_pickups(transactions_data, team_power_data, roster_grade_data, user_lookup, roster_to_manager, all_players=None, output_dirs=None):
     """Analyze waiver wire and free agent pickups with impact scoring"""
     print("\n📊 Analyzing Waiver Wire & Free Agent Impacts...")
     
@@ -479,7 +480,7 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
     return manager_grades
 
 
-def create_trade_visualization(trade_impacts, transactions_data=None):
+def create_trade_visualization(trade_impacts, transactions_data=None, output_dirs=None):
     """Create enhanced trade visualization with clean data, leaderboard, and detailed explanations"""
     try:
         from bokeh.plotting import figure, show, output_file
@@ -497,7 +498,10 @@ def create_trade_visualization(trade_impacts, transactions_data=None):
         print("\n⚠️  No trade data for visualization")
         return
     
-    plot_filename = f"trade_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+    if output_dirs:
+        plot_filename = os.path.join(output_dirs['html'], f"trade_analysis_{output_dirs['timestamp']}.html")
+    else:
+        plot_filename = f"trade_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
     output_file(plot_filename)
     
     # Create individual trade transactions with unique identifiers
@@ -577,7 +581,11 @@ def create_trade_visualization(trade_impacts, transactions_data=None):
     
     # Sort by worst impact and save to text file
     worst_trades.sort(key=lambda x: x['combined_impact'])
-    worst_trades_filename = f"worst_trades_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    
+    if output_dirs:
+        worst_trades_filename = os.path.join(output_dirs['text'], f"worst_trades_report_{output_dirs['timestamp']}.txt")
+    else:
+        worst_trades_filename = f"worst_trades_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
     
     with open(worst_trades_filename, 'w') as f:
         f.write("=" * 80 + "\n")
@@ -875,7 +883,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None):
     return plot_filename
 
 
-def create_waiver_visualization(waiver_impacts):
+def create_waiver_visualization(waiver_impacts, output_dirs=None):
     """Create enhanced waiver wire analysis visualization with individual transactions and leaderboard"""
     try:
         from bokeh.plotting import figure, show, output_file
@@ -892,7 +900,10 @@ def create_waiver_visualization(waiver_impacts):
         print("\n⚠️  No waiver data for visualization")
         return
     
-    plot_filename = f"waiver_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+    if output_dirs:
+        plot_filename = os.path.join(output_dirs['html'], f"waiver_analysis_{output_dirs['timestamp']}.html")
+    else:
+        plot_filename = f"waiver_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
     output_file(plot_filename)
     
     # Create individual waiver transactions with unique identifiers
@@ -1223,7 +1234,7 @@ def create_waiver_visualization(waiver_impacts):
     return plot_filename
 
 
-def create_manager_grade_visualization(manager_grades):
+def create_manager_grade_visualization(manager_grades, output_dirs=None):
     """Create comprehensive manager grade visualization with enhanced features"""
     try:
         from bokeh.plotting import figure, show, output_file
@@ -1240,7 +1251,10 @@ def create_manager_grade_visualization(manager_grades):
         print("\n⚠️  No manager grade data for visualization")
         return
     
-    plot_filename = f"manager_grades_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+    if output_dirs:
+        plot_filename = os.path.join(output_dirs['html'], f"manager_grades_{output_dirs['timestamp']}.html")
+    else:
+        plot_filename = f"manager_grades_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
     output_file(plot_filename)
     
     # Enhanced data preparation with better scaling
