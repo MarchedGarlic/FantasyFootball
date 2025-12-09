@@ -28,6 +28,73 @@ from visualizations import (
 )
 
 
+def load_league_config():
+    """Load league configuration from file or environment variables"""
+    import json
+    
+    # Try to load from config file first
+    try:
+        with open('league_config.json', 'r') as f:
+            config = json.load(f)
+            print(f"📋 Loaded config for league: {config.get('league_name', 'Unknown')}")
+            return config
+    except FileNotFoundError:
+        print("📝 No league_config.json found, using interactive mode")
+    except Exception as e:
+        print(f"⚠️  Error loading config: {e}")
+    
+    # Try environment variables as fallback
+    sleeper_username = os.getenv('SLEEPER_USERNAME')
+    league_id = os.getenv('LEAGUE_ID')
+    
+    if sleeper_username and league_id:
+        return {
+            'sleeper_username': sleeper_username,
+            'league_id': league_id,
+            'target_season': int(os.getenv('TARGET_SEASON', '2025')),
+            'auto_select': True
+        }
+    
+    return None
+
+
+def get_user_input_interactive():
+    """Get user input interactively when no config is available"""
+    # Get user input
+    username = input("\n👤 Enter your Sleeper username: ").strip()
+    if not username:
+        print("❌ Username cannot be empty")
+        return None, None
+    
+    # Get season preference
+    print("\n📅 Season Options:")
+    print("   1. 2025 leagues only")
+    print("   2. 2024 leagues only") 
+    print("   3. All available leagues (2022-2025)")
+    
+    while True:
+        try:
+            season_choice = input("\n🎯 Select season option (1-3): ").strip()
+            
+            if season_choice == "1":
+                target_season = 2025
+                break
+            elif season_choice == "2":
+                target_season = 2024
+                break
+            elif season_choice == "3":
+                target_season = None  # Show all seasons
+                break
+            else:
+                print("❌ Please enter 1, 2, or 3")
+                
+        except KeyboardInterrupt:
+            print("\n👋 Goodbye!")
+            return None, None
+    
+    return username, target_season
+
+
 def create_output_directories():
     """Create organized output directory structure"""
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -142,37 +209,21 @@ def main():
     print("="*50)
     
     try:
-        # Get user input
-        username = input("\n👤 Enter your Sleeper username: ").strip()
-        if not username:
-            print("❌ Username cannot be empty")
-            return
+        # Try to load configuration first
+        config = load_league_config()
         
-        # Get season preference
-        print("\n📅 Season Options:")
-        print("   1. 2025 leagues only")
-        print("   2. 2024 leagues only") 
-        print("   3. All available leagues (2022-2025)")
-        
-        while True:
-            try:
-                season_choice = input("\n🎯 Select season option (1-3): ").strip()
-                
-                if season_choice == "1":
-                    target_season = 2025
-                    break
-                elif season_choice == "2":
-                    target_season = 2024
-                    break
-                elif season_choice == "3":
-                    target_season = None  # Show all seasons
-                    break
-                else:
-                    print("❌ Please enter 1, 2, or 3")
-                    
-            except KeyboardInterrupt:
-                print("\n👋 Goodbye!")
+        if config and config.get('auto_select'):
+            # Use configuration
+            username = config['sleeper_username']
+            target_season = config.get('target_season')
+            predetermined_league_id = config.get('league_id')
+            print(f"🤖 Auto-mode: Using {username}'s league (ID: {predetermined_league_id})")
+        else:
+            # Interactive mode
+            username, target_season = get_user_input_interactive()
+            if not username:
                 return
+            predetermined_league_id = None
     
         # Initialize API clients
         print("\n🔌 Initializing API connections...")
@@ -184,10 +235,28 @@ def main():
         if not leagues:
             return
         
-        # Let user select league
-        selected_league = select_league_interactive(leagues)
-        if not selected_league:
-            return
+        # Select league (auto or interactive)
+        if predetermined_league_id:
+            # Find the predetermined league
+            selected_league = None
+            for league in leagues:
+                if league.get('league_id') == predetermined_league_id:
+                    selected_league = league
+                    break
+            
+            if not selected_league:
+                print(f"❌ League ID {predetermined_league_id} not found in your leagues!")
+                print("Available leagues:")
+                for i, league in enumerate(leagues, 1):
+                    print(f"   {i}. {league.get('name', 'Unknown')} (ID: {league.get('league_id')})")
+                return
+            
+            print(f"✅ Auto-selected: {selected_league.get('name', 'Unknown')}")
+        else:
+            # Interactive selection
+            selected_league = select_league_interactive(leagues)
+            if not selected_league:
+                return
         
         LEAGUE_ID = selected_league.get('league_id')
         SEASON = selected_league.get('season')

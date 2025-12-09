@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🏈 Fantasy Football League Analysis</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
     <style>
         * {
             margin: 0;
@@ -114,6 +115,21 @@
             text-align: center;
         }
         
+        .league-name {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            padding: 15px 30px;
+            margin: 20px auto 0 auto;
+            border-radius: 25px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 600px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2rem;
@@ -130,6 +146,7 @@
         <div class="header">
             <h1>🏈 Fantasy Football Analysis</h1>
             <p>Interactive dashboards and comprehensive league insights</p>
+            <div id="leagueName" class="league-name">Loading league information...</div>
         </div>
         
         <div class="last-updated" id="lastUpdated">
@@ -205,19 +222,32 @@
     </div>
     
     <script>
-        // Load the latest analysis timestamp
+        // Load the latest analysis timestamp and league info
         fetch('data/fantasy_analysis_latest.json')
             .then(response => response.json())
             .then(data => {
                 const timestamp = data.analysis_info?.timestamp;
+                const leagueName = data.analysis_info?.league_name;
+                
                 if (timestamp) {
                     const date = new Date(timestamp);
                     document.getElementById('lastUpdated').innerHTML = 
                         `📅 Last Updated: ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
                 }
+                
+                if (leagueName) {
+                    document.getElementById('leagueName').innerHTML = 
+                        `🏆 ${leagueName}`;
+                    console.log('League name loaded:', leagueName);
+                } else {
+                    document.getElementById('leagueName').innerHTML = '🏆 Fantasy League Dashboard';
+                    console.log('No league name found in data');
+                }
             })
             .catch(error => {
+                console.log('Error loading data:', error);
                 document.getElementById('lastUpdated').innerHTML = '📅 Analysis data loading...';
+                document.getElementById('leagueName').innerHTML = '🏆 Fantasy League Dashboard';
             });
         
         // Update links to point to the actual latest files

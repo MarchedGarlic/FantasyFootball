@@ -5,11 +5,16 @@
   "main": "index.js",
   "scripts": {
     "build": "node build.js",
-    "dev": "python main.py && npm run build"
+    "dev": "python main.py && npm run build",
+    "analysis": "python main.py",
+    "deploy": "npm run analysis && npm run build",
+    "serve": "npx http-server dist -p 3000 -o",
+    "start": "npm run build && npm run serve"
   },
   "author": "Fantasy League Manager",
   "license": "MIT",
   "devDependencies": {
-    "fs-extra": "^11.1.1"
+    "fs-extra": "^11.1.1",
+    "http-server": "^14.1.1"
   }
 }

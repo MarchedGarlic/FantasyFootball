@@ -1,12 +1,16 @@
 [build]
-  # Build command - we'll copy the latest HTML files to a dist folder
-  command = "npm run build"
+  # Build command - run analysis and build dashboard
+  command = "npm run deploy"
   
   # Directory to publish (where the HTML files will be)
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "18"
+  # Uncomment and set these for automated league selection:
+  # SLEEPER_USERNAME = "your_username"
+  # LEAGUE_ID = "your_league_id"
+  # TARGET_SEASON = "2025"
 
 # Redirect rules for better navigation
 [[redirects]]

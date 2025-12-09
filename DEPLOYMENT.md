@@ -2,19 +2,49 @@
 
 ## Quick Setup (5 minutes)
 
-### Step 1: Prepare Your Repository
+### Step 1: Configure Your League
+
+The system supports two ways to specify which league to analyze:
+
+#### Option A: Configuration File (Recommended)
+1. Copy `league_config.template.json` to `league_config.json`
+2. Edit the file with your details:
+```json
+{
+  "sleeper_username": "your_sleeper_username",
+  "target_season": 2025,
+  "league_name": "Your League Name",
+  "league_id": "your_league_id_here",
+  "auto_select": true
+}
+```
+
+To find your league ID:
+- Run `python main.py` without config first
+- Choose your league interactively
+- Copy the League ID from the output
+
+#### Option B: Environment Variables (For Netlify)
+Set these in your Netlify dashboard under Site Settings → Environment Variables:
+- `SLEEPER_USERNAME`: Your Sleeper username
+- `LEAGUE_ID`: Your league ID
+- `TARGET_SEASON`: 2025 (or desired season)
+
+### Step 2: Prepare Your Repository
 ```bash
-# Make sure your latest analysis is built
-python main.py
+# Test the configuration
+python main.py  # Should auto-select your league
+
+# Build the dashboard
 npm run build
 
 # Commit everything to GitHub
 git add .
-git commit -m "Add Netlify deployment setup"
+git commit -m "Add Netlify deployment setup with league config"
 git push
 ```
 
-### Step 2: Deploy to Netlify
+### Step 3: Deploy to Netlify
 
 #### Option A: Automatic Deployment (Recommended)
 1. Go to [netlify.com](https://netlify.com) and sign up/login
@@ -22,9 +52,15 @@ git push
 3. Choose **GitHub** and authorize Netlify
 4. Select your **FantasyFootball** repository
 5. Configure build settings:
-   - **Build command**: `npm run build`
+   - **Build command**: `npm run deploy` (runs analysis + build)
    - **Publish directory**: `dist`
+   - **Environment variables** (if not using config file):
+     - `SLEEPER_USERNAME`: your_username
+     - `LEAGUE_ID`: your_league_id  
+     - `TARGET_SEASON`: 2025
 6. Click **"Deploy site"**
+
+**Note**: First deployment may take 2-3 minutes as it runs the full analysis.
 
 #### Option B: Manual Deployment
 1. Run `npm run build` locally

@@ -14,18 +14,25 @@ This repository contains automated fantasy football analysis tools and a web das
 
 ### For League Managers
 
-1. Run the analysis:
+1. **Configure your league** (one-time setup):
    ```bash
-   python main.py
+   # Copy the template and edit with your details
+   cp league_config.template.json league_config.json
+   # Edit league_config.json with your username and league ID
    ```
 
-2. Build the web dashboard:
+2. **Run the analysis**:
+   ```bash
+   python main.py  # Will auto-use your configured league
+   ```
+
+3. **Build the web dashboard**:
    ```bash
    npm install
    npm run build
    ```
 
-3. Deploy to Netlify (see deployment guide below)
+4. **Deploy to Netlify** (see deployment guide below)
 
 ### For League Members
 
