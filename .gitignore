@@ -13,8 +13,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Configuration (contains sensitive league info)
-league_config.json
+# Configuration (sensitive league info - template provided)
+# league_config.json
 
 # Analysis outputs (keep organized folders, ignore loose files)
 fantasy_analysis_*.json
