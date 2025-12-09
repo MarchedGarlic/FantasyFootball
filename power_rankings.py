@@ -10,16 +10,22 @@ from datetime import datetime
 from typing import Dict, List
 
 
-def calculate_power_rating(scores, wins, losses, week_num):
-    """Calculate power rating using enhanced formula"""
+def calculate_power_rating(scores, wins, losses, week_num, combined_wins=None, combined_losses=None):
+    """Calculate power rating using enhanced formula with optional combined record"""
     if not scores:
         return 0.0
     
     avg_score = statistics.mean(scores)
     high_score = max(scores)
     low_score = min(scores)
-    total_games = wins + losses
-    win_percentage = wins / total_games if total_games > 0 else 0
+    
+    # Use combined record if available, otherwise fall back to regular record
+    if combined_wins is not None and combined_losses is not None:
+        total_games = combined_wins + combined_losses
+        win_percentage = combined_wins / total_games if total_games > 0 else 0
+    else:
+        total_games = wins + losses
+        win_percentage = wins / total_games if total_games > 0 else 0
     
     # Enhanced power rating formula:
     # (average × 6 + (high + low) × 2 + (win% × 200) × 2) ÷ 10
@@ -130,8 +136,17 @@ def calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup, ou
                 team_power_data[user_id]['cumulative_wins'][week] = cumulative_wins
                 team_power_data[user_id]['cumulative_losses'][week] = cumulative_losses
                 
-                # Calculate power rating through this week
-                power_rating = calculate_power_rating(cumulative_scores, cumulative_wins, cumulative_losses, week)
+                # Calculate power rating through this week using combined records if available
+                combined_wins = team_power_data[user_id].get('combined_record', {}).get('wins')
+                combined_losses = team_power_data[user_id].get('combined_record', {}).get('losses')
+                
+                if combined_wins is not None and combined_losses is not None:
+                    # Use combined record for power rating
+                    power_rating = calculate_power_rating(cumulative_scores, cumulative_wins, cumulative_losses, week, combined_wins, combined_losses)
+                else:
+                    # Fall back to regular record
+                    power_rating = calculate_power_rating(cumulative_scores, cumulative_wins, cumulative_losses, week)
+                    
                 team_power_data[user_id]['weekly_power_ratings'][week] = power_rating
     
     # Add summary statistics

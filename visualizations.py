@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Dict, List
 
 
-def create_roster_grade_plot(roster_grade_data, output_dirs=None):
+def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_data=None):
     """Create enhanced interactive Roster Grade progression plot with leaderboard and working toggles"""
     try:
         from bokeh.plotting import figure, show, output_file
@@ -79,23 +79,33 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None):
                 trend_weeks = list(range(min(weeks), 15))
                 trend_grades = model.predict(np.array(trend_weeks).reshape(-1, 1)).tolist()
             
-            # Add mock record data (would need to be calculated from actual game data)
-            running_wins = 0
-            running_losses = 0
+            # Get real record data from team_power_data if available
             regular_records = []
             combined_records = []
             
-            for j, week in enumerate(weeks):
-                # Simple win/loss simulation based on grade performance
-                if grades[j] > average_grade:
-                    running_wins += 1
-                else:
-                    running_losses += 1
-                regular_records.append(f"{running_wins}-{running_losses}")
-                combined_records.append(f"{running_wins}-{running_losses}")
+            if team_power_data and user_id in team_power_data:
+                power_data = team_power_data[user_id]
+                for week in weeks:
+                    cumulative_wins = power_data.get('cumulative_wins', {}).get(week, 0)
+                    cumulative_losses = power_data.get('cumulative_losses', {}).get(week, 0)
+                    regular_records.append(f"{cumulative_wins}-{cumulative_losses}")
+                    
+                    # Use combined record if available, otherwise fall back to regular
+                    combined_record = power_data.get('combined_record', {})
+                    if combined_record:
+                        combined_wins = combined_record.get('wins', cumulative_wins)
+                        combined_losses = combined_record.get('losses', cumulative_losses)
+                        combined_records.append(f"{combined_wins}-{combined_losses}")
+                    else:
+                        combined_records.append(f"{cumulative_wins}-{cumulative_losses}")
+            else:
+                # Fallback to placeholder records
+                for j, week in enumerate(weeks):
+                    regular_records.append(f"{j+1}-0")
+                    combined_records.append(f"{j+1}-0")
             
             team_data.append({
-                'name': data.get('manager_name', f'Manager {i+1}'),
+                'name': data.get('name', data.get('manager_name', f'Manager {i+1}')),
                 'color': colors[i % len(colors)],
                 'slope': slope,
                 'current_grade': current_grade,
@@ -103,7 +113,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None):
                 'source': ColumnDataSource(data={
                     'week': jittered_weeks,
                     'grade': grades,
-                    'team': [data.get('manager_name', f'Manager {i+1}')] * len(grades),
+                    'team': [data.get('name', data.get('manager_name', f'Manager {i+1}'))] * len(grades),
                     'original_week': weeks,
                     'original_grade': grades,
                     'avg_grade': [average_grade] * len(grades),
@@ -115,7 +125,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None):
                 'trend_source': ColumnDataSource(data={
                     'trend_week': trend_weeks,
                     'trend_grade': trend_grades,
-                    'team_name': [data.get('manager_name', f'Manager {i+1}')] * len(trend_weeks),
+                    'team_name': [data.get('name', data.get('manager_name', f'Manager {i+1}'))] * len(trend_weeks),
                     'slope': [slope] * len(trend_weeks),
                     'slope_display': [f"{slope:+.2f}" if slope != 0 else "0.00"] * len(trend_weeks)
                 }) if sklearn_available and trend_weeks else None
@@ -124,7 +134,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None):
             # Add to leaderboard data
             trend_icon = "📈" if slope > 0.1 else "📉" if slope < -0.1 else "➡️"
             leaderboard_data.append([
-                data.get('manager_name', f'Manager {i+1}'),
+                data.get('name', data.get('manager_name', f'Manager {i+1}')),
                 f"{current_grade:.2f}",
                 f"{average_grade:.2f}",
                 f"{slope:+.2f}" if sklearn_available else "N/A",
@@ -219,13 +229,14 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None):
         leaderboard_html += "</table>"
         leaderboard_div = Div(text=leaderboard_html, width=500, height=200)
         
-        # Add hover tool with detailed tooltips
+        # Add hover tool with detailed tooltips including combined record
         hover = HoverTool(tooltips=[
             ("Team", "@team"),
             ("Week", "@original_week"),
             ("Roster Grade", "@original_grade{0.1f}"),
             ("Regular Record", "@regular_record"),
             ("Combined Record", "@combined_record"),
+            ("vs Median", "@median_result"),
             ("Season Average", "@avg_grade{0.1f}"),
             ("Season High", "@high_grade{0.1f}"),
             ("Season Low", "@low_grade{0.1f}")
@@ -958,6 +969,238 @@ def create_trade_impact_visualization(combined_impacts, transactions_data=None, 
         
     except Exception as e:
         print(f"\n❌ Error creating trade impact visualization: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+def create_luck_analysis_plot(team_power_data, output_dirs=None):
+    """Create a luck analysis plot showing regular wins vs median wins with line of fairness (y=x)"""
+    try:
+        from bokeh.plotting import figure, show, output_file
+        from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS
+        from bokeh.layouts import column as bokeh_column, row as bokeh_row
+        from bokeh.palettes import Category20
+        from bokeh.models import Div, Line, Slope
+        import numpy as np
+    except ImportError:
+        print("\n⚠️  Bokeh not available - install with: pip install bokeh")
+        return None
+    
+    try:
+        # Setup output file
+        if output_dirs and 'html' in output_dirs:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            plot_filename = os.path.join(output_dirs['html'], f"luck_analysis_{timestamp}.html")
+        else:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S") 
+            plot_filename = f"luck_analysis_{timestamp}.html"
+        
+        output_file(plot_filename)
+        
+        # Prepare data for luck analysis
+        luck_data = []
+        
+        for user_id, data in team_power_data.items():
+            # Get final regular record (cumulative wins/losses for week 14)
+            cumulative_wins = data.get('cumulative_wins', {})
+            cumulative_losses = data.get('cumulative_losses', {})
+            
+            # Get week 14 record (latest week)
+            final_week = max(cumulative_wins.keys()) if cumulative_wins else 14
+            regular_wins = cumulative_wins.get(final_week, 0)
+            regular_losses = cumulative_losses.get(final_week, 0)
+            
+            # Get median record data
+            median_record = data.get('median_record', {})
+            median_wins = median_record.get('wins', 0)
+            
+            # Calculate luck metrics
+            total_games = regular_wins + regular_losses
+            expected_wins = median_wins  # How many wins they "deserved" vs median
+            luck_factor = regular_wins - expected_wins if expected_wins > 0 else 0
+            
+            # Determine team name
+            team_name = data.get('name', f'Team {user_id}')
+            
+            # Calculate luck category
+            if luck_factor > 2:
+                luck_category = "Very Lucky"
+                luck_color = "#2ca02c"  # Green
+            elif luck_factor > 0:
+                luck_category = "Lucky" 
+                luck_color = "#9fc852"  # Light green
+            elif luck_factor < -2:
+                luck_category = "Very Unlucky"
+                luck_color = "#d62728"  # Red
+            elif luck_factor < 0:
+                luck_category = "Unlucky"
+                luck_color = "#ff7f0e"  # Orange
+            else:
+                luck_category = "Fair"
+                luck_color = "#1f77b4"  # Blue
+                
+            # Calculate win percentage
+            regular_win_pct = (regular_wins / total_games * 100) if total_games > 0 else 0
+            expected_win_pct = (expected_wins / total_games * 100) if total_games > 0 else 0
+            
+            luck_data.append({
+                'team_name': team_name,
+                'regular_wins': regular_wins,
+                'median_wins': median_wins,
+                'regular_losses': regular_losses,
+                'luck_factor': luck_factor,
+                'luck_category': luck_category,
+                'luck_color': luck_color,
+                'regular_win_pct': regular_win_pct,
+                'expected_win_pct': expected_win_pct,
+                'total_games': total_games,
+                'record_display': f"{regular_wins}-{regular_losses}"
+            })
+        
+        # Sort by luck factor for display
+        luck_data.sort(key=lambda x: x['luck_factor'], reverse=True)
+        
+        # Create Bokeh data source
+        source = ColumnDataSource(data={
+            'team_name': [d['team_name'] for d in luck_data],
+            'regular_wins': [d['regular_wins'] for d in luck_data],
+            'median_wins': [d['median_wins'] for d in luck_data],
+            'regular_losses': [d['regular_losses'] for d in luck_data],
+            'luck_factor': [d['luck_factor'] for d in luck_data],
+            'luck_category': [d['luck_category'] for d in luck_data],
+            'luck_color': [d['luck_color'] for d in luck_data],
+            'regular_win_pct': [d['regular_win_pct'] for d in luck_data],
+            'expected_win_pct': [d['expected_win_pct'] for d in luck_data],
+            'total_games': [d['total_games'] for d in luck_data],
+            'record_display': [d['record_display'] for d in luck_data]
+        })
+        
+        # Calculate axis ranges
+        max_wins = max(max([d['regular_wins'] for d in luck_data]), max([d['median_wins'] for d in luck_data]))
+        axis_max = max_wins + 1
+        
+        # Create figure
+        p = figure(
+            title="Fantasy Football Luck Analysis: Regular Wins vs Median Wins",
+            x_axis_label="Median Wins (Skill-Based Performance)", 
+            y_axis_label="Regular Wins (Head-to-Head Record)",
+            width=900, height=700,
+            x_range=(0, axis_max),
+            y_range=(0, axis_max)
+        )
+        
+        # Add line of fairness (y = x)
+        p.line([0, axis_max], [0, axis_max], 
+               line_width=3, line_color="black", line_dash="dashed",
+               legend_label="Line of Fairness (y=x)", alpha=0.7)
+        
+        # Add scatter plot points
+        scatter = p.scatter('median_wins', 'regular_wins', source=source,
+                          size=15, color='luck_color', alpha=0.8,
+                          line_color='white', line_width=2)
+        
+        # Add hover tool
+        hover = HoverTool(tooltips=[
+            ("Team", "@team_name"),
+            ("Regular Record", "@record_display"),
+            ("Regular Wins", "@regular_wins"),
+            ("Median Wins", "@median_wins"),
+            ("Luck Factor", "@luck_factor wins"),
+            ("Luck Category", "@luck_category"),
+            ("Regular Win %", "@regular_win_pct{0.1f}%"),
+            ("Expected Win %", "@expected_win_pct{0.1f}%")
+        ])
+        p.add_tools(hover)
+        
+        # Create explanation div
+        explanation_div = Div(
+            text="""
+            <h3 style="margin:5px 0;">Luck Analysis Explanation</h3>
+            <p style="margin:2px;"><b>Line of Fairness (y=x):</b> Where teams should be if wins were purely skill-based</p>
+            <p style="margin:2px;"><b>Above the Line:</b> Teams with more regular wins than expected (lucky)</p>
+            <p style="margin:2px;"><b>Below the Line:</b> Teams with fewer regular wins than expected (unlucky)</p>
+            <p style="margin:2px;"><b>Median Wins:</b> Theoretical wins if you played against the weekly league median</p>
+            <p style="margin:2px;"><b>Regular Wins:</b> Actual head-to-head wins from your schedule</p>
+            <p style="margin:2px;"><b>Color Coding:</b> Green (Lucky), Blue (Fair), Orange (Unlucky), Red (Very Unlucky)</p>
+            <p style="margin:10px 0px 2px 0px; font-style: italic; color: #666;"><b>Note:</b> This analysis focuses on luck related to matchups and scheduling. It does not factor in injuries or other external circumstances that may affect team performance.</p>
+            """,
+            width=900, height=170,
+            visible=False
+        )
+        
+        # Create leaderboard
+        leaderboard_html = "<h3>Luck Leaderboard</h3><table style='border-collapse: collapse; width: 100%; font-size: 12px;'>"
+        leaderboard_html += "<tr style='background-color: #f0f0f0; font-weight: bold;'>"
+        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>#</th>"
+        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Team</th>"
+        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Record</th>"
+        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Median Wins</th>"
+        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Luck Factor</th>"
+        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Category</th>"
+        leaderboard_html += "</tr>"
+        
+        for i, data in enumerate(luck_data):
+            row_color = "#e8f5e8" if data['luck_factor'] > 0 else "#ffeaea" if data['luck_factor'] < 0 else "#f8f8f8"
+            leaderboard_html += f"<tr style='background-color: {row_color};'>"
+            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{i+1}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{data['team_name']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{data['record_display']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{data['median_wins']}</td>"
+            luck_sign = "+" if data['luck_factor'] > 0 else ""
+            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{luck_sign}{data['luck_factor']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{data['luck_category']}</td>"
+            leaderboard_html += "</tr>"
+        
+        leaderboard_html += "</table>"
+        
+        leaderboard_div = Div(
+            text=leaderboard_html,
+            width=450, height=400
+        )
+        
+        # Create buttons
+        explanation_button = Button(label="Show/Hide Explanation", button_type="light", width=200)
+        explanation_button.js_on_event("button_click", CustomJS(
+            args=dict(explanation=explanation_div),
+            code="explanation.visible = !explanation.visible;"
+        ))
+        
+        reset_button = Button(label="Reset Zoom", button_type="warning", width=120)
+        reset_button.js_on_event("button_click", CustomJS(
+            args=dict(plot=p),
+            code=f"""
+            plot.x_range.start = 0;
+            plot.x_range.end = {axis_max};
+            plot.y_range.start = 0;
+            plot.y_range.end = {axis_max};
+            """
+        ))
+        
+        # Layout
+        buttons_row = bokeh_row(explanation_button, reset_button, spacing=10)
+        main_row = bokeh_row(p, leaderboard_div, spacing=20)
+        layout = bokeh_column(
+            buttons_row,
+            explanation_div,
+            main_row,
+            spacing=10
+        )
+        
+        show(layout)
+        
+        print(f"\n🍀 Luck Analysis plot saved as: {plot_filename}")
+        print("🎮 Interactive Features:")
+        print("   • Hover over points for detailed luck metrics")
+        print("   • Points above line = Lucky teams")
+        print("   • Points below line = Unlucky teams") 
+        print("   • Leaderboard shows luck ranking")
+        print("   • Show/Hide explanation for methodology")
+        
+        return plot_filename
+        
+    except Exception as e:
+        print(f"\n❌ Error creating luck analysis: {e}")
         import traceback
         traceback.print_exc()
         return None
