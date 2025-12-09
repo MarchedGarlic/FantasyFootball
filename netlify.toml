@@ -1,12 +1,13 @@
 [build]
   # Build command - run analysis and build dashboard
-  command = "npm run deploy"
+  command = "pip install -r requirements.txt && npm run deploy"
   
   # Directory to publish (where the HTML files will be)
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "18"
+  PYTHON_VERSION = "3.9"
   # Uncomment and set these for automated league selection:
   # SLEEPER_USERNAME = "your_username"
   # LEAGUE_ID = "your_league_id"
