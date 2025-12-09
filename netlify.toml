@@ -1,0 +1,32 @@
+[build]
+  # Build command - we'll copy the latest HTML files to a dist folder
+  command = "npm run build"
+  
+  # Directory to publish (where the HTML files will be)
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Redirect rules for better navigation
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+# Handle SPA routing if needed
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers for better caching
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/*.json"
+  [headers.values]
+    Cache-Control = "public, max-age=7200"

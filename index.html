@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏈 Fantasy Football League Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .card-description {
+            opacity: 0.9;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        .card-button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .card-button:hover {
+            background: #ee5a5a;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+        
+        .last-updated {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏈 Fantasy Football Analysis</h1>
+            <p>Interactive dashboards and comprehensive league insights</p>
+        </div>
+        
+        <div class="last-updated" id="lastUpdated">
+            📅 Loading analysis timestamp...
+        </div>
+        
+        <div class="dashboard-grid">
+            <div class="dashboard-card" onclick="window.open('power_rating_interactive_latest.html', '_blank')">
+                <div class="card-icon">⚡</div>
+                <div class="card-title">Power Rankings</div>
+                <div class="card-description">
+                    Track team performance over time with interactive power rating progression charts. 
+                    See how each team's strength has evolved throughout the season.
+                </div>
+                <a href="#" class="card-button">View Power Rankings</a>
+            </div>
+            
+            <div class="dashboard-card" onclick="window.open('roster_grades_interactive_latest.html', '_blank')">
+                <div class="card-icon">📊</div>
+                <div class="card-title">Roster Grades</div>
+                <div class="card-description">
+                    Analyze roster quality and talent distribution across all teams. 
+                    Compare player values and roster construction strategies.
+                </div>
+                <a href="#" class="card-button">View Roster Analysis</a>
+            </div>
+            
+            <div class="dashboard-card" onclick="window.open('trade_analysis_latest.html', '_blank')">
+                <div class="card-icon">🔄</div>
+                <div class="card-title">Trade Analysis</div>
+                <div class="card-description">
+                    Deep dive into all league trades with impact scoring and winner/loser analysis. 
+                    See who made the best and worst moves.
+                </div>
+                <a href="#" class="card-button">View Trade Impact</a>
+            </div>
+            
+            <div class="dashboard-card" onclick="window.open('waiver_analysis_latest.html', '_blank')">
+                <div class="card-icon">📈</div>
+                <div class="card-title">Waiver Wire Analysis</div>
+                <div class="card-description">
+                    Track waiver wire pickups and free agent acquisitions. 
+                    Identify the best and worst waiver claims of the season.
+                </div>
+                <a href="#" class="card-button">View Waiver Activity</a>
+            </div>
+            
+            <div class="dashboard-card" onclick="window.open('manager_grades_latest.html', '_blank')">
+                <div class="card-icon">🏆</div>
+                <div class="card-title">Manager Report Cards</div>
+                <div class="card-description">
+                    Comprehensive manager performance grades based on trades, waivers, and overall strategy. 
+                    See who's managing their team most effectively.
+                </div>
+                <a href="#" class="card-button">View Manager Grades</a>
+            </div>
+            
+            <div class="dashboard-card" onclick="window.open('reports/worst_trades_report_latest.txt', '_blank')">
+                <div class="card-icon">📝</div>
+                <div class="card-title">Trade Report</div>
+                <div class="card-description">
+                    Detailed text report of the worst trades in your league with impact analysis. 
+                    Perfect for roasting your leaguemates!
+                </div>
+                <a href="#" class="card-button">View Full Report</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>💡 All visualizations are interactive - hover, click, and explore!</p>
+            <p>📱 Mobile-friendly dashboards for on-the-go analysis</p>
+        </div>
+    </div>
+    
+    <script>
+        // Load the latest analysis timestamp
+        fetch('data/fantasy_analysis_latest.json')
+            .then(response => response.json())
+            .then(data => {
+                const timestamp = data.analysis_info?.timestamp;
+                if (timestamp) {
+                    const date = new Date(timestamp);
+                    document.getElementById('lastUpdated').innerHTML = 
+                        `📅 Last Updated: ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('lastUpdated').innerHTML = '📅 Analysis data loading...';
+            });
+        
+        // Update links to point to the actual latest files
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find all HTML files and update links
+            const cards = document.querySelectorAll('.dashboard-card');
+            cards.forEach(card => {
+                const button = card.querySelector('.card-button');
+                if (button) {
+                    card.addEventListener('click', function() {
+                        const onclick = this.getAttribute('onclick');
+                        if (onclick) {
+                            eval(onclick);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "fantasy-football-analysis",
+  "version": "1.0.0",
+  "description": "Fantasy Football League Analysis Dashboard",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "python main.py && npm run build"
+  },
+  "author": "Fantasy League Manager",
+  "license": "MIT",
+  "devDependencies": {
+    "fs-extra": "^11.1.1"
+  }
+}
