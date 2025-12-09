@@ -8,7 +8,7 @@
 [build.environment]
   NODE_VERSION = "18"
   PYTHON_VERSION = "3.9"
-  # Uncomment and set these for automated league selection:
+  # Set these environment variables in Netlify dashboard:
   # SLEEPER_USERNAME = "your_username"
   # LEAGUE_ID = "your_league_id"
   # TARGET_SEASON = "2025"
