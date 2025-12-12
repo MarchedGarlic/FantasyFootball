@@ -42,7 +42,7 @@ def create_roster_grade_html():
         
         from .visualizations import create_roster_grade_plot
         create_roster_grade_plot(sample_roster_data)
-        print("✅ Roster grade HTML created successfully")
+        print("Roster grade HTML created successfully")
         
     except Exception as e:
         print(f"❌ Error creating roster grade HTML: {e}")
@@ -104,17 +104,17 @@ def create_manager_grade_html():
         
         from .trade_analysis import create_manager_grade_visualization
         create_manager_grade_visualization(sample_manager_data)
-        print("✅ Manager grade HTML created successfully")
+        print("Manager grade HTML created successfully")
         
     except Exception as e:
         print(f"❌ Error creating manager grade HTML: {e}")
 
 if __name__ == "__main__":
     print("🔧 Generating missing HTML files...")
-    print("\n📊 Creating Roster Grade visualization...")
+    print("\nCreating Roster Grade visualization...")
     create_roster_grade_html()
     
     print("\n👥 Creating Manager Grade visualization...")
     create_manager_grade_html()
     
-    print("\n🎉 Done! Check for the new HTML files.")
+    print("\nDone! Check for the new HTML files.")

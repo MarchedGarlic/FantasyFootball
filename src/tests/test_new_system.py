@@ -16,7 +16,7 @@ def test_analysis_functions():
             print_trade_analysis_results
         )
         
-        print("✅ All comprehensive analysis functions imported successfully!")
+        print("All comprehensive analysis functions imported successfully!")
         
         # Test with empty data to make sure functions handle no data gracefully
         print("\n🧪 Testing with empty data...")
@@ -50,10 +50,10 @@ def test_analysis_functions():
         print(f"   • Manager grades: {len(manager_grades)} grades")
         
         # Test print function
-        print("\n📊 Testing analysis results printing...")
+        print("\nTesting analysis results printing...")
         print_trade_analysis_results(trade_impacts, waiver_impacts)
         
-        print("\n🎉 All tests passed! The comprehensive analysis system is ready.")
+        print("\nAll tests passed! The comprehensive analysis system is ready.")
         
         return True
         
@@ -71,11 +71,11 @@ if __name__ == "__main__":
     success = test_analysis_functions()
     
     if success:
-        print("\n✅ System ready for full fantasy analysis!")
+        print("\nSystem ready for full fantasy analysis!")
         print("\nNew Features Available:")
-        print("   🔄 Pure Trade Analysis - Real player movements only")
-        print("   📊 Waiver Wire Analysis - Pickup impact scoring")  
-        print("   🏆 Manager Performance Grades - Comprehensive evaluation")
-        print("   📈 Enhanced Visualizations - Separate plots for each analysis type")
+        print("   Pure Trade Analysis - Real player movements only")
+        print("   Waiver Wire Analysis - Pickup impact scoring")  
+        print("   Manager Performance Grades - Comprehensive evaluation")
+        print("   Enhanced Visualizations - Separate plots for each analysis type")
     else:
         print("\n❌ System has issues that need to be fixed")

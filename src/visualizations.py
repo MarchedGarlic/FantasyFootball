@@ -405,8 +405,8 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         # Show the interactive plot
         show(layout)
         
-        print(f"\n📊 Interactive Roster Grade plot saved as: {plot_filename}")
-        print("\n🎮 Interactive Features:")
+        print(f"\nInteractive Roster Grade plot saved as: {plot_filename}")
+        print("\nInteractive Features:")
         print("   • 'Toggle All Teams' button: Show/hide all team roster grade lines")
         if sklearn_available:
             print("   • 'Toggle All Trends' button: Show/hide all trend lines")
@@ -415,7 +415,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         print("   • Hover over points for detailed information")
         print("   • Pan and zoom to explore the data")
         
-        print("\n📈 Roster Grade Analysis:")
+        print("\nRoster Grade Analysis:")
         print("   • Formula: Based on ESPN weekly stat leaders (QB top 30, RB top 60, WR/TE top 80)")
         print("   • Grades starters + bench with position tiers and bonus points")
         print("   • Points show roster talent level for each week")
@@ -432,7 +432,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
 
 def _create_roster_grade_text_analysis(roster_grade_data):
     """Fallback text analysis for roster grades"""
-    print("\n📈 Roster Grade Analysis (Text Format):")
+    print("\nRoster Grade Analysis (Text Format):")
     print(f"{'Team':<18} {'Current':<8} {'Average':<8} {'Trend':<10} {'High':<6} {'Low':<6}")
     print("-" * 65)
     
@@ -764,14 +764,14 @@ def create_combined_analysis_plot(team_power_data, roster_grade_data, output_dir
         layout = column(explanation_div, p1, button_row)
         show(layout)
         
-        print(f"\n📊 Combined analysis plot saved as: {plot_filename}")
-        print("\n🎮 Interactive Features:")
+        print(f"\nCombined analysis plot saved as: {plot_filename}")
+        print("\nInteractive Features:")
         print("   • Left Legend: Click to toggle Power Rating lines (circles + solid)")
         print("   • Right Legend: Click to toggle Roster Grade lines (squares + dashed)")
         print("   • Hover over points for detailed information")
         print("   • Pan and zoom to explore correlations")
         
-        print("\n📊 Analysis Notes:")
+        print("\nAnalysis Notes:")
         print("   • Power Ratings (left axis): Performance-based with win bonus")
         print("   • Roster Grades (right axis): Talent-based using ESPN rankings")
         print("   • Look for correlation patterns between the two metrics")
@@ -957,8 +957,8 @@ def create_trade_impact_visualization(combined_impacts, transactions_data=None, 
         
         show(p)
         
-        print(f"\n📊 Enhanced Trade Impact plot saved as: {plot_filename}")
-        print("🎮 Interactive Features:")
+        print(f"\nEnhanced Trade Impact plot saved as: {plot_filename}")
+        print("Interactive Features:")
         print("   • Legend: Click 'Trades' or 'Waivers/FA' to toggle visibility")
         print("   • Hover over points for detailed transaction information")
         print("   • Pan and zoom to explore the data")
@@ -1189,8 +1189,8 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         
         show(layout)
         
-        print(f"\n🍀 Luck Analysis plot saved as: {plot_filename}")
-        print("🎮 Interactive Features:")
+        print(f"\nLuck Analysis plot saved as: {plot_filename}")
+        print("Interactive Features:")
         print("   • Hover over points for detailed luck metrics")
         print("   • Points above line = Lucky teams")
         print("   • Points below line = Unlucky teams") 
@@ -1356,8 +1356,8 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         
         show(layout)
         
-        print(f"\n🏆 Power Ranking Leaderboard saved as: {plot_filename}")
-        print("🎯 Features:")
+        print(f"\nPower Ranking Leaderboard saved as: {plot_filename}")
+        print("Features:")
         print("   • Current power ratings with color-coded rankings")
         print("   • Trophy emojis for top 3 positions")
         print("   • Head-to-head and combined records")

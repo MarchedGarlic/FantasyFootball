@@ -33,14 +33,14 @@ def test_athlete_refs():
                 athlete_ref = first_leader.get('athlete', {}).get('$ref')
                 
                 if athlete_ref:
-                    print(f"🏈 Fetching athlete details from: {athlete_ref}")
+                    print(f"Fetching athlete details from: {athlete_ref}")
                     
                     # Fetch athlete details
                     athlete_response = session.get(athlete_ref)
                     
                     if athlete_response.status_code == 200:
                         athlete_data = athlete_response.json()
-                        print("✅ Athlete data fetched successfully!")
+                        print("Athlete data fetched successfully!")
                         print(f"Keys: {list(athlete_data.keys())}")
                         
                         # Print athlete info

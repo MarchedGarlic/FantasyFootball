@@ -67,7 +67,7 @@ def test_manager_grades():
         sample_power_data, sample_roster_data, sample_user_lookup
     )
     
-    print(f"\n📊 Manager Grades Generated: {len(manager_grades)}")
+    print(f"\nManager Grades Generated: {len(manager_grades)}")
     
     for manager_id, data in manager_grades.items():
         print(f"   • {data['name']}: {data['overall_grade']:.1f}/10")
@@ -80,7 +80,7 @@ def test_manager_grades():
         try:
             plot_file = create_manager_grade_visualization(manager_grades)
             if plot_file:
-                print(f"   ✅ Visualization created: {plot_file}")
+                print(f"   Visualization created: {plot_file}")
             else:
                 print("   ⚠️  Visualization creation skipped (missing Bokeh)")
         except Exception as e:
@@ -89,14 +89,14 @@ def test_manager_grades():
     return manager_grades
 
 if __name__ == "__main__":
-    print("🏆 Testing Manager Grade System")
+    print("Testing Manager Grade System")
     print("=" * 50)
     
     grades = test_manager_grades()
     
     if grades:
-        print("\n✅ Manager Grade System Working!")
-        print("\n📋 Features Tested:")
+        print("\nManager Grade System Working!")
+        print("\nFeatures Tested:")
         print("   • Comprehensive grading formula")
         print("   • Weekly progression tracking")
         print("   • Record simulation")

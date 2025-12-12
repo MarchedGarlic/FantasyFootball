@@ -17,12 +17,12 @@ def test_core_api_structure():
     
     if response.status_code == 200:
         data = response.json()
-        print("✅ API Response successful!")
+        print("API Response successful!")
         print(f"Keys: {list(data.keys())}")
         
         if 'categories' in data:
             categories = data['categories']
-            print(f"\n📊 Found {len(categories)} categories:")
+            print(f"\nFound {len(categories)} categories:")
             
             for i, category in enumerate(categories[:5]):  # Show first 5 categories
                 print(f"\n{i+1}. {category.get('displayName', 'Unknown')}")

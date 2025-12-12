@@ -42,7 +42,7 @@ def calculate_power_rating(scores, wins, losses, week_num, combined_wins=None, c
 
 def calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup, output_dirs=None):
     """Calculate power ratings for each team week by week"""
-    print("📊 Calculating weekly power rating progression...")
+    print("Calculating weekly power rating progression...")
     
     # Initialize team data structure
     team_power_data = {}
@@ -287,6 +287,9 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
                 'name': data['name'],
                 'color': colors[i % len(colors)],
                 'slope': slope,
+                'current_rating': ratings[-1] if ratings else 0,  # Latest rating
+                'record': regular_records[-1] if regular_records else "0-0",  # Latest record
+                'avg_score': avg_scores[-1] if avg_scores else 0,  # Latest average score
                 'source': ColumnDataSource(data={
                     'week': jittered_weeks,
                     'rating': ratings,
@@ -508,19 +511,71 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         p.xaxis.axis_label_text_font_size = "12pt"
         p.yaxis.axis_label_text_font_size = "12pt"
         
+        # Create leaderboard HTML
+        leaderboard_html = "<h3>Power Rankings Leaderboard</h3>"
+        leaderboard_html += "<table style='border-collapse: collapse; width: 100%; font-size: 12px;'>"
+        leaderboard_html += "<tr style='background-color: #f0f0f0; font-weight: bold;'>"
+        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Rank</th>"
+        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Team</th>"
+        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Current Rating</th>"
+        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Record</th>"
+        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Avg Score</th>"
+        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Trend</th>"
+        leaderboard_html += "</tr>"
+        
+        # Sort teams by current power rating for leaderboard
+        sorted_for_leaderboard = sorted(team_data, key=lambda x: x['current_rating'], reverse=True)
+        
+        for i, team in enumerate(sorted_for_leaderboard):
+            # Add trophy emojis for top 3
+            rank_display = f"🥇 {i+1}" if i == 0 else f"🥈 {i+1}" if i == 1 else f"🥉 {i+1}" if i == 2 else str(i+1)
+            
+            # Color code based on ranking
+            if i < 3:
+                row_color = "#fff3cd"  # Gold for top 3
+            elif i < 6:
+                row_color = "#d1ecf1"  # Light blue for middle
+            else:
+                row_color = "#f8f9fa"  # Light gray for bottom
+            
+            trend_icon = "📈" if team['slope'] > 0.5 else "📉" if team['slope'] < -0.5 else "➡️"
+            trend_text = f"{trend_icon} {team['slope']:+.1f}"
+            
+            leaderboard_html += f"<tr style='background-color: {row_color};'>"
+            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold;'>{rank_display}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{team['name']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold;'>{team['current_rating']:.1f}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{team['record']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{team['avg_score']:.1f}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{trend_text}</td>"
+            leaderboard_html += "</tr>"
+        
+        leaderboard_html += "</table>"
+        leaderboard_html += "<p style='font-size: 10px; color: #666; margin-top: 10px;'>"
+        leaderboard_html += "Current Rating = Latest week's power rating | "
+        leaderboard_html += "Trend = Weekly rating change direction and slope"
+        leaderboard_html += "</p>"
+        
+        leaderboard_div = Div(
+            text=leaderboard_html,
+            width=450, height=500
+        )
+
         # Create layout with controls
         if sklearn_available and trend_legend_items:
             controls = row(toggle_data_button, toggle_trends_button)
         else:
             controls = row(toggle_data_button)
         
-        layout = column(explanation_div, p, controls)
+        # Create main content row with chart and leaderboard side by side
+        main_row = row(p, leaderboard_div, spacing=20)
+        layout = column(explanation_div, main_row, controls)
         
         # Show the interactive plot
         show(layout)
         
-        print(f"\n📊 Interactive Power Rating plot saved as: {plot_filename}")
-        print("\n🎮 Interactive Features:")
+        print(f"\nInteractive Power Rating plot saved as: {plot_filename}")
+        print("\nInteractive Features:")
         print("   • 'All Teams' button: Show/hide all team power rating lines")
         if sklearn_available and trend_legend_items:
             print("   • 'All Trends' button: Show/hide all trend lines")
@@ -530,7 +585,7 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         print("   • Hover over points for detailed information")
         print("   • Pan and zoom to explore the data")
         
-        print("\n📈 Power Rating Analysis:")
+        print("\nPower Rating Analysis:")
         print("   • Formula: (avg×6 + (high+low)×2 + (win%×200)×2) ÷ 10")
         print("   • Emphasizes consistent performance with win bonus")
         print("   • Points show cumulative performance through each week")
@@ -546,7 +601,7 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
 
 def _create_power_rating_text_analysis(team_power_data):
     """Fallback text analysis for power ratings"""
-    print("\n📈 Power Rating Analysis (Text Format):")
+    print("\nPower Rating Analysis (Text Format):")
     print(f"{'Team':<18} {'Current':<8} {'Average':<8} {'Trend':<10} {'High':<6} {'Low':<6}")
     print("-" * 65)
     

@@ -22,7 +22,7 @@ def calculate_median_records(all_weekly_matchups: Dict, rosters: List, user_look
     Returns:
         Dictionary with regular, median, and combined records for each team
     """
-    print("\n📊 Calculating Median-Based Records...")
+    print("\nCalculating Median-Based Records...")
     
     # Initialize team records
     team_records = {}
@@ -152,7 +152,7 @@ def calculate_median_records(all_weekly_matchups: Dict, rosters: List, user_look
 
 def print_record_summary(team_records: Dict):
     """Print a summary of all team records"""
-    print("\n📋 RECORD SUMMARY")
+    print("\nRECORD SUMMARY")
     print("="*80)
     print(f"{'Team':<20} {'Regular':<10} {'vs Median':<10} {'Combined':<10} {'Combined %':<12}")
     print("="*80)
@@ -180,7 +180,7 @@ def print_record_summary(team_records: Dict):
 
 def analyze_median_performance(team_records: Dict):
     """Analyze which teams perform best vs median"""
-    print("\n📈 MEDIAN PERFORMANCE ANALYSIS")
+    print("\nMEDIAN PERFORMANCE ANALYSIS")
     print("="*60)
     
     median_performers = []
@@ -213,7 +213,7 @@ def analyze_median_performance(team_records: Dict):
     for i, team in enumerate(median_performers[-3:], 1):
         print(f"  {i}. {team['name']}: {team['median_record']} ({team['median_pct']:.1%})")
     
-    print("\n📊 Biggest Outperformers vs Regular Record:")
+    print("\nBiggest Outperformers vs Regular Record:")
     outperformers = sorted(median_performers, key=lambda x: x['difference'], reverse=True)
     for i, team in enumerate(outperformers[:3], 1):
         diff = team['difference']
@@ -239,7 +239,7 @@ def main():
             
             league_id = config['league_id']
             season = config.get('season', 2025)
-            print(f"📋 Using league: {config['league_name']} (ID: {league_id})")
+            print(f"Using league: {config['league_name']} (ID: {league_id})")
         else:
             print("❌ No league configuration found. Please run main.py first.")
             return
@@ -248,7 +248,7 @@ def main():
         sleeper_api = SleeperAPI()
         
         # Get league data
-        print("\n📡 Fetching league data...")
+        print("\nFetching league data...")
         rosters = sleeper_api.get_league_rosters(league_id)
         users = sleeper_api.get_league_users(league_id)
         
@@ -260,7 +260,7 @@ def main():
         user_lookup = {user['user_id']: user for user in users}
         
         # Get weekly matchups
-        print("📅 Fetching weekly matchups...")
+        print("Fetching weekly matchups...")
         all_weekly_matchups = {}
         max_week = 14
         
@@ -296,8 +296,8 @@ def main():
             
             json.dump(json_data, f, indent=2)
         
-        print(f"\n💾 Results saved to: {output_file}")
-        print("✅ Median record calculation complete!")
+        print(f"\nResults saved to: {output_file}")
+        print("Median record calculation complete!")
         
     except Exception as e:
         print(f"❌ Error: {e}")

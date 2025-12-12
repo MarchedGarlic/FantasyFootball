@@ -36,8 +36,16 @@ async function build() {
       const htmlFiles = await fs.readdir(htmlDir);
       for (const file of htmlFiles) {
         if (file.endsWith('.html')) {
-          const baseName = file.replace(`_${timestamp}.html`, '');
-          const newName = `${baseName}_latest.html`;
+          let newName;
+          // Handle files with their own timestamps (like power_ranking_leaderboard)
+          if (file.includes('power_ranking_leaderboard')) {
+            newName = 'power_ranking_leaderboard_latest.html';
+          } else if (file.includes('luck_analysis')) {
+            newName = 'luck_analysis_latest.html';
+          } else {
+            const baseName = file.replace(`_${timestamp}.html`, '');
+            newName = `${baseName}_latest.html`;
+          }
           await fs.copy(path.join(htmlDir, file), path.join('dist', newName));
           fileMapping[file] = newName;
           console.log(`✓ Copied ${file} → ${newName}`);

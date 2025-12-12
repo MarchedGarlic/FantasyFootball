@@ -43,7 +43,7 @@ class FantasyAnalyzer:
     
     def initialize_rankings(self, season="2025"):
         """Initialize player rankings from ESPN data"""
-        print(f"🏈 Initializing ESPN player rankings for {season} season...")
+        print(f"Initializing ESPN player rankings for {season} season...")
         self.nfl_leaders = self.espn_api.get_nfl_leaders(season)
         self._build_position_rankings()
     

@@ -30,7 +30,7 @@ def get_player_name_from_id(player_id, all_players=None):
 
 def analyze_real_trades_only(transactions_data, team_power_data, roster_grade_data, user_lookup, roster_to_manager, all_players=None, output_dirs=None):
     """Analyze only actual trades (not waivers) with detailed player movement tracking"""
-    print("🔄 Analyzing Real Trade Impacts Only...")
+    print("Analyzing Real Trade Impacts Only...")
     
     trade_impacts = []
     
@@ -50,7 +50,7 @@ def analyze_real_trades_only(transactions_data, team_power_data, roster_grade_da
             if transaction.get('type') != 'trade':
                 continue
                 
-            print(f"\n   📋 Analyzing Trade in Week {week_num}:")
+            print(f"\n   Analyzing Trade in Week {week_num}:")
             
             adds = transaction.get('adds', {}) or {}
             drops = transaction.get('drops', {}) or {}
@@ -118,14 +118,14 @@ def analyze_real_trades_only(transactions_data, team_power_data, roster_grade_da
                     'normalized_record': impact_results['normalized_record']
                 })
                 
-                print(f"     📈 {trade_info['name']}: Power {impact_results['power_impact']:+.1f}, Grade {impact_results['grade_impact']:+.1f}, Record {impact_results['record_impact']:+.1f}, Combined {impact_results['combined_impact']:+.1f}")
+                print(f"     {trade_info['name']}: Power {impact_results['power_impact']:+.1f}, Grade {impact_results['grade_impact']:+.1f}, Record {impact_results['record_impact']:+.1f}, Combined {impact_results['combined_impact']:+.1f}")
     
     return trade_impacts
 
 
 def analyze_waiver_pickups(transactions_data, team_power_data, roster_grade_data, user_lookup, roster_to_manager, all_players=None, output_dirs=None):
     """Analyze waiver wire and free agent pickups with impact scoring"""
-    print("\n📊 Analyzing Waiver Wire & Free Agent Impacts...")
+    print("\nAnalyzing Waiver Wire & Free Agent Impacts...")
     
     waiver_impacts = []
     
@@ -198,7 +198,7 @@ def analyze_waiver_pickups(transactions_data, team_power_data, roster_grade_data
                             'transaction_type': transaction_type
                         })
     
-    print(f"     📊 Analyzed {len(waiver_impacts)} waiver/FA transactions")
+    print(f"     Analyzed {len(waiver_impacts)} waiver/FA transactions")
     return waiver_impacts
 
 
@@ -321,7 +321,7 @@ def calculate_manager_grade_impact(manager_id, week_num, roster_grade_data, wind
 
 def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup, matchup_data=None):
     """Calculate comprehensive manager grades based on trades, waivers, and lineup decisions"""
-    print("\n🏆 Calculating Manager Performance Grades...")
+    print("\nCalculating Manager Performance Grades...")
     
     manager_grades = {}
     
@@ -508,7 +508,7 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
                 data['lineup_performance'] = sum(lineup_scores[manager_id]) / len(lineup_scores[manager_id])
         
         manager_name = data.get('name', manager_id)  # Get name or use ID as fallback
-        print(f"     📋 {manager_name}: Overall Grade {data['overall_grade']:.1f}/10 " +
+        print(f"     {manager_name}: Overall Grade {data['overall_grade']:.1f}/10 " +
               f"(Record: {data['record']['wins']}-{data['record']['losses']})")
     
     return manager_grades
@@ -654,7 +654,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
             f.write(f"   Gave Up: {trade['gave_up']}\n")
             f.write(f"   Trading Partner: {trade['other_manager']}\n")
     
-    print(f"\n📝 Worst trades report saved as: {worst_trades_filename}")
+    print(f"\nWorst trades report saved as: {worst_trades_filename}")
     
     # Calculate leaderboard statistics
     manager_stats = {}
@@ -911,9 +911,9 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     p.title.align = "center"
     
     show(layout)
-    print(f"\n📊 Enhanced trade analysis plot saved as: {plot_filename}")
-    print("📈 Features: Individual transactions, clean hover data, worst trades report")
-    print("🎮 Interactive: Manager legend, explanation panel, data toggles")
+    print(f"\nEnhanced trade analysis plot saved as: {plot_filename}")
+    print("Features: Individual transactions, clean hover data, worst trades report")
+    print("Interactive: Manager legend, explanation panel, data toggles")
     return plot_filename
 
 
@@ -1262,9 +1262,9 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     p.title.align = "center"
     
     show(layout)
-    print(f"\n📊 Waiver analysis plot saved as: {plot_filename}")
-    print("📈 Features: Individual transactions, clean hover data, best pickups leaderboard")
-    print("🎮 Interactive: Manager legend, explanation panel, data toggles")
+    print(f"\nWaiver analysis plot saved as: {plot_filename}")
+    print("Features: Individual transactions, clean hover data, best pickups leaderboard")
+    print("Interactive: Manager legend, explanation panel, data toggles")
     return plot_filename
 
 
@@ -1626,9 +1626,9 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     
     show(layout)
     
-    print(f"\n📊 Manager grades analysis saved as: {plot_filename}")
-    print(f"   📈 Features: Enhanced calculations, leaderboard, toggleable explanation")
-    print(f"   🎮 Interactive: Working toggles, proper hover data, trend analysis") 
+    print(f"\nManager grades analysis saved as: {plot_filename}")
+    print(f"   Features: Enhanced calculations, leaderboard, toggleable explanation")
+    print(f"   Interactive: Working toggles, proper hover data, trend analysis") 
     return plot_filename
 
 
@@ -1641,17 +1641,17 @@ def calculate_combined_trade_impact(trade_impacts, roster_grade_impacts=None):
 def print_trade_analysis_results(trade_impacts, waiver_impacts=None, combined_impacts=None):
     """Print comprehensive analysis results"""
     print("\n" + "="*65)
-    print("📊 COMPREHENSIVE FANTASY ANALYSIS RESULTS")
+    print("COMPREHENSIVE FANTASY ANALYSIS RESULTS")
     print("="*65)
     
     if trade_impacts:
-        print(f"\n📈 Trade Analysis Summary:")
+        print(f"\nTrade Analysis Summary:")
         print(f"   • Total Real Trades Analyzed: {len(trade_impacts)}")
         print(f"   • Average Trade Impact: {statistics.mean([t['combined_impact'] for t in trade_impacts]):+.1f}")
         
         # Top trades
         sorted_trades = sorted(trade_impacts, key=lambda x: abs(x['combined_impact']), reverse=True)[:5]
-        print(f"\n   🏆 Most Impactful Trades:")
+        print(f"\n   Most Impactful Trades:")
         for i, trade in enumerate(sorted_trades, 1):
             impact_type = "📈" if trade['combined_impact'] > 0 else "📉"
             print(f"   {i}. Week {trade['week']} - {trade['manager_name']}")
@@ -1660,7 +1660,7 @@ def print_trade_analysis_results(trade_impacts, waiver_impacts=None, combined_im
             print(f"      Gave: {', '.join(trade['gave_up_players'])}")
     
     if waiver_impacts:
-        print(f"\n📊 Waiver Wire Analysis Summary:")
+        print(f"\nWaiver Wire Analysis Summary:")
         print(f"   • Total Waiver Moves Analyzed: {len(waiver_impacts)}")
         print(f"   • Average Waiver Impact: {statistics.mean([w['combined_impact'] for w in waiver_impacts]):+.1f}")
     

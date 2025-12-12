@@ -39,10 +39,10 @@ def load_league_config():
     try:
         with open('league_config.json', 'r') as f:
             config = json.load(f)
-            print(f"📋 Loaded config for league: {config.get('league_name', 'Unknown')}")
+            print(f"Loaded config for league: {config.get('league_name', 'Unknown')}")
             return config
     except FileNotFoundError:
-        print("📝 No league_config.json found, using interactive mode")
+        print("No league_config.json found, using interactive mode")
     except Exception as e:
         print(f"⚠️  Error loading config: {e}")
     
@@ -70,7 +70,7 @@ def get_user_input_interactive():
         return None, None
     
     # Get season preference
-    print("\n📅 Season Options:")
+    print("\nSeason Options:")
     print("   1. 2025 leagues only")
     print("   2. 2024 leagues only") 
     print("   3. All available leagues (2022-2025)")
@@ -168,7 +168,7 @@ def select_league_interactive(leagues):
         print("\n❌ No leagues found")
         return None
     
-    print(f"\n📋 Found {len(leagues)} leagues:")
+    print(f"\nFound {len(leagues)} leagues:")
     print("-" * 80)
     print(f"{'#':<3} {'League Name':<30} {'Season':<8} {'Teams':<6} {'League ID':<20}")
     print("-" * 80)
@@ -194,7 +194,7 @@ def select_league_interactive(leagues):
             choice_num = int(choice)
             if 1 <= choice_num <= len(leagues):
                 selected_league = leagues[choice_num - 1]
-                print(f"\n✅ Selected: {selected_league.get('name', 'Unknown')} ({selected_league.get('season', 'Unknown')})")
+                print(f"\nSelected: {selected_league.get('name', 'Unknown')} ({selected_league.get('season', 'Unknown')})")
                 return selected_league
             else:
                 print(f"❌ Please enter a number between 1 and {len(leagues)}")
@@ -208,7 +208,7 @@ def select_league_interactive(leagues):
 
 def main():
     """Main analysis workflow"""
-    print("🏈 Fantasy Football Comprehensive Analysis")
+    print("Fantasy Football Comprehensive Analysis")
     print("="*50)
     
     try:
@@ -220,7 +220,7 @@ def main():
             username = config['sleeper_username']
             target_season = config.get('target_season')
             predetermined_league_id = config.get('league_id')
-            print(f"🤖 Auto-mode: Using {username}'s league (ID: {predetermined_league_id})")
+            print(f"Auto-mode: Using {username}'s league (ID: {predetermined_league_id})")
         else:
             # Interactive mode
             username, target_season = get_user_input_interactive()
@@ -229,7 +229,7 @@ def main():
             predetermined_league_id = None
     
         # Initialize API clients
-        print("\n🔌 Initializing API connections...")
+        print("\nInitializing API connections...")
         espn_api = ESPNAPI()
         sleeper_api = SleeperAPI()
         
@@ -254,7 +254,7 @@ def main():
                     print(f"   {i}. {league.get('name', 'Unknown')} (ID: {league.get('league_id')})")
                 return
             
-            print(f"✅ Auto-selected: {selected_league.get('name', 'Unknown')}")
+            print(f"Auto-selected: {selected_league.get('name', 'Unknown')}")
         else:
             # Interactive selection
             selected_league = select_league_interactive(leagues)
@@ -264,12 +264,12 @@ def main():
         LEAGUE_ID = selected_league.get('league_id')
         SEASON = selected_league.get('season')
         
-        print(f"\n📋 League: {selected_league.get('name', 'Unknown')}")
-        print(f"📅 Season: {SEASON}")
-        print(f"🆔 League ID: {LEAGUE_ID}")
+        print(f"\nLeague: {selected_league.get('name', 'Unknown')}")
+        print(f"Season: {SEASON}")
+        print(f"League ID: {LEAGUE_ID}")
         
         # Initialize analyzer with ESPN data
-        print("\n📊 Setting up Fantasy Analyzer...")
+        print("\nSetting up Fantasy Analyzer...")
         analyzer = FantasyAnalyzer(espn_api)
         
         # Get ESPN stat leaders for player grading
@@ -283,7 +283,7 @@ def main():
         print(f"   ✓ Loaded {len(all_players)} NFL players")
         
         # Get Sleeper league data
-        print("\n📡 Fetching Sleeper league data...")
+        print("\nFetching Sleeper league data...")
         
         # Get basic league info
         print("   • Getting league information...")
@@ -343,7 +343,7 @@ def main():
         print(f"   • Total trades found: {len(all_trades)}")
         
         # Create organized output directories
-        print("\n📁 Creating organized output directories...")
+        print("\nCreating organized output directories...")
         output_dirs = create_output_directories()
         print(f"   ✓ Created output directory: {output_dirs['base']}")
         print(f"   ✓ HTML reports: {os.path.basename(output_dirs['html'])}")
@@ -351,11 +351,11 @@ def main():
         print(f"   ✓ Text reports: {os.path.basename(output_dirs['text'])}")
         
         # Calculate Power Ratings
-        print("\n⚡ Calculating Power Ratings...")
+        print("\nCalculating Power Ratings...")
         team_power_data = calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup)
         
         # Calculate Median Records for Combined Analysis
-        print("\n📊 Calculating Median-Based Combined Records...")
+        print("\nCalculating Median-Based Combined Records...")
         median_records = calculate_median_records(all_weekly_matchups, rosters, user_lookup)
         
         # Update power data with combined records
@@ -366,7 +366,7 @@ def main():
                 team_power_data[user_id]['weekly_median_results'] = median_data['weekly_median_results']
         
         # Calculate Roster Grades using real ESPN data
-        print("\n📊 Calculating Weekly Roster Grades...")
+        print("\nCalculating Weekly Roster Grades...")
         roster_grade_data = {}
         
         for user_id, power_data in team_power_data.items():
@@ -487,7 +487,7 @@ def main():
         
         
         # Comprehensive Trade & Waiver Analysis
-        print("\n🔄 Starting Comprehensive Analysis...")
+        print("\nStarting Comprehensive Analysis...")
         
         # Initialize empty lists in case no data
         trade_impacts = []
@@ -516,7 +516,7 @@ def main():
         print_trade_analysis_results(trade_impacts, waiver_impacts)
         
         # Create Comprehensive Visualizations
-        print("\n📊 Creating Interactive Visualizations...")
+        print("\nCreating Interactive Visualizations...")
         
         # Power Rating plot
         print("   • Creating Power Rating progression plot...")
@@ -562,35 +562,35 @@ def main():
         
         # Analysis Summary
         print("\n" + "="*60)
-        print("📊 ANALYSIS COMPLETE - SUMMARY STATISTICS")
+        print("ANALYSIS COMPLETE - SUMMARY STATISTICS")
         print("="*60)
         
-        print(f"\n📈 Power Ratings Summary:")
+        print(f"\nPower Ratings Summary:")
         if team_power_data:
             current_ratings = [(data['name'], data.get('current_rating', 0)) 
                              for data in team_power_data.values()]
             current_ratings.sort(key=lambda x: x[1], reverse=True)
             
-            print(f"   🥇 Highest Power Rating: {current_ratings[0][0]} ({current_ratings[0][1]:.1f})")
-            print(f"   🥉 Lowest Power Rating: {current_ratings[-1][0]} ({current_ratings[-1][1]:.1f})")
+            print(f"   Highest Power Rating: {current_ratings[0][0]} ({current_ratings[0][1]:.1f})")
+            print(f"   Lowest Power Rating: {current_ratings[-1][0]} ({current_ratings[-1][1]:.1f})")
         
-        print(f"\n📊 Roster Grades Summary:")
+        print(f"\nRoster Grades Summary:")
         if roster_grade_data:
             current_grades = [(data['name'], data.get('current_grade', 0))
                             for data in roster_grade_data.values()]
             current_grades.sort(key=lambda x: x[1], reverse=True)
             
-            print(f"   🥇 Best Roster: {current_grades[0][0]} ({current_grades[0][1]:.1f})")
-            print(f"   🥉 Worst Roster: {current_grades[-1][0]} ({current_grades[-1][1]:.1f})")
+            print(f"   Best Roster: {current_grades[0][0]} ({current_grades[0][1]:.1f})")
+            print(f"   Worst Roster: {current_grades[-1][0]} ({current_grades[-1][1]:.1f})")
         
-        print(f"\n🔄 Analysis Summary:")
+        print(f"\nAnalysis Summary:")
         print(f"   • Total Trade Impacts: {len(trade_impacts)}")
         print(f"   • Waiver/FA Impacts: {len(waiver_impacts)}")
         print(f"   • Manager Grades Generated: {len(manager_grades)}")
         print(f"   • Unique Managers Analyzed: {len(set([t['manager_name'] for t in trade_impacts] + [w['manager_name'] for w in waiver_impacts]))}")
         
         # Generate JSON output files for sharing
-        print("\n💾 Generating JSON output files for AI analysis...")
+        print("\nGenerating JSON output files for AI analysis...")
         timestamp = output_dirs['timestamp']
         
         # Create comprehensive output data structure
@@ -723,11 +723,11 @@ def main():
         
         print(f"   ✓ Roster data saved: {os.path.relpath(roster_json_file)}")
 
-        print(f"\n📁 Files Generated in Organized Structure:")
-        print(f"   📂 Base Directory: {output_dirs['base']}")
-        print(f"   📂 HTML Reports: {os.path.basename(output_dirs['html'])}")
-        print(f"   📂 JSON Data: {os.path.basename(output_dirs['json'])}")
-        print(f"   📂 Text Reports: {os.path.basename(output_dirs['text'])}")
+        print(f"\nFiles Generated in Organized Structure:")
+        print(f"   Base Directory: {output_dirs['base']}")
+        print(f"   HTML Reports: {os.path.basename(output_dirs['html'])}")
+        print(f"   JSON Data: {os.path.basename(output_dirs['json'])}")
+        print(f"   Text Reports: {os.path.basename(output_dirs['text'])}")
         print(f"   • JSON analysis files for AI sharing:")
         print(f"     - {os.path.basename(main_json_file)} (comprehensive analysis)")
         if trade_impacts or waiver_impacts:
@@ -736,7 +736,7 @@ def main():
         print(f"   • Analysis completed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         print("\n" + "="*60)
-        print("🎉 Analysis Complete! Check the generated HTML files for interactive visualizations.")
+        print("\nAnalysis Complete! Check the generated HTML files for interactive visualizations.")
         
     except KeyboardInterrupt:
         print("\n⚠️  Analysis interrupted by user")
