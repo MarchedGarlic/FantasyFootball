@@ -1,0 +1,5918 @@
+{
+  "analysis_info": {
+    "timestamp": "2025-12-11T20:26:11.186780",
+    "league_name": "DeShaun & Justin’s Massage Parlor",
+    "season": 2025,
+    "league_id": "1260371721257496576",
+    "total_managers": 12,
+    "total_weeks_analyzed": 14,
+    "total_trades_found": 26
+  },
+  "raw_trades": [
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "notes": "Your trade was processed successfully!",
+        "poll_id": "1269511061233475584",
+        "veto_msg_id": "1269511061304786944"
+      },
+      "created": 1757037251254,
+      "settings": {
+        "is_counter": 1
+      },
+      "leg": 1,
+      "draft_picks": [],
+      "creator": "1130755765075136512",
+      "transaction_id": "1269509880872448000",
+      "adds": {
+        "12512": 9,
+        "1479": 12
+      },
+      "consenter_ids": [
+        9,
+        12
+      ],
+      "drops": {
+        "12512": 12,
+        "1479": 9
+      },
+      "roster_ids": [
+        9,
+        12
+      ],
+      "status_updated": 1757226014748,
+      "waiver_budget": [
+        {
+          "amount": 5,
+          "receiver": 12,
+          "sender": 9
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1278486959215353856",
+        "veto_msg_id": "1278486959282466816"
+      },
+      "created": 1759176832681,
+      "settings": null,
+      "leg": 4,
+      "draft_picks": [],
+      "creator": "1260834874474889216",
+      "transaction_id": "1278483935810043904",
+      "adds": {
+        "6819": 6,
+        "8408": 10
+      },
+      "consenter_ids": [
+        6,
+        10
+      ],
+      "drops": {
+        "6819": 10,
+        "8408": 6
+      },
+      "roster_ids": [
+        6,
+        10
+      ],
+      "status_updated": 1759194777782,
+      "waiver_budget": []
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1278428959821795328",
+        "veto_msg_id": "1278428959872159744"
+      },
+      "created": 1759163656502,
+      "settings": null,
+      "leg": 4,
+      "draft_picks": [],
+      "creator": "1260463320503169024",
+      "transaction_id": "1278428670909743104",
+      "adds": {
+        "11604": 1,
+        "12481": 4,
+        "1339": 4,
+        "4983": 1,
+        "6790": 1
+      },
+      "consenter_ids": [
+        1,
+        4
+      ],
+      "drops": {
+        "11604": 4,
+        "12481": 1,
+        "1339": 1,
+        "4983": 4,
+        "6790": 4
+      },
+      "roster_ids": [
+        1,
+        4
+      ],
+      "status_updated": 1759331932711,
+      "waiver_budget": [
+        {
+          "amount": 15,
+          "receiver": 1,
+          "sender": 4
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1278422724959551488",
+        "veto_msg_id": "1278422725018255360"
+      },
+      "created": 1759162187106,
+      "settings": null,
+      "leg": 4,
+      "draft_picks": [],
+      "creator": "1260463320503169024",
+      "transaction_id": "1278422507816247296",
+      "adds": {
+        "12514": 9,
+        "4035": 9,
+        "7543": 4
+      },
+      "consenter_ids": [
+        4,
+        9
+      ],
+      "drops": {
+        "12514": 4,
+        "4035": 4,
+        "7543": 9
+      },
+      "roster_ids": [
+        4,
+        9
+      ],
+      "status_updated": 1759165549609,
+      "waiver_budget": [
+        {
+          "amount": 10,
+          "receiver": 4,
+          "sender": 9
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1276992374031007744",
+        "veto_msg_id": "1276992374081323008"
+      },
+      "created": 1758809274454,
+      "settings": null,
+      "leg": 4,
+      "draft_picks": [],
+      "creator": "1260834874474889216",
+      "transaction_id": "1276942284868292608",
+      "adds": {
+        "11655": 10,
+        "12490": 7
+      },
+      "consenter_ids": [
+        7,
+        10
+      ],
+      "drops": {
+        "11655": 7,
+        "12490": 10
+      },
+      "roster_ids": [
+        7,
+        10
+      ],
+      "status_updated": 1758890500753,
+      "waiver_budget": []
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1276658187231055872",
+        "veto_msg_id": "1276658187352702976"
+      },
+      "created": 1758741139789,
+      "settings": {
+        "is_counter": 1
+      },
+      "leg": 4,
+      "draft_picks": [],
+      "creator": "1260463320503169024",
+      "transaction_id": "1276656507370373120",
+      "adds": {
+        "11631": 4,
+        "12526": 7,
+        "6794": 7,
+        "7547": 4
+      },
+      "consenter_ids": [
+        4,
+        7
+      ],
+      "drops": {
+        "11631": 7,
+        "12526": 4,
+        "6794": 4,
+        "7547": 7
+      },
+      "roster_ids": [
+        4,
+        7
+      ],
+      "status_updated": 1758742357359,
+      "waiver_budget": []
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1278827993724104704",
+        "veto_msg_id": "1278827993795399680"
+      },
+      "created": 1758728140671,
+      "settings": null,
+      "leg": 4,
+      "draft_picks": [],
+      "creator": "1127729098148655104",
+      "transaction_id": "1276601985117749248",
+      "adds": {
+        "2449": 3
+      },
+      "consenter_ids": [
+        1,
+        3
+      ],
+      "drops": {
+        "2449": 1
+      },
+      "roster_ids": [
+        1,
+        3
+      ],
+      "status_updated": 1759332281087,
+      "waiver_budget": [
+        {
+          "amount": 15,
+          "receiver": 1,
+          "sender": 3
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1279973566212743168",
+        "veto_msg_id": "1279973566271488000"
+      },
+      "created": 1759531973328,
+      "settings": null,
+      "leg": 5,
+      "draft_picks": [],
+      "creator": "1260463320503169024",
+      "transaction_id": "1279973503646334976",
+      "adds": {
+        "11631": 3,
+        "4988": 3,
+        "7567": 3,
+        "7569": 4
+      },
+      "drops": {
+        "11631": 4,
+        "4988": 4,
+        "7567": 4,
+        "7569": 3
+      },
+      "consenter_ids": [
+        3,
+        4
+      ],
+      "roster_ids": [
+        3,
+        4
+      ],
+      "status_updated": 1759607077860,
+      "waiver_budget": [
+        {
+          "amount": 5,
+          "receiver": 4,
+          "sender": 3
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "notes": "Your trade was processed successfully!",
+        "poll_id": "1286161010876514304",
+        "veto_msg_id": "1286161010964598784"
+      },
+      "created": 1761005535369,
+      "settings": null,
+      "leg": 7,
+      "draft_picks": [],
+      "creator": "1260463530457452544",
+      "transaction_id": "1286154070804942848",
+      "adds": {
+        "11564": 5,
+        "5849": 7,
+        "9224": 7
+      },
+      "consenter_ids": [
+        5,
+        7
+      ],
+      "drops": {
+        "11564": 7,
+        "5849": 5,
+        "9224": 5
+      },
+      "roster_ids": [
+        5,
+        7
+      ],
+      "status_updated": 1761114048766,
+      "waiver_budget": [
+        {
+          "amount": 15,
+          "receiver": 7,
+          "sender": 5
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1284285456606822400",
+        "veto_msg_id": "1284285456657174528"
+      },
+      "created": 1760559967182,
+      "settings": null,
+      "leg": 7,
+      "draft_picks": [],
+      "creator": "1130755765075136512",
+      "transaction_id": "1284285222375936000",
+      "adds": {
+        "12474": 9,
+        "4035": 1,
+        "8126": 9
+      },
+      "consenter_ids": [
+        1,
+        9
+      ],
+      "drops": {
+        "12474": 1,
+        "4035": 9,
+        "8126": 1
+      },
+      "roster_ids": [
+        1,
+        9
+      ],
+      "status_updated": 1760626091433,
+      "waiver_budget": [
+        {
+          "amount": 15,
+          "receiver": 1,
+          "sender": 9
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "notes": "Your trade was processed successfully!",
+        "poll_id": "1287668861243490304",
+        "veto_msg_id": "1287668861306441728"
+      },
+      "created": 1761366682203,
+      "settings": null,
+      "leg": 8,
+      "draft_picks": [],
+      "creator": "858530366355525632",
+      "transaction_id": "1287668830419570688",
+      "adds": {
+        "8132": 7,
+        "8134": 11
+      },
+      "consenter_ids": [
+        7,
+        11
+      ],
+      "drops": {
+        "8132": 11,
+        "8134": 7
+      },
+      "roster_ids": [
+        7,
+        11
+      ],
+      "status_updated": 1761459668733,
+      "waiver_budget": []
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1291138436161376256",
+        "veto_msg_id": "1291138436249448448"
+      },
+      "created": 1762193775542,
+      "settings": null,
+      "leg": 9,
+      "draft_picks": [],
+      "creator": "1260463320503169024",
+      "transaction_id": "1291137911319728128",
+      "adds": {
+        "12534": 4,
+        "6790": 4,
+        "7569": 1
+      },
+      "consenter_ids": [
+        1,
+        4
+      ],
+      "drops": {
+        "12534": 1,
+        "6790": 1,
+        "7569": 4
+      },
+      "roster_ids": [
+        1,
+        4
+      ],
+      "status_updated": 1762221191983,
+      "waiver_budget": [
+        {
+          "amount": 3,
+          "receiver": 1,
+          "sender": 4
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1291100021076267008",
+        "veto_msg_id": "1291100021151793152"
+      },
+      "created": 1762184677908,
+      "settings": null,
+      "leg": 9,
+      "draft_picks": [],
+      "creator": "1127729098148655104",
+      "transaction_id": "1291099753077018624",
+      "adds": {
+        "4035": 8,
+        "5872": 1
+      },
+      "consenter_ids": [
+        1,
+        8
+      ],
+      "drops": {
+        "4035": 1,
+        "5872": 8
+      },
+      "roster_ids": [
+        1,
+        8
+      ],
+      "status_updated": 1762221185828,
+      "waiver_budget": []
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1293809620715864064",
+        "veto_msg_id": "1293809620812337152"
+      },
+      "created": 1762830389268,
+      "settings": null,
+      "leg": 10,
+      "draft_picks": [],
+      "creator": "1127729098148655104",
+      "transaction_id": "1293808062812925952",
+      "adds": {
+        "8205": 5
+      },
+      "drops": {
+        "8205": 1
+      },
+      "consenter_ids": [
+        1,
+        5
+      ],
+      "roster_ids": [
+        1,
+        5
+      ],
+      "status_updated": 1762877908129,
+      "waiver_budget": [
+        {
+          "amount": 7,
+          "receiver": 1,
+          "sender": 5
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1293800143383973888",
+        "veto_msg_id": "1293800143467855872"
+      },
+      "created": 1762828471664,
+      "settings": null,
+      "leg": 10,
+      "draft_picks": [],
+      "creator": "1127729098148655104",
+      "transaction_id": "1293800019802980352",
+      "adds": {
+        "12529": 3,
+        "6770": 1
+      },
+      "drops": {
+        "12529": 1,
+        "6770": 3
+      },
+      "consenter_ids": [
+        1,
+        3
+      ],
+      "roster_ids": [
+        1,
+        3
+      ],
+      "status_updated": 1762877901048,
+      "waiver_budget": [
+        {
+          "amount": 20,
+          "receiver": 1,
+          "sender": 3
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1293646133750431744",
+        "veto_msg_id": "1293646133834317824"
+      },
+      "created": 1762791763806,
+      "settings": null,
+      "leg": 10,
+      "draft_picks": [],
+      "creator": "1260463530457452544",
+      "transaction_id": "1293646055883145216",
+      "adds": {
+        "11635": 5,
+        "8111": 8,
+        "9487": 8
+      },
+      "drops": {
+        "11635": 8,
+        "8111": 5,
+        "9487": 5
+      },
+      "consenter_ids": [
+        5,
+        8
+      ],
+      "roster_ids": [
+        5,
+        8
+      ],
+      "status_updated": 1762830358680,
+      "waiver_budget": [
+        {
+          "amount": 5,
+          "receiver": 8,
+          "sender": 5
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1291976758563729409",
+        "veto_msg_id": "1291976758651789312"
+      },
+      "created": 1762393759154,
+      "settings": null,
+      "leg": 10,
+      "draft_picks": [],
+      "creator": "1260834874474889216",
+      "transaction_id": "1291976703379255296",
+      "adds": {
+        "11604": 10,
+        "11647": 10,
+        "1466": 1,
+        "3198": 1
+      },
+      "drops": {
+        "11604": 1,
+        "11647": 1,
+        "1466": 10,
+        "3198": 10
+      },
+      "consenter_ids": [
+        1,
+        10
+      ],
+      "roster_ids": [
+        1,
+        10
+      ],
+      "status_updated": 1762455824971,
+      "waiver_budget": [
+        {
+          "amount": 10,
+          "receiver": 1,
+          "sender": 10
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1291973554455199744",
+        "veto_msg_id": "1291973554551681024"
+      },
+      "created": 1762392988750,
+      "settings": null,
+      "leg": 10,
+      "draft_picks": [],
+      "creator": "858068603554111488",
+      "transaction_id": "1291973472070692864",
+      "adds": {
+        "12489": 1,
+        "4983": 2,
+        "5872": 2,
+        "8228": 1
+      },
+      "drops": {
+        "12489": 2,
+        "4983": 1,
+        "5872": 1,
+        "8228": 2
+      },
+      "consenter_ids": [
+        1,
+        2
+      ],
+      "roster_ids": [
+        1,
+        2
+      ],
+      "status_updated": 1762455816047,
+      "waiver_budget": []
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1291868369745629184",
+        "veto_msg_id": "1291868369837891584"
+      },
+      "created": 1762367906817,
+      "settings": null,
+      "leg": 10,
+      "draft_picks": [],
+      "creator": "1260463320503169024",
+      "transaction_id": "1291868270818783232",
+      "adds": {
+        "12485": 3,
+        "1339": 3,
+        "2449": 4,
+        "5022": 4,
+        "5846": 4,
+        "5850": 4,
+        "7547": 3,
+        "7567": 3
+      },
+      "drops": {
+        "12485": 4,
+        "1339": 4,
+        "2449": 3,
+        "5022": 3,
+        "5846": 3,
+        "5850": 3,
+        "7547": 4,
+        "7567": 4
+      },
+      "consenter_ids": [
+        3,
+        4
+      ],
+      "roster_ids": [
+        3,
+        4
+      ],
+      "status_updated": 1762454303764,
+      "waiver_budget": [
+        {
+          "amount": 10,
+          "receiver": 4,
+          "sender": 3
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1291829184049451008",
+        "veto_msg_id": "1291829184150122496"
+      },
+      "created": 1762358558308,
+      "settings": {
+        "is_counter": 1
+      },
+      "leg": 10,
+      "draft_picks": [],
+      "creator": "694022020266033152",
+      "transaction_id": "1291829060330082304",
+      "adds": {
+        "11627": 6,
+        "421": 6,
+        "4892": 4,
+        "6819": 4,
+        "7543": 6,
+        "8136": 4,
+        "9500": 6
+      },
+      "drops": {
+        "11627": 4,
+        "421": 4,
+        "4892": 6,
+        "6819": 6,
+        "7543": 4,
+        "8136": 6,
+        "9500": 4
+      },
+      "consenter_ids": [
+        4,
+        6
+      ],
+      "roster_ids": [
+        4,
+        6
+      ],
+      "status_updated": 1762445392806,
+      "waiver_budget": [
+        {
+          "amount": 10,
+          "receiver": 6,
+          "sender": 4
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1295165053934276608",
+        "veto_msg_id": "1295165054039134208"
+      },
+      "created": 1763153898077,
+      "settings": null,
+      "leg": 11,
+      "draft_picks": [],
+      "creator": "1127729098148655104",
+      "transaction_id": "1295164957104553984",
+      "adds": {
+        "12517": 9
+      },
+      "drops": {
+        "12517": 1
+      },
+      "consenter_ids": [
+        1,
+        9
+      ],
+      "roster_ids": [
+        1,
+        9
+      ],
+      "status_updated": 1763160166252,
+      "waiver_budget": [
+        {
+          "amount": 5,
+          "receiver": 1,
+          "sender": 9
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1294456966839549952",
+        "veto_msg_id": "1294456966915051520"
+      },
+      "created": 1762981378283,
+      "settings": null,
+      "leg": 11,
+      "draft_picks": [],
+      "creator": "1260463320503169024",
+      "transaction_id": "1294441356642521088",
+      "adds": {
+        "12534": 8
+      },
+      "drops": {
+        "12534": 4
+      },
+      "consenter_ids": [
+        4,
+        8
+      ],
+      "roster_ids": [
+        4,
+        8
+      ],
+      "status_updated": 1762986954412,
+      "waiver_budget": [
+        {
+          "amount": 50,
+          "receiver": 4,
+          "sender": 8
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1294431037807427584",
+        "veto_msg_id": "1294431037874536448"
+      },
+      "created": 1762978535343,
+      "settings": null,
+      "leg": 11,
+      "draft_picks": [],
+      "creator": "1260463320503169024",
+      "transaction_id": "1294429432487886848",
+      "adds": {
+        "5846": 10,
+        "6790": 10,
+        "6819": 10,
+        "9493": 4
+      },
+      "drops": {
+        "5846": 4,
+        "6790": 4,
+        "6819": 4,
+        "9493": 10
+      },
+      "consenter_ids": [
+        4,
+        10
+      ],
+      "roster_ids": [
+        4,
+        10
+      ],
+      "status_updated": 1762986948689,
+      "waiver_budget": [
+        {
+          "amount": 10,
+          "receiver": 10,
+          "sender": 4
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1294423379192868864",
+        "veto_msg_id": "1294423379276734464"
+      },
+      "created": 1762974218624,
+      "settings": null,
+      "leg": 11,
+      "draft_picks": [],
+      "creator": "1130755765075136512",
+      "transaction_id": "1294411326860328960",
+      "adds": {
+        "11620": 10,
+        "9754": 9
+      },
+      "drops": {
+        "11620": 9,
+        "9754": 10
+      },
+      "consenter_ids": [
+        9,
+        10
+      ],
+      "roster_ids": [
+        9,
+        10
+      ],
+      "status_updated": 1763003373441,
+      "waiver_budget": [
+        {
+          "amount": 20,
+          "receiver": 9,
+          "sender": 10
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1294423201329209344",
+        "veto_msg_id": "1294423201408909312"
+      },
+      "created": 1762973652240,
+      "settings": null,
+      "leg": 11,
+      "draft_picks": [],
+      "creator": "1260463530457452544",
+      "transaction_id": "1294408951269462016",
+      "adds": {
+        "11564": 2,
+        "11635": 2,
+        "4034": 5
+      },
+      "drops": {
+        "11564": 5,
+        "11635": 5,
+        "4034": 2
+      },
+      "consenter_ids": [
+        2,
+        5
+      ],
+      "roster_ids": [
+        2,
+        5
+      ],
+      "status_updated": 1762977954409,
+      "waiver_budget": [
+        {
+          "amount": 10,
+          "receiver": 2,
+          "sender": 5
+        }
+      ]
+    },
+    {
+      "status": "complete",
+      "type": "trade",
+      "metadata": {
+        "poll_id": "1294402362810580992",
+        "veto_msg_id": "1294402362890289152"
+      },
+      "created": 1762972072688,
+      "settings": null,
+      "leg": 11,
+      "draft_picks": [],
+      "creator": "858530366355525632",
+      "transaction_id": "1294402326148173824",
+      "adds": {
+        "11638": 1,
+        "12489": 11,
+        "12517": 1
+      },
+      "drops": {
+        "11638": 11,
+        "12489": 1,
+        "12517": 11
+      },
+      "consenter_ids": [
+        1,
+        11
+      ],
+      "roster_ids": [
+        1,
+        11
+      ],
+      "status_updated": 1762975060415,
+      "waiver_budget": []
+    }
+  ],
+  "comprehensive_analysis": {
+    "trade_impacts": [
+      {
+        "week": 1,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "other_manager": "djmarino615",
+        "acquired_players": [
+          "Quinshon Judkins"
+        ],
+        "gave_up_players": [
+          "Keenan Allen"
+        ],
+        "other_acquired": [
+          "Keenan Allen"
+        ],
+        "other_gave_up": [
+          "Quinshon Judkins"
+        ],
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "record_impact": 0.0,
+        "combined_impact": 0.0,
+        "normalized_power": 0.0,
+        "normalized_grade": 0.0,
+        "normalized_record": 0.0
+      },
+      {
+        "week": 1,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "other_manager": "jackjohnnsonn26",
+        "acquired_players": [
+          "Keenan Allen"
+        ],
+        "gave_up_players": [
+          "Quinshon Judkins"
+        ],
+        "other_acquired": [
+          "Quinshon Judkins"
+        ],
+        "other_gave_up": [
+          "Keenan Allen"
+        ],
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "record_impact": 0.0,
+        "combined_impact": 0.0,
+        "normalized_power": 0.0,
+        "normalized_grade": 0.0,
+        "normalized_record": 0.0
+      },
+      {
+        "week": 4,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "other_manager": "papabwall69",
+        "acquired_players": [
+          "Michael Pittman"
+        ],
+        "gave_up_players": [
+          "Jordan Mason"
+        ],
+        "other_acquired": [
+          "Jordan Mason"
+        ],
+        "other_gave_up": [
+          "Michael Pittman"
+        ],
+        "power_impact": 0.09999999999999432,
+        "grade_impact": -0.5999999999999996,
+        "record_impact": -0.012500000000000134,
+        "combined_impact": -0.4666666666666683,
+        "normalized_power": 0.04999999999999716,
+        "normalized_grade": -1.1999999999999993,
+        "normalized_record": -0.25000000000000266
+      },
+      {
+        "week": 4,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "other_manager": "CallMeBeanz",
+        "acquired_players": [
+          "Jordan Mason"
+        ],
+        "gave_up_players": [
+          "Michael Pittman"
+        ],
+        "other_acquired": [
+          "Michael Pittman"
+        ],
+        "other_gave_up": [
+          "Jordan Mason"
+        ],
+        "power_impact": 6.400000000000006,
+        "grade_impact": 0.7000000000000002,
+        "record_impact": 0.17750000000000016,
+        "combined_impact": 2.7166666666666686,
+        "normalized_power": 3.200000000000003,
+        "normalized_grade": 1.4000000000000004,
+        "normalized_record": 3.5500000000000034
+      },
+      {
+        "week": 4,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "other_manager": "Spillywilly69",
+        "acquired_players": [
+          "Brock Bowers",
+          "DJ Moore",
+          "D'Andre Swift"
+        ],
+        "gave_up_players": [
+          "Cam Skattebo",
+          "Zach Ertz"
+        ],
+        "other_acquired": [
+          "Cam Skattebo",
+          "Zach Ertz"
+        ],
+        "other_gave_up": [
+          "Brock Bowers",
+          "DJ Moore",
+          "D'Andre Swift"
+        ],
+        "power_impact": 0.4000000000000057,
+        "grade_impact": 0.09999999999999964,
+        "record_impact": 0.012500000000000134,
+        "combined_impact": 0.21666666666666826,
+        "normalized_power": 0.20000000000000284,
+        "normalized_grade": 0.1999999999999993,
+        "normalized_record": 0.25000000000000266
+      },
+      {
+        "week": 4,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "other_manager": "joeyscott31",
+        "acquired_players": [
+          "Cam Skattebo",
+          "Zach Ertz"
+        ],
+        "gave_up_players": [
+          "Brock Bowers",
+          "DJ Moore",
+          "D'Andre Swift"
+        ],
+        "other_acquired": [
+          "Brock Bowers",
+          "DJ Moore",
+          "D'Andre Swift"
+        ],
+        "other_gave_up": [
+          "Cam Skattebo",
+          "Zach Ertz"
+        ],
+        "power_impact": 3.0,
+        "grade_impact": 0.0,
+        "record_impact": 0.07500000000000001,
+        "combined_impact": 1.0,
+        "normalized_power": 1.5,
+        "normalized_grade": 0.0,
+        "normalized_record": 1.5000000000000002
+      },
+      {
+        "week": 4,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "other_manager": "jackjohnnsonn26",
+        "acquired_players": [
+          "Travis Etienne"
+        ],
+        "gave_up_players": [
+          "Emeka Egbuka",
+          "Alvin Kamara"
+        ],
+        "other_acquired": [
+          "Emeka Egbuka",
+          "Alvin Kamara"
+        ],
+        "other_gave_up": [
+          "Travis Etienne"
+        ],
+        "power_impact": 3.0,
+        "grade_impact": 0.0,
+        "record_impact": 0.07500000000000001,
+        "combined_impact": 1.0,
+        "normalized_power": 1.5,
+        "normalized_grade": 0.0,
+        "normalized_record": 1.5000000000000002
+      },
+      {
+        "week": 4,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "other_manager": "Spillywilly69",
+        "acquired_players": [
+          "Emeka Egbuka",
+          "Alvin Kamara"
+        ],
+        "gave_up_players": [
+          "Travis Etienne"
+        ],
+        "other_acquired": [
+          "Travis Etienne"
+        ],
+        "other_gave_up": [
+          "Emeka Egbuka",
+          "Alvin Kamara"
+        ],
+        "power_impact": -13.299999999999983,
+        "grade_impact": 0.6999999999999993,
+        "record_impact": -0.25,
+        "combined_impact": -3.4166666666666643,
+        "normalized_power": -6.6499999999999915,
+        "normalized_grade": 1.3999999999999986,
+        "normalized_record": -5.0
+      },
+      {
+        "week": 4,
+        "manager_id": "1260799280998785024",
+        "manager_name": "CameronMulyk",
+        "other_manager": "papabwall69",
+        "acquired_players": [
+          "Bhayshul Tuten"
+        ],
+        "gave_up_players": [
+          "Tyrone Tracy"
+        ],
+        "other_acquired": [
+          "Tyrone Tracy"
+        ],
+        "other_gave_up": [
+          "Bhayshul Tuten"
+        ],
+        "power_impact": 4.800000000000011,
+        "grade_impact": 0.2999999999999998,
+        "record_impact": 0.12750000000000028,
+        "combined_impact": 1.8500000000000039,
+        "normalized_power": 2.4000000000000057,
+        "normalized_grade": 0.5999999999999996,
+        "normalized_record": 2.5500000000000056
+      },
+      {
+        "week": 4,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "other_manager": "CameronMulyk",
+        "acquired_players": [
+          "Tyrone Tracy"
+        ],
+        "gave_up_players": [
+          "Bhayshul Tuten"
+        ],
+        "other_acquired": [
+          "Bhayshul Tuten"
+        ],
+        "other_gave_up": [
+          "Tyrone Tracy"
+        ],
+        "power_impact": 6.400000000000006,
+        "grade_impact": 0.7000000000000002,
+        "record_impact": 0.17750000000000016,
+        "combined_impact": 2.7166666666666686,
+        "normalized_power": 3.200000000000003,
+        "normalized_grade": 1.4000000000000004,
+        "normalized_record": 3.5500000000000034
+      },
+      {
+        "week": 4,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "other_manager": "CameronMulyk",
+        "acquired_players": [
+          "Brian Thomas",
+          "Amon-Ra St. Brown"
+        ],
+        "gave_up_players": [
+          "Tetairoa McMillan",
+          "Justin Jefferson"
+        ],
+        "other_acquired": [
+          "Tetairoa McMillan",
+          "Justin Jefferson"
+        ],
+        "other_gave_up": [
+          "Brian Thomas",
+          "Amon-Ra St. Brown"
+        ],
+        "power_impact": 3.0,
+        "grade_impact": 0.0,
+        "record_impact": 0.07500000000000001,
+        "combined_impact": 1.0,
+        "normalized_power": 1.5,
+        "normalized_grade": 0.0,
+        "normalized_record": 1.5000000000000002
+      },
+      {
+        "week": 4,
+        "manager_id": "1260799280998785024",
+        "manager_name": "CameronMulyk",
+        "other_manager": "Spillywilly69",
+        "acquired_players": [
+          "Tetairoa McMillan",
+          "Justin Jefferson"
+        ],
+        "gave_up_players": [
+          "Brian Thomas",
+          "Amon-Ra St. Brown"
+        ],
+        "other_acquired": [
+          "Brian Thomas",
+          "Amon-Ra St. Brown"
+        ],
+        "other_gave_up": [
+          "Tetairoa McMillan",
+          "Justin Jefferson"
+        ],
+        "power_impact": 4.800000000000011,
+        "grade_impact": 0.2999999999999998,
+        "record_impact": 0.12750000000000028,
+        "combined_impact": 1.8500000000000039,
+        "normalized_power": 2.4000000000000057,
+        "normalized_grade": 0.5999999999999996,
+        "normalized_record": 2.5500000000000056
+      },
+      {
+        "week": 4,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "other_manager": "Shockley5",
+        "acquired_players": [],
+        "gave_up_players": [
+          "Stefon Diggs"
+        ],
+        "other_acquired": [
+          "Stefon Diggs"
+        ],
+        "other_gave_up": [],
+        "power_impact": 0.4000000000000057,
+        "grade_impact": 0.09999999999999964,
+        "record_impact": 0.012500000000000134,
+        "combined_impact": 0.21666666666666826,
+        "normalized_power": 0.20000000000000284,
+        "normalized_grade": 0.1999999999999993,
+        "normalized_record": 0.25000000000000266
+      },
+      {
+        "week": 4,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "other_manager": "joeyscott31",
+        "acquired_players": [
+          "Stefon Diggs"
+        ],
+        "gave_up_players": [],
+        "other_acquired": [],
+        "other_gave_up": [
+          "Stefon Diggs"
+        ],
+        "power_impact": 21.39999999999999,
+        "grade_impact": -0.5999999999999996,
+        "record_impact": 0.5,
+        "combined_impact": 6.499999999999999,
+        "normalized_power": 10.699999999999996,
+        "normalized_grade": -1.1999999999999993,
+        "normalized_record": 10.0
+      },
+      {
+        "week": 5,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "other_manager": "Spillywilly69",
+        "acquired_players": [
+          "Brian Thomas",
+          "Nick Chubb",
+          "Kenneth Gainwell"
+        ],
+        "gave_up_players": [
+          "Nico Collins"
+        ],
+        "other_acquired": [
+          "Nico Collins"
+        ],
+        "other_gave_up": [
+          "Brian Thomas",
+          "Nick Chubb",
+          "Kenneth Gainwell"
+        ],
+        "power_impact": 5.900000000000006,
+        "grade_impact": 0.7999999999999998,
+        "record_impact": 0.16750000000000015,
+        "combined_impact": 2.633333333333335,
+        "normalized_power": 2.950000000000003,
+        "normalized_grade": 1.5999999999999996,
+        "normalized_record": 3.350000000000003
+      },
+      {
+        "week": 5,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "other_manager": "Shockley5",
+        "acquired_players": [
+          "Nico Collins"
+        ],
+        "gave_up_players": [
+          "Brian Thomas",
+          "Nick Chubb",
+          "Kenneth Gainwell"
+        ],
+        "other_acquired": [
+          "Brian Thomas",
+          "Nick Chubb",
+          "Kenneth Gainwell"
+        ],
+        "other_gave_up": [
+          "Nico Collins"
+        ],
+        "power_impact": -3.6999999999999886,
+        "grade_impact": 0.0,
+        "record_impact": -0.09249999999999972,
+        "combined_impact": -1.2333333333333296,
+        "normalized_power": -1.8499999999999943,
+        "normalized_grade": 0.0,
+        "normalized_record": -1.8499999999999943
+      },
+      {
+        "week": 7,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "other_manager": "CameronMulyk",
+        "acquired_players": [
+          "Drake Maye"
+        ],
+        "gave_up_players": [
+          "Kyler Murray",
+          "Chase Brown"
+        ],
+        "other_acquired": [
+          "Kyler Murray",
+          "Chase Brown"
+        ],
+        "other_gave_up": [
+          "Drake Maye"
+        ],
+        "power_impact": 15.900000000000006,
+        "grade_impact": 0.8000000000000007,
+        "record_impact": 0.25,
+        "combined_impact": 4.850000000000001,
+        "normalized_power": 7.950000000000003,
+        "normalized_grade": 1.6000000000000014,
+        "normalized_record": 5.0
+      },
+      {
+        "week": 7,
+        "manager_id": "1260799280998785024",
+        "manager_name": "CameronMulyk",
+        "other_manager": "coletheman88",
+        "acquired_players": [
+          "Kyler Murray",
+          "Chase Brown"
+        ],
+        "gave_up_players": [
+          "Drake Maye"
+        ],
+        "other_acquired": [
+          "Drake Maye"
+        ],
+        "other_gave_up": [
+          "Kyler Murray",
+          "Chase Brown"
+        ],
+        "power_impact": -6.900000000000006,
+        "grade_impact": 0.40000000000000036,
+        "record_impact": -0.16250000000000014,
+        "combined_impact": -1.9666666666666683,
+        "normalized_power": -3.450000000000003,
+        "normalized_grade": 0.8000000000000007,
+        "normalized_record": -3.2500000000000027
+      },
+      {
+        "week": 7,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "other_manager": "jackjohnnsonn26",
+        "acquired_players": [
+          "Alvin Kamara"
+        ],
+        "gave_up_players": [
+          "Woody Marks",
+          "Wan'Dale Robinson"
+        ],
+        "other_acquired": [
+          "Woody Marks",
+          "Wan'Dale Robinson"
+        ],
+        "other_gave_up": [
+          "Alvin Kamara"
+        ],
+        "power_impact": 6.099999999999994,
+        "grade_impact": 0.6000000000000005,
+        "record_impact": 0.16749999999999987,
+        "combined_impact": 2.533333333333332,
+        "normalized_power": 3.049999999999997,
+        "normalized_grade": 1.200000000000001,
+        "normalized_record": 3.3499999999999974
+      },
+      {
+        "week": 7,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "other_manager": "joeyscott31",
+        "acquired_players": [
+          "Woody Marks",
+          "Wan'Dale Robinson"
+        ],
+        "gave_up_players": [
+          "Alvin Kamara"
+        ],
+        "other_acquired": [
+          "Alvin Kamara"
+        ],
+        "other_gave_up": [
+          "Woody Marks",
+          "Wan'Dale Robinson"
+        ],
+        "power_impact": -2.8000000000000114,
+        "grade_impact": 0.5,
+        "record_impact": -0.05750000000000029,
+        "combined_impact": -0.5166666666666705,
+        "normalized_power": -1.4000000000000057,
+        "normalized_grade": 1.0,
+        "normalized_record": -1.1500000000000057
+      },
+      {
+        "week": 8,
+        "manager_id": "1260799280998785024",
+        "manager_name": "CameronMulyk",
+        "other_manager": "cmoney2137",
+        "acquired_players": [
+          "Tyler Allgeier"
+        ],
+        "gave_up_players": [
+          "Khalil Shakir"
+        ],
+        "other_acquired": [
+          "Khalil Shakir"
+        ],
+        "other_gave_up": [
+          "Tyler Allgeier"
+        ],
+        "power_impact": -2.0,
+        "grade_impact": -1.0,
+        "record_impact": -0.07500000000000001,
+        "combined_impact": -1.5,
+        "normalized_power": -1.0,
+        "normalized_grade": -2.0,
+        "normalized_record": -1.5000000000000002
+      },
+      {
+        "week": 8,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "other_manager": "CameronMulyk",
+        "acquired_players": [
+          "Khalil Shakir"
+        ],
+        "gave_up_players": [
+          "Tyler Allgeier"
+        ],
+        "other_acquired": [
+          "Tyler Allgeier"
+        ],
+        "other_gave_up": [
+          "Khalil Shakir"
+        ],
+        "power_impact": 6.699999999999989,
+        "grade_impact": 0.39999999999999947,
+        "record_impact": 0.1774999999999997,
+        "combined_impact": 2.5666666666666624,
+        "normalized_power": 3.3499999999999943,
+        "normalized_grade": 0.7999999999999989,
+        "normalized_record": 3.5499999999999945
+      },
+      {
+        "week": 9,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "other_manager": "Spillywilly69",
+        "acquired_players": [
+          "Nico Collins"
+        ],
+        "gave_up_players": [
+          "Kyle Monangai",
+          "D'Andre Swift"
+        ],
+        "other_acquired": [
+          "Kyle Monangai",
+          "D'Andre Swift"
+        ],
+        "other_gave_up": [
+          "Nico Collins"
+        ],
+        "power_impact": 2.8000000000000114,
+        "grade_impact": 0.9000000000000004,
+        "record_impact": 0.0925000000000003,
+        "combined_impact": 1.6833333333333373,
+        "normalized_power": 1.4000000000000057,
+        "normalized_grade": 1.8000000000000007,
+        "normalized_record": 1.850000000000006
+      },
+      {
+        "week": 9,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "other_manager": "joeyscott31",
+        "acquired_players": [
+          "Kyle Monangai",
+          "D'Andre Swift"
+        ],
+        "gave_up_players": [
+          "Nico Collins"
+        ],
+        "other_acquired": [
+          "Nico Collins"
+        ],
+        "other_gave_up": [
+          "Kyle Monangai",
+          "D'Andre Swift"
+        ],
+        "power_impact": 5.199999999999989,
+        "grade_impact": 0.5999999999999996,
+        "record_impact": 0.1449999999999997,
+        "combined_impact": 2.2333333333333294,
+        "normalized_power": 2.5999999999999943,
+        "normalized_grade": 1.1999999999999993,
+        "normalized_record": 2.899999999999994
+      },
+      {
+        "week": 9,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "other_manager": "Richmccc",
+        "acquired_players": [
+          "Deebo Samuel"
+        ],
+        "gave_up_players": [
+          "Alvin Kamara"
+        ],
+        "other_acquired": [
+          "Alvin Kamara"
+        ],
+        "other_gave_up": [
+          "Deebo Samuel"
+        ],
+        "power_impact": 2.8000000000000114,
+        "grade_impact": 0.9000000000000004,
+        "record_impact": 0.0925000000000003,
+        "combined_impact": 1.6833333333333373,
+        "normalized_power": 1.4000000000000057,
+        "normalized_grade": 1.8000000000000007,
+        "normalized_record": 1.850000000000006
+      },
+      {
+        "week": 9,
+        "manager_id": "1260801218851115008",
+        "manager_name": "Richmccc",
+        "other_manager": "joeyscott31",
+        "acquired_players": [
+          "Alvin Kamara"
+        ],
+        "gave_up_players": [
+          "Deebo Samuel"
+        ],
+        "other_acquired": [
+          "Deebo Samuel"
+        ],
+        "other_gave_up": [
+          "Alvin Kamara"
+        ],
+        "power_impact": -2.6999999999999886,
+        "grade_impact": -0.10000000000000053,
+        "record_impact": -0.06999999999999973,
+        "combined_impact": -0.98333333333333,
+        "normalized_power": -1.3499999999999943,
+        "normalized_grade": -0.20000000000000107,
+        "normalized_record": -1.3999999999999946
+      },
+      {
+        "week": 10,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "other_manager": "coletheman88",
+        "acquired_players": [],
+        "gave_up_players": [
+          "Isiah Pacheco"
+        ],
+        "other_acquired": [
+          "Isiah Pacheco"
+        ],
+        "other_gave_up": [],
+        "power_impact": -4.099999999999994,
+        "grade_impact": 0.6000000000000005,
+        "record_impact": -0.08749999999999986,
+        "combined_impact": -0.8666666666666645,
+        "normalized_power": -2.049999999999997,
+        "normalized_grade": 1.200000000000001,
+        "normalized_record": -1.7499999999999971
+      },
+      {
+        "week": 10,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "other_manager": "joeyscott31",
+        "acquired_players": [
+          "Isiah Pacheco"
+        ],
+        "gave_up_players": [],
+        "other_acquired": [],
+        "other_gave_up": [
+          "Isiah Pacheco"
+        ],
+        "power_impact": 5.099999999999994,
+        "grade_impact": 0.2999999999999998,
+        "record_impact": 0.13499999999999987,
+        "combined_impact": 1.9499999999999982,
+        "normalized_power": 2.549999999999997,
+        "normalized_grade": 0.5999999999999996,
+        "normalized_record": 2.6999999999999975
+      },
+      {
+        "week": 10,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "other_manager": "Shockley5",
+        "acquired_players": [
+          "Joe Burrow"
+        ],
+        "gave_up_players": [
+          "TreVeyon Henderson"
+        ],
+        "other_acquired": [
+          "TreVeyon Henderson"
+        ],
+        "other_gave_up": [
+          "Joe Burrow"
+        ],
+        "power_impact": -4.099999999999994,
+        "grade_impact": 0.6000000000000005,
+        "record_impact": -0.08749999999999986,
+        "combined_impact": -0.8666666666666645,
+        "normalized_power": -2.049999999999997,
+        "normalized_grade": 1.200000000000001,
+        "normalized_record": -1.7499999999999971
+      },
+      {
+        "week": 10,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "other_manager": "joeyscott31",
+        "acquired_players": [
+          "TreVeyon Henderson"
+        ],
+        "gave_up_players": [
+          "Joe Burrow"
+        ],
+        "other_acquired": [
+          "Joe Burrow"
+        ],
+        "other_gave_up": [
+          "TreVeyon Henderson"
+        ],
+        "power_impact": 3.0,
+        "grade_impact": -0.10000000000000053,
+        "record_impact": 0.0725,
+        "combined_impact": 0.9166666666666664,
+        "normalized_power": 1.5,
+        "normalized_grade": -0.20000000000000107,
+        "normalized_record": 1.45
+      },
+      {
+        "week": 10,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "other_manager": "Richmccc",
+        "acquired_players": [
+          "Ladd McConkey"
+        ],
+        "gave_up_players": [
+          "Cade Otton",
+          "Parker Washington"
+        ],
+        "other_acquired": [
+          "Cade Otton",
+          "Parker Washington"
+        ],
+        "other_gave_up": [
+          "Ladd McConkey"
+        ],
+        "power_impact": 5.099999999999994,
+        "grade_impact": 0.2999999999999998,
+        "record_impact": 0.13499999999999987,
+        "combined_impact": 1.9499999999999982,
+        "normalized_power": 2.549999999999997,
+        "normalized_grade": 0.5999999999999996,
+        "normalized_record": 2.6999999999999975
+      },
+      {
+        "week": 10,
+        "manager_id": "1260801218851115008",
+        "manager_name": "Richmccc",
+        "other_manager": "coletheman88",
+        "acquired_players": [
+          "Cade Otton",
+          "Parker Washington"
+        ],
+        "gave_up_players": [
+          "Ladd McConkey"
+        ],
+        "other_acquired": [
+          "Ladd McConkey"
+        ],
+        "other_gave_up": [
+          "Cade Otton",
+          "Parker Washington"
+        ],
+        "power_impact": -1.9000000000000057,
+        "grade_impact": 0.0,
+        "record_impact": -0.047500000000000146,
+        "combined_impact": -0.6333333333333352,
+        "normalized_power": -0.9500000000000028,
+        "normalized_grade": 0.0,
+        "normalized_record": -0.950000000000003
+      },
+      {
+        "week": 10,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "other_manager": "papabwall69",
+        "acquired_players": [
+          "Travis Kelce",
+          "Derrick Henry"
+        ],
+        "gave_up_players": [
+          "Brock Bowers",
+          "Kimani Vidal"
+        ],
+        "other_acquired": [
+          "Brock Bowers",
+          "Kimani Vidal"
+        ],
+        "other_gave_up": [
+          "Travis Kelce",
+          "Derrick Henry"
+        ],
+        "power_impact": -4.099999999999994,
+        "grade_impact": 0.6000000000000005,
+        "record_impact": -0.08749999999999986,
+        "combined_impact": -0.8666666666666645,
+        "normalized_power": -2.049999999999997,
+        "normalized_grade": 1.200000000000001,
+        "normalized_record": -1.7499999999999971
+      },
+      {
+        "week": 10,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "other_manager": "joeyscott31",
+        "acquired_players": [
+          "Brock Bowers",
+          "Kimani Vidal"
+        ],
+        "gave_up_players": [
+          "Travis Kelce",
+          "Derrick Henry"
+        ],
+        "other_acquired": [
+          "Travis Kelce",
+          "Derrick Henry"
+        ],
+        "other_gave_up": [
+          "Brock Bowers",
+          "Kimani Vidal"
+        ],
+        "power_impact": -3.200000000000017,
+        "grade_impact": 0.0,
+        "record_impact": -0.08000000000000043,
+        "combined_impact": -1.0666666666666724,
+        "normalized_power": -1.6000000000000085,
+        "normalized_grade": 0.0,
+        "normalized_record": -1.6000000000000085
+      },
+      {
+        "week": 10,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "other_manager": "Tcdun",
+        "acquired_players": [
+          "RJ Harvey",
+          "Jaylen Warren"
+        ],
+        "gave_up_players": [
+          "DJ Moore",
+          "Deebo Samuel"
+        ],
+        "other_acquired": [
+          "DJ Moore",
+          "Deebo Samuel"
+        ],
+        "other_gave_up": [
+          "RJ Harvey",
+          "Jaylen Warren"
+        ],
+        "power_impact": -4.099999999999994,
+        "grade_impact": 0.6000000000000005,
+        "record_impact": -0.08749999999999986,
+        "combined_impact": -0.8666666666666645,
+        "normalized_power": -2.049999999999997,
+        "normalized_grade": 1.200000000000001,
+        "normalized_record": -1.7499999999999971
+      },
+      {
+        "week": 10,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "other_manager": "joeyscott31",
+        "acquired_players": [
+          "DJ Moore",
+          "Deebo Samuel"
+        ],
+        "gave_up_players": [
+          "RJ Harvey",
+          "Jaylen Warren"
+        ],
+        "other_acquired": [
+          "RJ Harvey",
+          "Jaylen Warren"
+        ],
+        "other_gave_up": [
+          "DJ Moore",
+          "Deebo Samuel"
+        ],
+        "power_impact": -2.3999999999999773,
+        "grade_impact": 0.0,
+        "record_impact": -0.059999999999999436,
+        "combined_impact": -0.7999999999999924,
+        "normalized_power": -1.1999999999999886,
+        "normalized_grade": 0.0,
+        "normalized_record": -1.1999999999999886
+      },
+      {
+        "week": 10,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "other_manager": "Spillywilly69",
+        "acquired_players": [
+          "Tez Johnson",
+          "Zach Ertz",
+          "Amon-Ra St. Brown",
+          "Kenneth Gainwell"
+        ],
+        "gave_up_players": [
+          "Stefon Diggs",
+          "Dallas Goedert",
+          "DK Metcalf",
+          "Josh Jacobs"
+        ],
+        "other_acquired": [
+          "Stefon Diggs",
+          "Dallas Goedert",
+          "DK Metcalf",
+          "Josh Jacobs"
+        ],
+        "other_gave_up": [
+          "Tez Johnson",
+          "Zach Ertz",
+          "Amon-Ra St. Brown",
+          "Kenneth Gainwell"
+        ],
+        "power_impact": 3.0,
+        "grade_impact": -0.10000000000000053,
+        "record_impact": 0.0725,
+        "combined_impact": 0.9166666666666664,
+        "normalized_power": 1.5,
+        "normalized_grade": -0.20000000000000107,
+        "normalized_record": 1.45
+      },
+      {
+        "week": 10,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "other_manager": "Shockley5",
+        "acquired_players": [
+          "Stefon Diggs",
+          "Dallas Goedert",
+          "DK Metcalf",
+          "Josh Jacobs"
+        ],
+        "gave_up_players": [
+          "Tez Johnson",
+          "Zach Ertz",
+          "Amon-Ra St. Brown",
+          "Kenneth Gainwell"
+        ],
+        "other_acquired": [
+          "Tez Johnson",
+          "Zach Ertz",
+          "Amon-Ra St. Brown",
+          "Kenneth Gainwell"
+        ],
+        "other_gave_up": [
+          "Stefon Diggs",
+          "Dallas Goedert",
+          "DK Metcalf",
+          "Josh Jacobs"
+        ],
+        "power_impact": -0.6999999999999886,
+        "grade_impact": -0.5999999999999996,
+        "record_impact": -0.03249999999999971,
+        "combined_impact": -0.7333333333333293,
+        "normalized_power": -0.3499999999999943,
+        "normalized_grade": -1.1999999999999993,
+        "normalized_record": -0.6499999999999941
+      },
+      {
+        "week": 10,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "other_manager": "CallMeBeanz",
+        "acquired_players": [
+          "Baker Mayfield",
+          "Michael Pittman",
+          "Rachaad White"
+        ],
+        "gave_up_players": [
+          "Troy Franklin",
+          "Matthew Stafford",
+          "Travis Etienne",
+          "Josh Downs"
+        ],
+        "other_acquired": [
+          "Troy Franklin",
+          "Matthew Stafford",
+          "Travis Etienne",
+          "Josh Downs"
+        ],
+        "other_gave_up": [
+          "Baker Mayfield",
+          "Michael Pittman",
+          "Rachaad White"
+        ],
+        "power_impact": -0.6999999999999886,
+        "grade_impact": -0.5999999999999996,
+        "record_impact": -0.03249999999999971,
+        "combined_impact": -0.7333333333333293,
+        "normalized_power": -0.3499999999999943,
+        "normalized_grade": -1.1999999999999993,
+        "normalized_record": -0.6499999999999941
+      },
+      {
+        "week": 10,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "other_manager": "Spillywilly69",
+        "acquired_players": [
+          "Troy Franklin",
+          "Matthew Stafford",
+          "Travis Etienne",
+          "Josh Downs"
+        ],
+        "gave_up_players": [
+          "Baker Mayfield",
+          "Michael Pittman",
+          "Rachaad White"
+        ],
+        "other_acquired": [
+          "Baker Mayfield",
+          "Michael Pittman",
+          "Rachaad White"
+        ],
+        "other_gave_up": [
+          "Troy Franklin",
+          "Matthew Stafford",
+          "Travis Etienne",
+          "Josh Downs"
+        ],
+        "power_impact": 1.0999999999999943,
+        "grade_impact": -0.40000000000000036,
+        "record_impact": 0.01749999999999985,
+        "combined_impact": 0.03333333333333114,
+        "normalized_power": 0.5499999999999972,
+        "normalized_grade": -0.8000000000000007,
+        "normalized_record": 0.349999999999997
+      },
+      {
+        "week": 11,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "other_manager": "jackjohnnsonn26",
+        "acquired_players": [],
+        "gave_up_players": [
+          "Colston Loveland"
+        ],
+        "other_acquired": [
+          "Colston Loveland"
+        ],
+        "other_gave_up": [],
+        "power_impact": 0.5999999999999943,
+        "grade_impact": -0.6000000000000005,
+        "record_impact": -1.5543122344752193e-16,
+        "combined_impact": -0.3000000000000023,
+        "normalized_power": 0.29999999999999716,
+        "normalized_grade": -1.200000000000001,
+        "normalized_record": -3.1086244689504387e-15
+      },
+      {
+        "week": 11,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "other_manager": "joeyscott31",
+        "acquired_players": [
+          "Colston Loveland"
+        ],
+        "gave_up_players": [],
+        "other_acquired": [],
+        "other_gave_up": [
+          "Colston Loveland"
+        ],
+        "power_impact": -3.200000000000017,
+        "grade_impact": -0.2999999999999998,
+        "record_impact": -0.08750000000000042,
+        "combined_impact": -1.3166666666666722,
+        "normalized_power": -1.6000000000000085,
+        "normalized_grade": -0.5999999999999996,
+        "normalized_record": -1.7500000000000084
+      },
+      {
+        "week": 11,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "other_manager": "Richmccc",
+        "acquired_players": [],
+        "gave_up_players": [
+          "Kyle Monangai"
+        ],
+        "other_acquired": [
+          "Kyle Monangai"
+        ],
+        "other_gave_up": [],
+        "power_impact": -1.8000000000000114,
+        "grade_impact": 1.0,
+        "record_impact": -0.020000000000000285,
+        "combined_impact": 0.23333333333332953,
+        "normalized_power": -0.9000000000000057,
+        "normalized_grade": 2.0,
+        "normalized_record": -0.4000000000000057
+      },
+      {
+        "week": 11,
+        "manager_id": "1260801218851115008",
+        "manager_name": "Richmccc",
+        "other_manager": "Spillywilly69",
+        "acquired_players": [
+          "Kyle Monangai"
+        ],
+        "gave_up_players": [],
+        "other_acquired": [],
+        "other_gave_up": [
+          "Kyle Monangai"
+        ],
+        "power_impact": -2.1999999999999886,
+        "grade_impact": 0.10000000000000053,
+        "record_impact": -0.05249999999999971,
+        "combined_impact": -0.6499999999999958,
+        "normalized_power": -1.0999999999999943,
+        "normalized_grade": 0.20000000000000107,
+        "normalized_record": -1.049999999999994
+      },
+      {
+        "week": 11,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "other_manager": "papabwall69",
+        "acquired_players": [
+          "Puka Nacua"
+        ],
+        "gave_up_players": [
+          "DK Metcalf",
+          "D'Andre Swift",
+          "Michael Pittman"
+        ],
+        "other_acquired": [
+          "DK Metcalf",
+          "D'Andre Swift",
+          "Michael Pittman"
+        ],
+        "other_gave_up": [
+          "Puka Nacua"
+        ],
+        "power_impact": -1.8000000000000114,
+        "grade_impact": 1.0,
+        "record_impact": -0.020000000000000285,
+        "combined_impact": 0.23333333333332953,
+        "normalized_power": -0.9000000000000057,
+        "normalized_grade": 2.0,
+        "normalized_record": -0.4000000000000057
+      },
+      {
+        "week": 11,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "other_manager": "Spillywilly69",
+        "acquired_players": [
+          "DK Metcalf",
+          "D'Andre Swift",
+          "Michael Pittman"
+        ],
+        "gave_up_players": [
+          "Puka Nacua"
+        ],
+        "other_acquired": [
+          "Puka Nacua"
+        ],
+        "other_gave_up": [
+          "DK Metcalf",
+          "D'Andre Swift",
+          "Michael Pittman"
+        ],
+        "power_impact": -2.3999999999999773,
+        "grade_impact": 0.0,
+        "record_impact": -0.059999999999999436,
+        "combined_impact": -0.7999999999999924,
+        "normalized_power": -1.1999999999999886,
+        "normalized_grade": 0.0,
+        "normalized_record": -1.1999999999999886
+      },
+      {
+        "week": 11,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "other_manager": "papabwall69",
+        "acquired_players": [
+          "Quentin Johnston"
+        ],
+        "gave_up_players": [
+          "Rome Odunze"
+        ],
+        "other_acquired": [
+          "Rome Odunze"
+        ],
+        "other_gave_up": [
+          "Quentin Johnston"
+        ],
+        "power_impact": -3.200000000000017,
+        "grade_impact": -0.2999999999999998,
+        "record_impact": -0.08750000000000042,
+        "combined_impact": -1.3166666666666722,
+        "normalized_power": -1.6000000000000085,
+        "normalized_grade": -0.5999999999999996,
+        "normalized_record": -1.7500000000000084
+      },
+      {
+        "week": 11,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "other_manager": "jackjohnnsonn26",
+        "acquired_players": [
+          "Rome Odunze"
+        ],
+        "gave_up_players": [
+          "Quentin Johnston"
+        ],
+        "other_acquired": [
+          "Quentin Johnston"
+        ],
+        "other_gave_up": [
+          "Rome Odunze"
+        ],
+        "power_impact": -2.3999999999999773,
+        "grade_impact": 0.0,
+        "record_impact": -0.059999999999999436,
+        "combined_impact": -0.7999999999999924,
+        "normalized_power": -1.1999999999999886,
+        "normalized_grade": 0.0,
+        "normalized_record": -1.1999999999999886
+      },
+      {
+        "week": 11,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "other_manager": "coletheman88",
+        "acquired_players": [
+          "Drake Maye",
+          "Ladd McConkey"
+        ],
+        "gave_up_players": [
+          "Christian McCaffrey"
+        ],
+        "other_acquired": [
+          "Christian McCaffrey"
+        ],
+        "other_gave_up": [
+          "Drake Maye",
+          "Ladd McConkey"
+        ],
+        "power_impact": 2.5999999999999943,
+        "grade_impact": 0.0,
+        "record_impact": 0.06499999999999986,
+        "combined_impact": 0.8666666666666648,
+        "normalized_power": 1.2999999999999972,
+        "normalized_grade": 0.0,
+        "normalized_record": 1.2999999999999972
+      },
+      {
+        "week": 11,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "other_manager": "Tcdun",
+        "acquired_players": [
+          "Christian McCaffrey"
+        ],
+        "gave_up_players": [
+          "Drake Maye",
+          "Ladd McConkey"
+        ],
+        "other_acquired": [
+          "Drake Maye",
+          "Ladd McConkey"
+        ],
+        "other_gave_up": [
+          "Christian McCaffrey"
+        ],
+        "power_impact": 14.599999999999994,
+        "grade_impact": -0.2999999999999998,
+        "record_impact": 0.25,
+        "combined_impact": 3.899999999999999,
+        "normalized_power": 7.299999999999997,
+        "normalized_grade": -0.5999999999999996,
+        "normalized_record": 5.0
+      },
+      {
+        "week": 11,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "other_manager": "cmoney2137",
+        "acquired_players": [
+          "Ricky Pearsall",
+          "Colston Loveland"
+        ],
+        "gave_up_players": [
+          "RJ Harvey"
+        ],
+        "other_acquired": [
+          "RJ Harvey"
+        ],
+        "other_gave_up": [
+          "Ricky Pearsall",
+          "Colston Loveland"
+        ],
+        "power_impact": 0.5999999999999943,
+        "grade_impact": -0.6000000000000005,
+        "record_impact": -1.5543122344752193e-16,
+        "combined_impact": -0.3000000000000023,
+        "normalized_power": 0.29999999999999716,
+        "normalized_grade": -1.200000000000001,
+        "normalized_record": -3.1086244689504387e-15
+      },
+      {
+        "week": 11,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "other_manager": "joeyscott31",
+        "acquired_players": [
+          "RJ Harvey"
+        ],
+        "gave_up_players": [
+          "Ricky Pearsall",
+          "Colston Loveland"
+        ],
+        "other_acquired": [
+          "Ricky Pearsall",
+          "Colston Loveland"
+        ],
+        "other_gave_up": [
+          "RJ Harvey"
+        ],
+        "power_impact": -6.599999999999994,
+        "grade_impact": 0.5,
+        "record_impact": -0.15249999999999986,
+        "combined_impact": -1.7833333333333314,
+        "normalized_power": -3.299999999999997,
+        "normalized_grade": 1.0,
+        "normalized_record": -3.049999999999997
+      }
+    ],
+    "waiver_impacts": [
+      {
+        "week": 1,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Trey Benson",
+        "player_dropped": "Braelon Allen",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 1,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Trey Benson",
+        "player_dropped": "Bryce Young",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 1,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Harold Fannin",
+        "player_dropped": "Kaleb Johnson",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 1,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Los Angeles Rams",
+        "player_dropped": "Arizona Cardinals",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260801218851115008",
+        "manager_name": "Richmccc",
+        "player_added": "Calvin Austin",
+        "player_dropped": "Trevor Lawrence",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Quentin Johnston",
+        "player_dropped": "Jaydon Blue",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Romeo Doubs",
+        "player_dropped": "Amari Cooper",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 1,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Kaleb Johnson",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Dylan Sampson",
+        "player_dropped": "Luther Burden",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Chig Okonkwo",
+        "player_dropped": "Zach Ertz",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Matthew Stafford",
+        "player_dropped": "Michael Penix",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Marvin Mims",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Braelon Allen",
+        "player_dropped": "Trey Benson",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Evan McPherson",
+        "player_dropped": "Jordan Love",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Matt Gay",
+        "player_dropped": "Braelon Allen",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Amari Cooper",
+        "player_dropped": "Michael Pittman",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "San Francisco 49ers",
+        "player_dropped": "Kaleb Johnson",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 1,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Jerome Ford",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 1,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Washington Commanders",
+        "player_dropped": "Marvin Mims",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 1,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Arizona Cardinals",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 2,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Troy Franklin",
+        "player_dropped": "Tyler Allgeier",
+        "power_impact": 0.0,
+        "grade_impact": -0.25,
+        "combined_impact": -0.25,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 2,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Spencer Shrader",
+        "player_dropped": "Evan McPherson",
+        "power_impact": 0.0,
+        "grade_impact": 0.34999999999999964,
+        "combined_impact": 0.34999999999999964,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 2,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Bhayshul Tuten",
+        "player_dropped": "Xavier Legette",
+        "power_impact": 0.0,
+        "grade_impact": 0.34999999999999964,
+        "combined_impact": 0.34999999999999964,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 2,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Daniel Jones",
+        "player_dropped": "Joe Burrow",
+        "power_impact": 0.0,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": -0.2999999999999998,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 2,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Zach Ertz",
+        "player_dropped": "Aaron Rodgers",
+        "power_impact": 0.0,
+        "grade_impact": -0.25,
+        "combined_impact": -0.25,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 2,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Matt Prater",
+        "player_dropped": "Chase McLaughlin",
+        "power_impact": 0.0,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": 0.04999999999999982,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 2,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Juwan Johnson",
+        "player_dropped": "Ollie Gordon",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 2,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Daniel Jones",
+        "player_dropped": "C.J. Stroud",
+        "power_impact": 0.0,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": -0.2999999999999998,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 2,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Seattle Seahawks",
+        "player_dropped": "Los Angeles Rams",
+        "power_impact": 0.0,
+        "grade_impact": -0.25,
+        "combined_impact": -0.25,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 2,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Matt Prater",
+        "player_dropped": "Chase McLaughlin",
+        "power_impact": 0.0,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": 0.04999999999999982,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 2,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Tyler Allgeier",
+        "player_dropped": "Josh Downs",
+        "power_impact": 0.0,
+        "grade_impact": -0.25,
+        "combined_impact": -0.25,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 2,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Aaron Rodgers",
+        "player_dropped": "Bryce Young",
+        "power_impact": 0.0,
+        "grade_impact": -0.25,
+        "combined_impact": -0.25,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 2,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Jordan Love",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": 0.04999999999999982,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 2,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Marquise Brown",
+        "player_dropped": "Tank Bigsby",
+        "power_impact": 0.0,
+        "grade_impact": -0.25,
+        "combined_impact": -0.25,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 3,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Trey Benson",
+        "player_dropped": "Kyle Monangai",
+        "power_impact": 2.433333333333337,
+        "grade_impact": 0.0,
+        "combined_impact": 2.433333333333337,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 3,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Tre Tucker",
+        "player_dropped": "DeAndre Hopkins",
+        "power_impact": 2.433333333333337,
+        "grade_impact": 0.0,
+        "combined_impact": 2.433333333333337,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 3,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Michael Pittman",
+        "player_dropped": "Jayden Higgins",
+        "power_impact": 35.16666666666667,
+        "grade_impact": -0.14999999999999947,
+        "combined_impact": 35.01666666666667,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 3,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Tre Tucker",
+        "player_dropped": "Jerome Ford",
+        "power_impact": -6.066666666666663,
+        "grade_impact": -0.14999999999999947,
+        "combined_impact": -6.216666666666662,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 3,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Trey Benson",
+        "player_dropped": "None (roster space)",
+        "power_impact": 12.216666666666669,
+        "grade_impact": 0.0,
+        "combined_impact": 12.216666666666669,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 3,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Trey Benson",
+        "player_dropped": "Chris Godwin",
+        "power_impact": -1.6833333333333087,
+        "grade_impact": -0.10000000000000142,
+        "combined_impact": -1.7833333333333101,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 3,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Woody Marks",
+        "player_dropped": "Evan Engram",
+        "power_impact": 12.216666666666669,
+        "grade_impact": 0.0,
+        "combined_impact": 12.216666666666669,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 3,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "player_added": "Trey Benson",
+        "player_dropped": "None (roster space)",
+        "power_impact": 18.19999999999999,
+        "grade_impact": 0.5999999999999996,
+        "combined_impact": 18.79999999999999,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 3,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Michael Pittman",
+        "player_dropped": "Jason Myers",
+        "power_impact": -20.900000000000006,
+        "grade_impact": 0.34999999999999964,
+        "combined_impact": -20.550000000000004,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 3,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Trey Benson",
+        "player_dropped": "Dylan Sampson",
+        "power_impact": -20.900000000000006,
+        "grade_impact": 0.34999999999999964,
+        "combined_impact": -20.550000000000004,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 3,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Houston Texans",
+        "player_dropped": "Seattle Seahawks",
+        "power_impact": 12.216666666666669,
+        "grade_impact": 0.0,
+        "combined_impact": 12.216666666666669,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 3,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Jason Myers",
+        "player_dropped": "Marvin Mims",
+        "power_impact": -20.900000000000006,
+        "grade_impact": 0.34999999999999964,
+        "combined_impact": -20.550000000000004,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 3,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Indianapolis Colts",
+        "player_dropped": "None (roster space)",
+        "power_impact": 2.5833333333333144,
+        "grade_impact": 0.05000000000000071,
+        "combined_impact": 2.633333333333315,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 3,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Kyle Monangai",
+        "player_dropped": "None (roster space)",
+        "power_impact": 2.433333333333337,
+        "grade_impact": 0.0,
+        "combined_impact": 2.433333333333337,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 3,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Ollie Gordon",
+        "player_dropped": "None (roster space)",
+        "power_impact": 2.433333333333337,
+        "grade_impact": 0.0,
+        "combined_impact": 2.433333333333337,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 3,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "DeAndre Hopkins",
+        "player_dropped": "Trey Benson",
+        "power_impact": 2.433333333333337,
+        "grade_impact": 0.0,
+        "combined_impact": 2.433333333333337,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 4,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "New York Giants",
+        "player_dropped": "New England Patriots",
+        "power_impact": 0.2333333333333485,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": 0.18333333333334867,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Kareem Hunt",
+        "player_dropped": "Washington Commanders",
+        "power_impact": 7.76666666666668,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 7.91666666666668,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Kenneth Gainwell",
+        "player_dropped": "None (roster space)",
+        "power_impact": 35.0,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 35.15,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Malik Washington",
+        "player_dropped": "None (roster space)",
+        "power_impact": 35.0,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 35.15,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "player_added": "Kendre Miller",
+        "player_dropped": "Malik Nabers",
+        "power_impact": 2.8666666666666742,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 3.0666666666666744,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "player_added": "Kendre Miller",
+        "player_dropped": "Malik Nabers",
+        "power_impact": 2.8666666666666742,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 3.0666666666666744,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Darren Waller",
+        "player_dropped": "Marquise Brown",
+        "power_impact": 18.099999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": 18.149999999999995,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Wan'Dale Robinson",
+        "player_dropped": "None (roster space)",
+        "power_impact": 18.099999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": 18.149999999999995,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Deshaun Watson",
+        "player_dropped": "None (roster space)",
+        "power_impact": 18.099999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": 18.149999999999995,
+        "transaction_type": "commissioner"
+      },
+      {
+        "week": 4,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Darren Waller",
+        "player_dropped": "Washington Commanders",
+        "power_impact": 7.76666666666668,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 7.91666666666668,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Kenneth Gainwell",
+        "player_dropped": "Joey Slye",
+        "power_impact": 7.76666666666668,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 7.91666666666668,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Marvin Mims",
+        "player_dropped": "None (roster space)",
+        "power_impact": 4.866666666666674,
+        "grade_impact": 0.0,
+        "combined_impact": 4.866666666666674,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Kenneth Gainwell",
+        "player_dropped": "Luther Burden",
+        "power_impact": 4.866666666666674,
+        "grade_impact": 0.0,
+        "combined_impact": 4.866666666666674,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "New York Giants",
+        "player_dropped": "Houston Texans",
+        "power_impact": 18.099999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": 18.149999999999995,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Oronde Gadsden",
+        "player_dropped": "Elic Ayomanor",
+        "power_impact": 18.099999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": 18.149999999999995,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 4,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Ollie Gordon",
+        "player_dropped": "Dylan Sampson",
+        "power_impact": -22.43333333333331,
+        "grade_impact": 0.0,
+        "combined_impact": -22.43333333333331,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 4,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Luther Burden",
+        "player_dropped": "Ollie Gordon",
+        "power_impact": 4.866666666666674,
+        "grade_impact": 0.0,
+        "combined_impact": 4.866666666666674,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 4,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Chicago Bears",
+        "player_dropped": "Kyle Monangai",
+        "power_impact": 4.866666666666674,
+        "grade_impact": 0.0,
+        "combined_impact": 4.866666666666674,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 4,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Ollie Gordon",
+        "player_dropped": "DeAndre Hopkins",
+        "power_impact": 4.866666666666674,
+        "grade_impact": 0.0,
+        "combined_impact": 4.866666666666674,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 4,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Chris Godwin",
+        "player_dropped": "None (roster space)",
+        "power_impact": -8.733333333333348,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -8.783333333333347,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Chris Godwin",
+        "player_dropped": "None (roster space)",
+        "power_impact": -8.733333333333348,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -8.783333333333347,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 4,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "New England Patriots",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.2333333333333485,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": 0.18333333333334867,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 4,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Joey Slye",
+        "player_dropped": "None (roster space)",
+        "power_impact": 7.76666666666668,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 7.91666666666668,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 4,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Elic Ayomanor",
+        "player_dropped": "None (roster space)",
+        "power_impact": 18.099999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": 18.149999999999995,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "1260799280998785024",
+        "manager_name": "CameronMulyk",
+        "player_added": "Darren Waller",
+        "player_dropped": "Bhayshul Tuten",
+        "power_impact": -9.066666666666663,
+        "grade_impact": 0.35000000000000053,
+        "combined_impact": -8.716666666666661,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 5,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Jake Tonges",
+        "player_dropped": "None (roster space)",
+        "power_impact": 4.799999999999997,
+        "grade_impact": 0.0,
+        "combined_impact": 4.799999999999997,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 5,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Chris Boswell",
+        "player_dropped": "Ka'imi Fairbairn",
+        "power_impact": 20.033333333333317,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.183333333333316,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 5,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Green Bay Packers",
+        "player_dropped": "Arizona Cardinals",
+        "power_impact": -2.0999999999999943,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -2.0499999999999945,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 5,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Eddy Pineiro",
+        "player_dropped": "Daniel Carlson",
+        "power_impact": -2.0999999999999943,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -2.0499999999999945,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 5,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Darren Waller",
+        "player_dropped": "Emari Demercado",
+        "power_impact": 20.033333333333317,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.183333333333316,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 5,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Hassan Haskins",
+        "player_dropped": "Dalton Schultz",
+        "power_impact": 20.033333333333317,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.183333333333316,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 5,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Jake Tonges",
+        "player_dropped": "None (roster space)",
+        "power_impact": 4.799999999999997,
+        "grade_impact": 0.0,
+        "combined_impact": 4.799999999999997,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 5,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Las Vegas Raiders",
+        "player_dropped": "New York Giants",
+        "power_impact": 20.033333333333317,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.183333333333316,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 5,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Kenneth Gainwell",
+        "player_dropped": "None (roster space)",
+        "power_impact": 4.799999999999997,
+        "grade_impact": 0.0,
+        "combined_impact": 4.799999999999997,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 5,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Rico Dowdle",
+        "player_dropped": "None (roster space)",
+        "power_impact": 20.033333333333317,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.183333333333316,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Dalton Schultz",
+        "player_dropped": "Taysom Hill",
+        "power_impact": 20.033333333333317,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.183333333333316,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Taysom Hill",
+        "player_dropped": "Elic Ayomanor",
+        "power_impact": 20.033333333333317,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.183333333333316,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Justice Hill",
+        "player_dropped": "Jayden Higgins",
+        "power_impact": 24.19999999999999,
+        "grade_impact": 0.10000000000000053,
+        "combined_impact": 24.29999999999999,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Jason Myers",
+        "player_dropped": "Jake Elliott",
+        "power_impact": 4.799999999999997,
+        "grade_impact": 0.0,
+        "combined_impact": 4.799999999999997,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Marquise Brown",
+        "player_dropped": "None (roster space)",
+        "power_impact": -11.133333333333326,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": -10.933333333333326,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Rachaad White",
+        "player_dropped": "Tre Tucker",
+        "power_impact": -11.133333333333326,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": -10.933333333333326,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Michael Carter",
+        "player_dropped": "Ollie Gordon",
+        "power_impact": -15.599999999999994,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": -15.899999999999995,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Jaxson Dart",
+        "player_dropped": "None (roster space)",
+        "power_impact": 21.03333333333333,
+        "grade_impact": 0.0,
+        "combined_impact": 21.03333333333333,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Arizona Cardinals",
+        "player_dropped": "New England Patriots",
+        "power_impact": -2.0999999999999943,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -2.0499999999999945,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Troy Franklin",
+        "player_dropped": "None (roster space)",
+        "power_impact": -2.0999999999999943,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -2.0499999999999945,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 5,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Indianapolis Colts",
+        "player_dropped": "San Francisco 49ers",
+        "power_impact": -15.599999999999994,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": -15.899999999999995,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 5,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Los Angeles Rams",
+        "player_dropped": "Indianapolis Colts",
+        "power_impact": 12.733333333333348,
+        "grade_impact": 0.0,
+        "combined_impact": 12.733333333333348,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Emari Demercado",
+        "player_dropped": "Chris Boswell",
+        "power_impact": 20.033333333333317,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.183333333333316,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Jacksonville Jaguars",
+        "player_dropped": "Green Bay Packers",
+        "power_impact": 7.666666666666671,
+        "grade_impact": 0.5,
+        "combined_impact": 8.166666666666671,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Elic Ayomanor",
+        "player_dropped": "None (roster space)",
+        "power_impact": 20.033333333333317,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.183333333333316,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Ka'imi Fairbairn",
+        "player_dropped": "Troy Franklin",
+        "power_impact": 20.033333333333317,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.183333333333316,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Darius Slayton",
+        "player_dropped": "None (roster space)",
+        "power_impact": 4.799999999999997,
+        "grade_impact": 0.0,
+        "combined_impact": 4.799999999999997,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Chase McLaughlin",
+        "player_dropped": "Matt Prater",
+        "power_impact": 21.03333333333333,
+        "grade_impact": 0.0,
+        "combined_impact": 21.03333333333333,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Cleveland Browns",
+        "player_dropped": "None (roster space)",
+        "power_impact": 21.03333333333333,
+        "grade_impact": 0.0,
+        "combined_impact": 21.03333333333333,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 5,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Brenton Strange",
+        "player_dropped": "Joey Slye",
+        "power_impact": 12.733333333333348,
+        "grade_impact": 0.0,
+        "combined_impact": 12.733333333333348,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 6,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Kimani Vidal",
+        "player_dropped": "Darius Slayton",
+        "power_impact": 6.800000000000011,
+        "grade_impact": 0.0,
+        "combined_impact": 6.800000000000011,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 6,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Kansas City Chiefs",
+        "player_dropped": "Las Vegas Raiders",
+        "power_impact": 29.03333333333333,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": 28.98333333333333,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 6,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Kimani Vidal",
+        "player_dropped": "Hassan Haskins",
+        "power_impact": 29.03333333333333,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": 28.98333333333333,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 6,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Tez Johnson",
+        "player_dropped": "None (roster space)",
+        "power_impact": 6.800000000000011,
+        "grade_impact": 0.0,
+        "combined_impact": 6.800000000000011,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 6,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Michael Badgley",
+        "player_dropped": "Brandon McManus",
+        "power_impact": 19.00000000000003,
+        "grade_impact": -0.25,
+        "combined_impact": 18.75000000000003,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 6,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Jalen Coker",
+        "player_dropped": "Kimani Vidal",
+        "power_impact": 6.800000000000011,
+        "grade_impact": 0.0,
+        "combined_impact": 6.800000000000011,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 6,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Indianapolis Colts",
+        "player_dropped": "None (roster space)",
+        "power_impact": -12.366666666666674,
+        "grade_impact": 0.34999999999999964,
+        "combined_impact": -12.016666666666675,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 6,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Mason Taylor",
+        "player_dropped": "None (roster space)",
+        "power_impact": 29.03333333333333,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": 28.98333333333333,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 6,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Indianapolis Colts",
+        "player_dropped": "Chicago Bears",
+        "power_impact": 6.800000000000011,
+        "grade_impact": 0.0,
+        "combined_impact": 6.800000000000011,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 6,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Indianapolis Colts",
+        "player_dropped": "New England Patriots",
+        "power_impact": -16.599999999999994,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": -16.899999999999995,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 6,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "New England Patriots",
+        "player_dropped": "Indianapolis Colts",
+        "power_impact": -16.599999999999994,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": -16.899999999999995,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 6,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Kimani Vidal",
+        "player_dropped": "None (roster space)",
+        "power_impact": 6.800000000000011,
+        "grade_impact": 0.0,
+        "combined_impact": 6.800000000000011,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 6,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Matt Prater",
+        "player_dropped": "None (roster space)",
+        "power_impact": -16.599999999999994,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": -16.899999999999995,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 6,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "AJ Barner",
+        "player_dropped": "Chig Okonkwo",
+        "power_impact": -16.599999999999994,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": -16.899999999999995,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 6,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Brandon McManus",
+        "player_dropped": "Cam Little",
+        "power_impact": 19.00000000000003,
+        "grade_impact": -0.25,
+        "combined_impact": 18.75000000000003,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Jake Moody",
+        "player_dropped": "Jason Myers",
+        "power_impact": 3.700000000000003,
+        "grade_impact": 0.2999999999999998,
+        "combined_impact": 4.000000000000003,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 7,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Tez Johnson",
+        "player_dropped": "Jalen Coker",
+        "power_impact": 3.700000000000003,
+        "grade_impact": 0.2999999999999998,
+        "combined_impact": 4.000000000000003,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 7,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Houston Texans",
+        "player_dropped": "None (roster space)",
+        "power_impact": 19.53333333333333,
+        "grade_impact": -0.20000000000000018,
+        "combined_impact": 19.333333333333332,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 7,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Tez Johnson",
+        "player_dropped": "None (roster space)",
+        "power_impact": 19.53333333333333,
+        "grade_impact": -0.20000000000000018,
+        "combined_impact": 19.333333333333332,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 7,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Oronde Gadsden",
+        "player_dropped": "Mason Taylor",
+        "power_impact": 24.53333333333333,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 24.73333333333333,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 7,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Kyle Monangai",
+        "player_dropped": "Kenneth Gainwell",
+        "power_impact": 3.700000000000003,
+        "grade_impact": 0.2999999999999998,
+        "combined_impact": 4.000000000000003,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 7,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Kyle Monangai",
+        "player_dropped": "Kansas City Chiefs",
+        "power_impact": 24.53333333333333,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 24.73333333333333,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 7,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Tampa Bay Buccaneers",
+        "player_dropped": "Luke McCaffrey",
+        "power_impact": 24.53333333333333,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 24.73333333333333,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Tyler Allgeier",
+        "player_dropped": "Justin Fields",
+        "power_impact": -3.833333333333343,
+        "grade_impact": 0.25,
+        "combined_impact": -3.583333333333343,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 7,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Brashard Smith",
+        "player_dropped": "Jordan Whittington",
+        "power_impact": -3.833333333333343,
+        "grade_impact": 0.25,
+        "combined_impact": -3.583333333333343,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 7,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Zonovan Knight",
+        "player_dropped": "Tez Johnson",
+        "power_impact": 3.700000000000003,
+        "grade_impact": 0.2999999999999998,
+        "combined_impact": 4.000000000000003,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Brandon McManus",
+        "player_dropped": "None (roster space)",
+        "power_impact": 1.8999999999999915,
+        "grade_impact": -0.09999999999999964,
+        "combined_impact": 1.7999999999999918,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Chris Moore",
+        "player_dropped": "Brock Purdy",
+        "power_impact": 8.933333333333323,
+        "grade_impact": 0.0,
+        "combined_impact": 8.933333333333323,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Luke McCaffrey",
+        "player_dropped": "None (roster space)",
+        "power_impact": 24.53333333333333,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 24.73333333333333,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Tre Tucker",
+        "player_dropped": "Michael Carter",
+        "power_impact": -11.26666666666668,
+        "grade_impact": 0.0,
+        "combined_impact": -11.26666666666668,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Elic Ayomanor",
+        "player_dropped": "Josh Downs",
+        "power_impact": -3.833333333333343,
+        "grade_impact": 0.25,
+        "combined_impact": -3.583333333333343,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Kendrick Bourne",
+        "player_dropped": "David Njoku",
+        "power_impact": -3.833333333333343,
+        "grade_impact": 0.25,
+        "combined_impact": -3.583333333333343,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Jake Elliott",
+        "player_dropped": "Matt Prater",
+        "power_impact": -11.26666666666668,
+        "grade_impact": 0.0,
+        "combined_impact": -11.26666666666668,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Jaxson Dart",
+        "player_dropped": "Tyrone Tracy",
+        "power_impact": -11.26666666666668,
+        "grade_impact": 0.0,
+        "combined_impact": -11.26666666666668,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Kameron Johnson",
+        "player_dropped": "Minnesota Vikings",
+        "power_impact": -7.599999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -7.5499999999999945,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Jordan Whittington",
+        "player_dropped": "Troy Franklin",
+        "power_impact": -3.833333333333343,
+        "grade_impact": 0.25,
+        "combined_impact": -3.583333333333343,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 7,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Josh Downs",
+        "player_dropped": "Brian Robinson",
+        "power_impact": -3.833333333333343,
+        "grade_impact": 0.25,
+        "combined_impact": -3.583333333333343,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 8,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Aaron Jones",
+        "player_dropped": "Brandon McManus",
+        "power_impact": -1.13333333333334,
+        "grade_impact": 0.25,
+        "combined_impact": -0.88333333333334,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 8,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Tyrone Tracy",
+        "player_dropped": "Darnell Mooney",
+        "power_impact": 16.366666666666674,
+        "grade_impact": 0.9000000000000004,
+        "combined_impact": 17.266666666666673,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 8,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "player_added": "Aaron Jones",
+        "player_dropped": "None (roster space)",
+        "power_impact": -11.600000000000009,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -12.000000000000009,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 8,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Tyrone Tracy",
+        "player_dropped": "Jake Elliott",
+        "power_impact": -4.26666666666668,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": -4.31666666666668,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 8,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Aaron Jones",
+        "player_dropped": "Sterling Shepard",
+        "power_impact": -4.26666666666668,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": -4.31666666666668,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 8,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Aaron Jones",
+        "player_dropped": "TreVeyon Henderson",
+        "power_impact": 16.366666666666674,
+        "grade_impact": 0.9000000000000004,
+        "combined_impact": 17.266666666666673,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 8,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Tyrone Tracy",
+        "player_dropped": "Kameron Johnson",
+        "power_impact": -3.73333333333332,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": -4.03333333333332,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 8,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Aaron Jones",
+        "player_dropped": "Zonovan Knight",
+        "power_impact": 2.6333333333333258,
+        "grade_impact": 0.2999999999999998,
+        "combined_impact": 2.9333333333333256,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 8,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Aaron Jones",
+        "player_dropped": "Brandon McManus",
+        "power_impact": -1.13333333333334,
+        "grade_impact": 0.25,
+        "combined_impact": -0.88333333333334,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 8,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Los Angeles Chargers",
+        "player_dropped": "Tampa Bay Buccaneers",
+        "power_impact": 16.366666666666674,
+        "grade_impact": 0.9000000000000004,
+        "combined_impact": 17.266666666666673,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 8,
+        "manager_id": "1260801218851115008",
+        "manager_name": "Richmccc",
+        "player_added": "Tyrone Tracy",
+        "player_dropped": "Austin Ekeler",
+        "power_impact": -12.300000000000011,
+        "grade_impact": 0.09999999999999964,
+        "combined_impact": -12.200000000000012,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 8,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Tyrone Tracy",
+        "player_dropped": "Zonovan Knight",
+        "power_impact": 2.6333333333333258,
+        "grade_impact": 0.2999999999999998,
+        "combined_impact": 2.9333333333333256,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 8,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "player_added": "Aaron Rodgers",
+        "player_dropped": "None (roster space)",
+        "power_impact": -11.600000000000009,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -12.000000000000009,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 8,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Darnell Mooney",
+        "player_dropped": "None (roster space)",
+        "power_impact": 16.366666666666674,
+        "grade_impact": 0.9000000000000004,
+        "combined_impact": 17.266666666666673,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 8,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Marcus Mariota",
+        "player_dropped": "Chris Moore",
+        "power_impact": 5.299999999999997,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": 5.249999999999997,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 8,
+        "manager_id": "1260799280998785024",
+        "manager_name": "CameronMulyk",
+        "player_added": "Dalton Schultz",
+        "player_dropped": "None (roster space)",
+        "power_impact": -17.40000000000002,
+        "grade_impact": -0.35000000000000053,
+        "combined_impact": -17.75000000000002,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 8,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Isaiah Davis",
+        "player_dropped": "Darnell Mooney",
+        "power_impact": 10.566666666666677,
+        "grade_impact": -0.15000000000000036,
+        "combined_impact": 10.416666666666677,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 8,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Kayshon Boutte",
+        "player_dropped": "AJ Barner",
+        "power_impact": -4.26666666666668,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": -4.31666666666668,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 8,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "player_added": "Wil Lutz",
+        "player_dropped": "Jake Bates",
+        "power_impact": -11.600000000000009,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -12.000000000000009,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 8,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Sterling Shepard",
+        "player_dropped": "Tre Tucker",
+        "power_impact": -4.26666666666668,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": -4.31666666666668,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 8,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Atlanta Falcons",
+        "player_dropped": "Jacksonville Jaguars",
+        "power_impact": 10.566666666666677,
+        "grade_impact": -0.15000000000000036,
+        "combined_impact": 10.416666666666677,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 8,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Cairo Santos",
+        "player_dropped": "Wil Lutz",
+        "power_impact": 2.6333333333333258,
+        "grade_impact": 0.2999999999999998,
+        "combined_impact": 2.9333333333333256,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 8,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Wil Lutz",
+        "player_dropped": "Jake Moody",
+        "power_impact": 2.6333333333333258,
+        "grade_impact": 0.2999999999999998,
+        "combined_impact": 2.9333333333333256,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Olamide Zaccheaus",
+        "player_dropped": "None (roster space)",
+        "power_impact": 3.4666666666666686,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": 3.4166666666666687,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Tre Tucker",
+        "player_dropped": "None (roster space)",
+        "power_impact": 3.866666666666646,
+        "grade_impact": 0.2999999999999998,
+        "combined_impact": 4.166666666666646,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 9,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Christian Watson",
+        "player_dropped": "None (roster space)",
+        "power_impact": -1.8333333333333428,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": -1.6833333333333433,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Green Bay Packers",
+        "player_dropped": "Jacksonville Jaguars",
+        "power_impact": 13.799999999999997,
+        "grade_impact": -0.20000000000000107,
+        "combined_impact": 13.599999999999996,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 9,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Houston Texans",
+        "player_dropped": "None (roster space)",
+        "power_impact": -1.8333333333333428,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": -1.6833333333333433,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 9,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Aaron Rodgers",
+        "player_dropped": "None (roster space)",
+        "power_impact": -1.8333333333333428,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": -1.6833333333333433,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Green Bay Packers",
+        "player_dropped": "Jacksonville Jaguars",
+        "power_impact": 13.799999999999997,
+        "grade_impact": -0.20000000000000107,
+        "combined_impact": 13.599999999999996,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Josh Downs",
+        "player_dropped": "Zonovan Knight",
+        "power_impact": 0.06666666666667709,
+        "grade_impact": 0.5,
+        "combined_impact": 0.5666666666666771,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 9,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Carolina Panthers",
+        "player_dropped": "Los Angeles Chargers",
+        "power_impact": 4.2333333333333485,
+        "grade_impact": 0.9000000000000004,
+        "combined_impact": 5.133333333333349,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Christian Watson",
+        "player_dropped": "Isaiah Davis",
+        "power_impact": 13.799999999999997,
+        "grade_impact": -0.20000000000000107,
+        "combined_impact": 13.599999999999996,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Parker Washington",
+        "player_dropped": "None (roster space)",
+        "power_impact": 13.799999999999997,
+        "grade_impact": -0.20000000000000107,
+        "combined_impact": 13.599999999999996,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Kyle Monangai",
+        "player_dropped": "None (roster space)",
+        "power_impact": 4.2333333333333485,
+        "grade_impact": 0.9000000000000004,
+        "combined_impact": 5.133333333333349,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Elic Ayomanor",
+        "player_dropped": "Emanuel Wilson",
+        "power_impact": -1.8333333333333428,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": -1.6833333333333433,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "player_added": "Seattle Seahawks",
+        "player_dropped": "None (roster space)",
+        "power_impact": -6.36666666666666,
+        "grade_impact": -0.7000000000000011,
+        "combined_impact": -7.066666666666661,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260801218851115008",
+        "manager_name": "Richmccc",
+        "player_added": "Samaje Perine",
+        "player_dropped": "None (roster space)",
+        "power_impact": -9.366666666666646,
+        "grade_impact": 0.05000000000000071,
+        "combined_impact": -9.316666666666645,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260801218851115008",
+        "manager_name": "Richmccc",
+        "player_added": "Joe Flacco",
+        "player_dropped": "Calvin Austin",
+        "power_impact": -9.366666666666646,
+        "grade_impact": 0.05000000000000071,
+        "combined_impact": -9.316666666666645,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Emanuel Wilson",
+        "player_dropped": "Elic Ayomanor",
+        "power_impact": -1.8333333333333428,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": -1.6833333333333433,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Colston Loveland",
+        "player_dropped": "None (roster space)",
+        "power_impact": -1.8333333333333428,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": -1.6833333333333433,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Joshua Karty",
+        "player_dropped": "None (roster space)",
+        "power_impact": 3.4666666666666686,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": 3.4166666666666687,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Jacksonville Jaguars",
+        "player_dropped": "Atlanta Falcons",
+        "power_impact": 13.799999999999997,
+        "grade_impact": -0.20000000000000107,
+        "combined_impact": 13.599999999999996,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Matt Prater",
+        "player_dropped": "Sterling Shepard",
+        "power_impact": -2.1333333333333258,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": -2.1833333333333256,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Tyjae Spears",
+        "player_dropped": "Jake Elliott",
+        "power_impact": -2.1333333333333258,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": -2.1833333333333256,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Troy Franklin",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.06666666666667709,
+        "grade_impact": 0.5,
+        "combined_impact": 0.5666666666666771,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Devin Singletary",
+        "player_dropped": "None (roster space)",
+        "power_impact": 13.799999999999997,
+        "grade_impact": -0.20000000000000107,
+        "combined_impact": 13.599999999999996,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Jake Bates",
+        "player_dropped": "Michael Badgley",
+        "power_impact": 3.866666666666646,
+        "grade_impact": 0.2999999999999998,
+        "combined_impact": 4.166666666666646,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 9,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Sam Darnold",
+        "player_dropped": "Marquise Brown",
+        "power_impact": 1.4666666666666686,
+        "grade_impact": -0.15000000000000036,
+        "combined_impact": 1.3166666666666682,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Luther Burden",
+        "player_dropped": "Dalton Kincaid",
+        "power_impact": 0.3333333333333286,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 0.5333333333333288,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Jayden Reed",
+        "player_dropped": "None (roster space)",
+        "power_impact": 17.5,
+        "grade_impact": 0.0,
+        "combined_impact": 17.5,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "J.J. McCarthy",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.3999999999999915,
+        "grade_impact": -0.25,
+        "combined_impact": 0.14999999999999147,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Sean Tucker",
+        "player_dropped": "None (roster space)",
+        "power_impact": 17.5,
+        "grade_impact": 0.0,
+        "combined_impact": 17.5,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Jason Myers",
+        "player_dropped": "Matt Gay",
+        "power_impact": 17.5,
+        "grade_impact": 0.0,
+        "combined_impact": 17.5,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Aaron Rodgers",
+        "player_dropped": "None (roster space)",
+        "power_impact": -0.7666666666666515,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": -0.6166666666666512,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Los Angeles Rams",
+        "player_dropped": "Cleveland Browns",
+        "power_impact": -1.7333333333333485,
+        "grade_impact": 0.35000000000000053,
+        "combined_impact": -1.383333333333348,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Seattle Seahawks",
+        "player_dropped": "Chicago Bears",
+        "power_impact": 0.3333333333333286,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 0.5333333333333288,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Baltimore Ravens",
+        "player_dropped": "Carolina Panthers",
+        "power_impact": -0.7666666666666515,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": -0.6166666666666512,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Seattle Seahawks",
+        "player_dropped": "Chicago Bears",
+        "power_impact": 0.3333333333333286,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 0.5333333333333288,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Dalton Kincaid",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.3333333333333286,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 0.5333333333333288,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 10,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Luke Musgrave",
+        "player_dropped": "Olamide Zaccheaus",
+        "power_impact": 0.8000000000000114,
+        "grade_impact": 0.0,
+        "combined_impact": 0.8000000000000114,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 10,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Carolina Panthers",
+        "player_dropped": "Seattle Seahawks",
+        "power_impact": -0.7666666666666515,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": -0.6166666666666512,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Sam Darnold",
+        "player_dropped": "Aaron Rodgers",
+        "power_impact": -3.5999999999999943,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": -3.399999999999995,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Seattle Seahawks",
+        "player_dropped": "Jacksonville Jaguars",
+        "power_impact": -0.7666666666666515,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": -0.6166666666666512,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Jacksonville Jaguars",
+        "player_dropped": "None (roster space)",
+        "power_impact": -0.7666666666666515,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": -0.6166666666666512,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 10,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Isiah Pacheco",
+        "player_dropped": "Carolina Panthers",
+        "power_impact": -0.7666666666666515,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": -0.6166666666666512,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Emari Demercado",
+        "player_dropped": "Tyjae Spears",
+        "power_impact": -4.133333333333326,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -4.083333333333326,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 10,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Alec Pierce",
+        "player_dropped": "None (roster space)",
+        "power_impact": -3.5999999999999943,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": -3.399999999999995,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260801218851115008",
+        "manager_name": "Richmccc",
+        "player_added": "Darius Slayton",
+        "player_dropped": "Isiah Pacheco",
+        "power_impact": -3.433333333333337,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": -3.483333333333338,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260801218851115008",
+        "manager_name": "Richmccc",
+        "player_added": "Michael Badgley",
+        "player_dropped": "None (roster space)",
+        "power_impact": -3.433333333333337,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": -3.483333333333338,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Theo Johnson",
+        "player_dropped": "Cooper Kupp",
+        "power_impact": -4.133333333333326,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -4.083333333333326,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Green Bay Packers",
+        "player_dropped": "Jacksonville Jaguars",
+        "power_impact": 17.5,
+        "grade_impact": 0.0,
+        "combined_impact": 17.5,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 10,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Cleveland Browns",
+        "player_dropped": "Los Angeles Rams",
+        "power_impact": -1.7333333333333485,
+        "grade_impact": 0.35000000000000053,
+        "combined_impact": -1.383333333333348,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 11,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Las Vegas Raiders",
+        "player_dropped": "Los Angeles Rams",
+        "power_impact": -4.833333333333314,
+        "grade_impact": 0.09999999999999964,
+        "combined_impact": -4.733333333333315,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 11,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Michael Wilson",
+        "player_dropped": "None (roster space)",
+        "power_impact": -2.833333333333343,
+        "grade_impact": 0.34999999999999964,
+        "combined_impact": -2.483333333333343,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 11,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Jacoby Brissett",
+        "player_dropped": "None (roster space)",
+        "power_impact": -2.433333333333337,
+        "grade_impact": -0.8499999999999996,
+        "combined_impact": -3.2833333333333368,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 11,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Emanuel Wilson",
+        "player_dropped": "None (roster space)",
+        "power_impact": -0.6333333333333258,
+        "grade_impact": -0.5500000000000007,
+        "combined_impact": -1.1833333333333265,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 11,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Emanuel Wilson",
+        "player_dropped": "None (roster space)",
+        "power_impact": -0.6333333333333258,
+        "grade_impact": -0.5500000000000007,
+        "combined_impact": -1.1833333333333265,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 11,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Jacoby Brissett",
+        "player_dropped": "Tre Tucker",
+        "power_impact": -4.833333333333314,
+        "grade_impact": 0.09999999999999964,
+        "combined_impact": -4.733333333333315,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 11,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Andrei Iosivas",
+        "player_dropped": "None (roster space)",
+        "power_impact": 20.69999999999999,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": 20.64999999999999,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 11,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Darnell Mooney",
+        "player_dropped": "None (roster space)",
+        "power_impact": -2.433333333333337,
+        "grade_impact": -0.8499999999999996,
+        "combined_impact": -3.2833333333333368,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 11,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Emanuel Wilson",
+        "player_dropped": "Nick Chubb",
+        "power_impact": 2.2333333333333343,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": 1.9333333333333345,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 11,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Will Reichard",
+        "player_dropped": "Matt Prater",
+        "power_impact": -4.433333333333309,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -4.383333333333309,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 11,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "player_added": "Pat Freiermuth",
+        "player_dropped": "None (roster space)",
+        "power_impact": -4.966666666666683,
+        "grade_impact": 0.10000000000000053,
+        "combined_impact": -4.866666666666682,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 11,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Kansas City Chiefs",
+        "player_dropped": "Josh Downs",
+        "power_impact": -2.833333333333343,
+        "grade_impact": 0.34999999999999964,
+        "combined_impact": -2.483333333333343,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 11,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Brock Purdy",
+        "player_dropped": "Trevor Lawrence",
+        "power_impact": 20.69999999999999,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": 20.64999999999999,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 11,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Nick Chubb",
+        "player_dropped": "None (roster space)",
+        "power_impact": 2.2333333333333343,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": 1.9333333333333345,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 11,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "David Njoku",
+        "player_dropped": "None (roster space)",
+        "power_impact": 2.2333333333333343,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": 1.9333333333333345,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 11,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Tony Pollard",
+        "player_dropped": "None (roster space)",
+        "power_impact": 2.2333333333333343,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": 1.9333333333333345,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 11,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Tyjae Spears",
+        "player_dropped": "None (roster space)",
+        "power_impact": 2.2333333333333343,
+        "grade_impact": -0.2999999999999998,
+        "combined_impact": 1.9333333333333345,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 11,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Calvin Austin",
+        "player_dropped": "None (roster space)",
+        "power_impact": -5.099999999999994,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": -4.899999999999994,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 11,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Trevor Lawrence",
+        "player_dropped": "None (roster space)",
+        "power_impact": 20.69999999999999,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": 20.64999999999999,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 11,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Dalton Kincaid",
+        "player_dropped": "Brashard Smith",
+        "power_impact": -5.099999999999994,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": -4.899999999999994,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 11,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Brock Purdy",
+        "player_dropped": "None (roster space)",
+        "power_impact": -0.8333333333333144,
+        "grade_impact": 0.0,
+        "combined_impact": -0.8333333333333144,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Chris Rodriguez",
+        "player_dropped": "None (roster space)",
+        "power_impact": -3.7333333333333343,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -4.133333333333335,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 12,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Matt Prater",
+        "player_dropped": "Jake Bates",
+        "power_impact": -5.96666666666664,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": -6.01666666666664,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 12,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Los Angeles Rams",
+        "player_dropped": "Las Vegas Raiders",
+        "power_impact": -5.96666666666664,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": -6.01666666666664,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 12,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Los Angeles Chargers",
+        "player_dropped": "Baltimore Ravens",
+        "power_impact": -1.5666666666666629,
+        "grade_impact": -0.8499999999999996,
+        "combined_impact": -2.4166666666666625,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 12,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Los Angeles Rams",
+        "player_dropped": "Green Bay Packers",
+        "power_impact": 15.38333333333334,
+        "grade_impact": -0.09999999999999964,
+        "combined_impact": 15.28333333333334,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 12,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Devin Neal",
+        "player_dropped": "Trevor Lawrence",
+        "power_impact": -3.7333333333333343,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -4.133333333333335,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 12,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Matt Gay",
+        "player_dropped": "Will Reichard",
+        "power_impact": -2.566666666666663,
+        "grade_impact": 0.0,
+        "combined_impact": -2.566666666666663,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Bhayshul Tuten",
+        "player_dropped": "Emari Demercado",
+        "power_impact": -2.566666666666663,
+        "grade_impact": 0.0,
+        "combined_impact": -2.566666666666663,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Jake Elliott",
+        "player_dropped": "None (roster space)",
+        "power_impact": -4.400000000000006,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": -4.2000000000000055,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Bryce Young",
+        "player_dropped": "Aaron Rodgers",
+        "power_impact": -1.5666666666666629,
+        "grade_impact": -0.8499999999999996,
+        "combined_impact": -2.4166666666666625,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Cooper Kupp",
+        "player_dropped": "Tyrell Shavers",
+        "power_impact": -3.7333333333333343,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -4.133333333333335,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Tony Pollard",
+        "player_dropped": "Jordan Love",
+        "power_impact": -1.6166666666666458,
+        "grade_impact": 0.0,
+        "combined_impact": -1.6166666666666458,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Zonovan Knight",
+        "player_dropped": "Luke Musgrave",
+        "power_impact": -1.6166666666666458,
+        "grade_impact": 0.0,
+        "combined_impact": -1.6166666666666458,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Trevor Lawrence",
+        "player_dropped": "None (roster space)",
+        "power_impact": -3.7333333333333343,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -4.133333333333335,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "Tyrell Shavers",
+        "player_dropped": "None (roster space)",
+        "power_impact": -3.7333333333333343,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -4.133333333333335,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "1260801218851115008",
+        "manager_name": "Richmccc",
+        "player_added": "Jacksonville Jaguars",
+        "player_dropped": "Joe Flacco",
+        "power_impact": 3.4000000000000057,
+        "grade_impact": 0.0,
+        "combined_impact": 3.4000000000000057,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Tank Bigsby",
+        "player_dropped": "None (roster space)",
+        "power_impact": -3.1166666666666742,
+        "grade_impact": -0.34999999999999964,
+        "combined_impact": -3.466666666666674,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "San Francisco 49ers",
+        "player_dropped": "None (roster space)",
+        "power_impact": -3.1166666666666742,
+        "grade_impact": -0.34999999999999964,
+        "combined_impact": -3.466666666666674,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "player_added": "Daniel Carlson",
+        "player_dropped": "Wil Lutz",
+        "power_impact": -4.083333333333329,
+        "grade_impact": 0.34999999999999964,
+        "combined_impact": -3.733333333333329,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Cleveland Browns",
+        "player_dropped": "Houston Texans",
+        "power_impact": -3.1166666666666742,
+        "grade_impact": -0.34999999999999964,
+        "combined_impact": -3.466666666666674,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 12,
+        "manager_id": "858530366355525632",
+        "manager_name": "cmoney2137",
+        "player_added": "Ka'imi Fairbairn",
+        "player_dropped": "None (roster space)",
+        "power_impact": -3.1166666666666742,
+        "grade_impact": -0.34999999999999964,
+        "combined_impact": -3.466666666666674,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 13,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Tampa Bay Buccaneers",
+        "player_dropped": "Los Angeles Chargers",
+        "power_impact": 0.0,
+        "grade_impact": -0.3000000000000007,
+        "combined_impact": -0.3000000000000007,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 13,
+        "manager_id": "1130755765075136512",
+        "manager_name": "jackjohnnsonn26",
+        "player_added": "Will Reichard",
+        "player_dropped": "Daniel Carlson",
+        "power_impact": 0.0,
+        "grade_impact": 0.25,
+        "combined_impact": 0.25,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 13,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Tampa Bay Buccaneers",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 13,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Trevor Lawrence",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 13,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Jordan Love",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": -0.10000000000000053,
+        "combined_impact": -0.10000000000000053,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 13,
+        "manager_id": "1260463320503169024",
+        "manager_name": "Spillywilly69",
+        "player_added": "Blake Corum",
+        "player_dropped": "David Njoku",
+        "power_impact": 0.0,
+        "grade_impact": -0.5,
+        "combined_impact": -0.5,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 13,
+        "manager_id": "1260799280998785024",
+        "manager_name": "CameronMulyk",
+        "player_added": "Blake Corum",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": 0.10000000000000053,
+        "combined_impact": 0.10000000000000053,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 13,
+        "manager_id": "1260801218851115008",
+        "manager_name": "Richmccc",
+        "player_added": "Jayden Higgins",
+        "player_dropped": "Cade Otton",
+        "power_impact": 0.0,
+        "grade_impact": -0.09999999999999964,
+        "combined_impact": -0.09999999999999964,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 13,
+        "manager_id": "694022020266033152",
+        "manager_name": "CallMeBeanz",
+        "player_added": "Greg Dortch",
+        "player_dropped": "Chris Godwin",
+        "power_impact": 0.0,
+        "grade_impact": -0.20000000000000018,
+        "combined_impact": -0.20000000000000018,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 13,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Miami Dolphins",
+        "player_dropped": "Las Vegas Raiders",
+        "power_impact": 0.0,
+        "grade_impact": -8.881784197001252e-16,
+        "combined_impact": -8.881784197001252e-16,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 13,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Mike Evans",
+        "player_dropped": "Sean Tucker",
+        "power_impact": 0.0,
+        "grade_impact": -0.10000000000000053,
+        "combined_impact": -0.10000000000000053,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "993314024194396160",
+        "manager_name": "Shockley5",
+        "player_added": "C.J. Stroud",
+        "player_dropped": "Cooper Kupp",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "waiver"
+      },
+      {
+        "week": 14,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Los Angeles Chargers",
+        "player_dropped": "New England Patriots",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Harrison Mevis",
+        "player_dropped": "Matt Gay",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1260834874474889216",
+        "manager_name": "papabwall69",
+        "player_added": "Tre Tucker",
+        "player_dropped": "Bhayshul Tuten",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Jacoby Brissett",
+        "player_dropped": "Romeo Doubs",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Kyle Pitts",
+        "player_dropped": "Darren Waller",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Houston Texans",
+        "player_dropped": "Chicago Bears",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Chicago Bears",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Deshaun Watson",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "858068603554111488",
+        "manager_name": "Tcdun",
+        "player_added": "Kansas City Chiefs",
+        "player_dropped": "Pittsburgh Steelers",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1127729098148655104",
+        "manager_name": "joeyscott31",
+        "player_added": "Brenton Strange",
+        "player_dropped": "Oronde Gadsden",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Devaughn Vele",
+        "player_dropped": "Andrei Iosivas",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1260463530457452544",
+        "manager_name": "coletheman88",
+        "player_added": "Samaje Perine",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Baltimore Ravens",
+        "player_dropped": "Miami Dolphins",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Darren Waller",
+        "player_dropped": "None (roster space)",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      },
+      {
+        "week": 14,
+        "manager_id": "1260854493860331520",
+        "manager_name": "djmarino615",
+        "player_added": "Jake Bates",
+        "player_dropped": "Matt Prater",
+        "power_impact": 0.0,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
+        "transaction_type": "free_agent"
+      }
+    ],
+    "manager_grades": {
+      "694022020266033152": {
+        "name": "CallMeBeanz",
+        "weekly_grades": {
+          "1": 3.808536706349206,
+          "2": 3.6475367063492063,
+          "3": 3.6685367063492063,
+          "4": 3.6702867063492057,
+          "5": 3.745536706349206,
+          "6": 3.4497867063492063,
+          "7": 3.4707867063492057,
+          "8": 3.481286706349206,
+          "9": 3.483036706349206,
+          "10": 3.5022867063492065,
+          "11": 3.484786706349206,
+          "12": 3.4917867063492065,
+          "13": 3.4305367063492063,
+          "14": 3.3955367063492066
+        },
+        "trade_performance": 4.945833333333333,
+        "waiver_performance": 3.282222222222222,
+        "lineup_performance": 6.038392857142858,
+        "overall_grade": 3.552161706349206,
+        "record": {
+          "wins": 11,
+          "losses": 3
+        },
+        "combined_record": {
+          "wins": 20,
+          "losses": 8
+        }
+      },
+      "858068603554111488": {
+        "name": "Tcdun",
+        "weekly_grades": {
+          "1": 2.759883928571429,
+          "2": 2.972383928571429,
+          "3": 3.4308839285714288,
+          "4": 3.429133928571429,
+          "5": 3.6426339285714295,
+          "6": 3.5778839285714295,
+          "7": 3.6688839285714288,
+          "8": 3.689883928571429,
+          "9": 3.7353839285714288,
+          "10": 3.6933839285714294,
+          "11": 3.738883928571429,
+          "12": 3.6863839285714293,
+          "13": 3.710883928571429,
+          "14": 3.677633928571429
+        },
+        "trade_performance": 5.008333333333334,
+        "waiver_performance": 6.233333333333334,
+        "lineup_performance": 4.22125,
+        "overall_grade": 3.5295803571428577,
+        "record": {
+          "wins": 7,
+          "losses": 7
+        },
+        "combined_record": {
+          "wins": 13,
+          "losses": 15
+        }
+      },
+      "858530366355525632": {
+        "name": "cmoney2137",
+        "weekly_grades": {
+          "1": 3.605323823207444,
+          "2": 3.6910738232074443,
+          "3": 3.411073823207444,
+          "4": 3.598323823207444,
+          "5": 3.708573823207444,
+          "6": 3.549323823207444,
+          "7": 3.4618238232074443,
+          "8": 3.579073823207444,
+          "9": 3.510823823207444,
+          "10": 3.565073823207444,
+          "11": 3.4495738232074435,
+          "12": 3.479323823207444,
+          "13": 3.433823823207444,
+          "14": 3.4740738232074437
+        },
+        "trade_performance": 5.097916666666666,
+        "waiver_performance": 4.176053639846743,
+        "lineup_performance": 5.375535714285715,
+        "overall_grade": 3.5369488232074437,
+        "record": {
+          "wins": 8,
+          "losses": 6
+        },
+        "combined_record": {
+          "wins": 16,
+          "losses": 12
+        }
+      },
+      "993314024194396160": {
+        "name": "Shockley5",
+        "weekly_grades": {
+          "1": 2.9726084656084657,
+          "2": 3.0321084656084656,
+          "3": 3.184358465608466,
+          "4": 3.5588584656084654,
+          "5": 3.662108465608466,
+          "6": 3.6323584656084655,
+          "7": 3.7321084656084658,
+          "8": 3.6813584656084655,
+          "9": 3.6096084656084657,
+          "10": 3.662108465608466,
+          "11": 3.6953584656084657,
+          "12": 3.7391084656084654,
+          "13": 3.6096084656084657,
+          "14": 3.5711084656084653
+        },
+        "trade_performance": 5.685416666666667,
+        "waiver_performance": 5.676851851851851,
+        "lineup_performance": 4.062678571428572,
+        "overall_grade": 3.5244834656084656,
+        "record": {
+          "wins": 6,
+          "losses": 8
+        },
+        "combined_record": {
+          "wins": 11,
+          "losses": 17
+        }
+      },
+      "1127729098148655104": {
+        "name": "joeyscott31",
+        "weekly_grades": {
+          "1": 3.459139700577201,
+          "2": 4.090889700577201,
+          "3": 3.8826397005772013,
+          "4": 3.889639700577201,
+          "5": 3.877389700577201,
+          "6": 4.199389700577201,
+          "7": 4.306139700577201,
+          "8": 4.409389700577201,
+          "9": 4.458389700577201,
+          "10": 4.386639700577201,
+          "11": 4.397139700577201,
+          "12": 4.3533897005772015,
+          "13": 4.383139700577201,
+          "14": 4.390139700577201
+        },
+        "trade_performance": 5.051515151515152,
+        "waiver_performance": 7.589384920634922,
+        "lineup_performance": 5.288035714285714,
+        "overall_grade": 4.1773897005772005,
+        "record": {
+          "wins": 8,
+          "losses": 6
+        },
+        "combined_record": {
+          "wins": 16,
+          "losses": 12
+        }
+      },
+      "1130755765075136512": {
+        "name": "jackjohnnsonn26",
+        "weekly_grades": {
+          "1": 2.686411706349206,
+          "2": 3.494911706349206,
+          "3": 3.6821617063492056,
+          "4": 3.4494117063492062,
+          "5": 3.4931617063492064,
+          "6": 3.284911706349206,
+          "7": 3.235911706349206,
+          "8": 3.1624117063492063,
+          "9": 3.122161706349206,
+          "10": 3.169411706349206,
+          "11": 3.113411706349206,
+          "12": 3.0661617063492064,
+          "13": 3.041661706349206,
+          "14": 3.0854117063492064
+        },
+        "trade_performance": 4.671666666666666,
+        "waiver_performance": 3.990555555555555,
+        "lineup_performance": 4.881964285714287,
+        "overall_grade": 3.2205367063492063,
+        "record": {
+          "wins": 5,
+          "losses": 9
+        },
+        "combined_record": {
+          "wins": 7,
+          "losses": 21
+        }
+      },
+      "1260463320503169024": {
+        "name": "Spillywilly69",
+        "weekly_grades": {
+          "1": 3.2385027916205247,
+          "2": 3.364502791620524,
+          "3": 3.277002791620524,
+          "4": 3.3295027916205244,
+          "5": 3.264752791620525,
+          "6": 3.4380027916205242,
+          "7": 3.4327527916205245,
+          "8": 3.3522527916205247,
+          "9": 3.4432527916205244,
+          "10": 3.431002791620524,
+          "11": 3.3995027916205247,
+          "12": 3.3960027916205244,
+          "13": 3.4502527916205246,
+          "14": 3.4975027916205246
+        },
+        "trade_performance": 5.083333333333333,
+        "waiver_performance": 6.043927648578812,
+        "lineup_performance": 3.8691071428571426,
+        "overall_grade": 3.3796277916205244,
+        "record": {
+          "wins": 3,
+          "losses": 11
+        },
+        "combined_record": {
+          "wins": 10,
+          "losses": 18
+        }
+      },
+      "1260463530457452544": {
+        "name": "coletheman88",
+        "weekly_grades": {
+          "1": 4.497971996753248,
+          "2": 4.128721996753248,
+          "3": 4.098971996753247,
+          "4": 4.021971996753248,
+          "5": 3.997471996753247,
+          "6": 4.065721996753247,
+          "7": 4.343971996753247,
+          "8": 4.242471996753247,
+          "9": 4.175971996753248,
+          "10": 4.265221996753247,
+          "11": 4.520721996753247,
+          "12": 4.590721996753246,
+          "13": 4.569721996753247,
+          "14": 4.609971996753247
+        },
+        "trade_performance": 5.790625,
+        "waiver_performance": 8.490909090909092,
+        "lineup_performance": 4.5808928571428575,
+        "overall_grade": 4.294971996753247,
+        "record": {
+          "wins": 7,
+          "losses": 7
+        },
+        "combined_record": {
+          "wins": 13,
+          "losses": 15
+        }
+      },
+      "1260799280998785024": {
+        "name": "CameronMulyk",
+        "weekly_grades": {
+          "1": 3.143964947089948,
+          "2": 3.0564649470899474,
+          "3": 3.1929649470899477,
+          "4": 3.276964947089948,
+          "5": 3.222714947089948,
+          "6": 3.1089649470899476,
+          "7": 2.9882149470899475,
+          "8": 2.9532149470899474,
+          "9": 2.8972149470899473,
+          "10": 2.730964947089947,
+          "11": 2.7782149470899475,
+          "12": 2.751964947089948,
+          "13": 2.795714947089947,
+          "14": 2.8097149470899474
+        },
+        "trade_performance": 5.014583333333334,
+        "waiver_performance": 2.3759259259259267,
+        "lineup_performance": 4.869821428571429,
+        "overall_grade": 2.9790899470899475,
+        "record": {
+          "wins": 7,
+          "losses": 7
+        },
+        "combined_record": {
+          "wins": 14,
+          "losses": 14
+        }
+      },
+      "1260801218851115008": {
+        "name": "Richmccc",
+        "weekly_grades": {
+          "1": 3.5089117063492066,
+          "2": 3.3391617063492065,
+          "3": 3.1781617063492065,
+          "4": 3.459911706349207,
+          "5": 3.3654117063492066,
+          "6": 3.407411706349207,
+          "7": 3.3129117063492064,
+          "8": 3.2289117063492063,
+          "9": 3.1816617063492068,
+          "10": 3.1484117063492065,
+          "11": 3.109911706349207,
+          "12": 3.199161706349207,
+          "13": 3.2341617063492065,
+          "14": 3.1781617063492065
+        },
+        "trade_performance": 4.811111111111111,
+        "waiver_performance": 3.5625000000000013,
+        "lineup_performance": 5.183035714285714,
+        "overall_grade": 3.2751617063492064,
+        "record": {
+          "wins": 6,
+          "losses": 8
+        },
+        "combined_record": {
+          "wins": 12,
+          "losses": 16
+        }
+      },
+      "1260834874474889216": {
+        "name": "papabwall69",
+        "weekly_grades": {
+          "1": 4.114316468253969,
+          "2": 3.295316468253968,
+          "3": 3.3775664682539683,
+          "4": 3.4895664682539684,
+          "5": 3.3880664682539687,
+          "6": 3.1395664682539683,
+          "7": 3.0818164682539684,
+          "8": 3.1220664682539683,
+          "9": 3.1798164682539682,
+          "10": 3.123816468253968,
+          "11": 3.0818164682539684,
+          "12": 3.025816468253968,
+          "13": 3.0590664682539686,
+          "14": 3.1080664682539685
+        },
+        "trade_performance": 5.138333333333334,
+        "waiver_performance": 2.8817460317460313,
+        "lineup_performance": 5.284107142857144,
+        "overall_grade": 3.2561914682539688,
+        "record": {
+          "wins": 7,
+          "losses": 7
+        },
+        "combined_record": {
+          "wins": 14,
+          "losses": 14
+        }
+      },
+      "1260854493860331520": {
+        "name": "djmarino615",
+        "weekly_grades": {
+          "1": 3.8738561507936513,
+          "2": 4.218606150793652,
+          "3": 4.206356150793651,
+          "4": 3.952606150793651,
+          "5": 4.071606150793651,
+          "6": 4.250106150793651,
+          "7": 4.384856150793651,
+          "8": 4.4111061507936515,
+          "9": 4.4321061507936514,
+          "10": 4.456606150793651,
+          "11": 4.390106150793651,
+          "12": 4.4023561507936515,
+          "13": 4.344606150793651,
+          "14": 4.299106150793651
+        },
+        "trade_performance": 5.0,
+        "waiver_performance": 6.2361111111111125,
+        "lineup_performance": 6.345178571428571,
+        "overall_grade": 4.263856150793651,
+        "record": {
+          "wins": 9,
+          "losses": 5
+        },
+        "combined_record": {
+          "wins": 22,
+          "losses": 6
+        }
+      }
+    }
+  }
+}

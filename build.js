@@ -8,44 +8,26 @@ async function build() {
     // Create dist directory
     await fs.ensureDir('dist');
     
-    // Find the latest analysis output folder
-    const files = await fs.readdir('.');
-    const analysisFolders = files.filter(file => 
-      file.startsWith('fantasy_analysis_output_') && 
-      fs.statSync(file).isDirectory()
-    );
+    // Use fixed analysis output folder
+    const analysisFolder = 'fantasy_analysis_output';
     
-    if (analysisFolders.length === 0) {
-      console.log('❌ No analysis output folders found. Run Python script first!');
+    if (!fs.existsSync(analysisFolder)) {
+      console.log('❌ No analysis output folder found. Run Python script first!');
       process.exit(1);
     }
     
-    // Sort by timestamp and get the latest
-    analysisFolders.sort().reverse();
-    const latestFolder = analysisFolders[0];
-    console.log(`📂 Using latest analysis: ${latestFolder}`);
-    
-    // Extract timestamp from folder name
-    const timestamp = latestFolder.replace('fantasy_analysis_output_', '');
+    console.log(`📂 Using analysis folder: ${analysisFolder}`);
     
     // Copy HTML files to dist with latest naming
-    const htmlDir = path.join(latestFolder, 'html_reports');
+    const htmlDir = path.join(analysisFolder, 'html_reports');
     const fileMapping = {};
     
     if (await fs.pathExists(htmlDir)) {
       const htmlFiles = await fs.readdir(htmlDir);
       for (const file of htmlFiles) {
         if (file.endsWith('.html')) {
-          let newName;
-          // Handle files with their own timestamps (like power_ranking_leaderboard)
-          if (file.includes('power_ranking_leaderboard')) {
-            newName = 'power_ranking_leaderboard_latest.html';
-          } else if (file.includes('luck_analysis')) {
-            newName = 'luck_analysis_latest.html';
-          } else {
-            const baseName = file.replace(`_${timestamp}.html`, '');
-            newName = `${baseName}_latest.html`;
-          }
+          // Since we removed timestamps, just use the base filename with _latest suffix
+          let newName = file.replace('.html', '_latest.html');
           await fs.copy(path.join(htmlDir, file), path.join('dist', newName));
           fileMapping[file] = newName;
           console.log(`✓ Copied ${file} → ${newName}`);
@@ -54,14 +36,13 @@ async function build() {
     }
     
     // Copy JSON data for API access
-    const jsonDir = path.join(latestFolder, 'json_data');
+    const jsonDir = path.join(analysisFolder, 'json_data');
     if (await fs.pathExists(jsonDir)) {
       await fs.ensureDir('dist/data');
       const jsonFiles = await fs.readdir(jsonDir);
       for (const file of jsonFiles) {
         if (file.endsWith('.json')) {
-          const baseName = file.replace(`_${timestamp}.json`, '');
-          const newName = `${baseName}_latest.json`;
+          const newName = file.replace('.json', '_latest.json');
           await fs.copy(path.join(jsonDir, file), path.join('dist/data', newName));
           console.log(`✓ Copied ${file} → data/${newName}`);
         }
@@ -69,14 +50,13 @@ async function build() {
     }
     
     // Copy text reports
-    const textDir = path.join(latestFolder, 'text_reports');
+    const textDir = path.join(analysisFolder, 'text_reports');
     if (await fs.pathExists(textDir)) {
       await fs.ensureDir('dist/reports');
       const textFiles = await fs.readdir(textDir);
       for (const file of textFiles) {
         if (file.endsWith('.txt')) {
-          const baseName = file.replace(`_${timestamp}.txt`, '');
-          const newName = `${baseName}_latest.txt`;
+          const newName = file.replace('.txt', '_latest.txt');
           await fs.copy(path.join(textDir, file), path.join('dist/reports', newName));
           console.log(`✓ Copied ${file} → reports/${newName}`);
         }

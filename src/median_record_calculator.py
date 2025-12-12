@@ -280,7 +280,7 @@ def main():
         import json
         from datetime import datetime
         
-        output_file = f"median_records_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        output_file = "median_records.json"
         with open(output_file, 'w') as f:
             # Convert for JSON serialization
             json_data = {}

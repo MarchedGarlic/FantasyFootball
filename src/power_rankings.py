@@ -321,9 +321,9 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         
         # Create the interactive figure
         if output_dirs:
-            plot_filename = os.path.join(output_dirs['html'], f"power_rating_interactive_{output_dirs['timestamp']}.html")
+            plot_filename = os.path.join(output_dirs['html'], "power_rating_interactive.html")
         else:
-            plot_filename = f"power_rating_interactive_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+            plot_filename = "power_rating_interactive.html"
         output_file(plot_filename)
         
         # Set up the figure with tools

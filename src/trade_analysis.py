@@ -533,9 +533,9 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         return
     
     if output_dirs:
-        plot_filename = os.path.join(output_dirs['html'], f"trade_analysis_{output_dirs['timestamp']}.html")
+        plot_filename = os.path.join(output_dirs['html'], "trade_analysis.html")
     else:
-        plot_filename = f"trade_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        plot_filename = "trade_analysis.html"
     output_file(plot_filename)
     
     # Create individual trade transactions with unique identifiers
@@ -617,9 +617,9 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     worst_trades.sort(key=lambda x: x['combined_impact'])
     
     if output_dirs:
-        worst_trades_filename = os.path.join(output_dirs['text'], f"worst_trades_report_{output_dirs['timestamp']}.txt")
+        worst_trades_filename = os.path.join(output_dirs['text'], "worst_trades_report.txt")
     else:
-        worst_trades_filename = f"worst_trades_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        worst_trades_filename = "worst_trades_report.txt"
     
     with open(worst_trades_filename, 'w') as f:
         f.write("=" * 80 + "\n")
@@ -935,9 +935,9 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         return
     
     if output_dirs:
-        plot_filename = os.path.join(output_dirs['html'], f"waiver_analysis_{output_dirs['timestamp']}.html")
+        plot_filename = os.path.join(output_dirs['html'], "waiver_analysis.html")
     else:
-        plot_filename = f"waiver_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        plot_filename = "waiver_analysis.html"
     output_file(plot_filename)
     
     # Create individual waiver transactions with unique identifiers
@@ -1286,9 +1286,9 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         return
     
     if output_dirs:
-        plot_filename = os.path.join(output_dirs['html'], f"manager_grades_{output_dirs['timestamp']}.html")
+        plot_filename = os.path.join(output_dirs['html'], "manager_grades.html")
     else:
-        plot_filename = f"manager_grades_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        plot_filename = "manager_grades.html"
     output_file(plot_filename)
     
     # Enhanced data preparation with better scaling

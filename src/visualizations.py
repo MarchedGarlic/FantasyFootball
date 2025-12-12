@@ -153,9 +153,9 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         
         # Create the interactive figure
         if output_dirs:
-            plot_filename = os.path.join(output_dirs['html'], f"roster_grades_interactive_{output_dirs['timestamp']}.html")
+            plot_filename = os.path.join(output_dirs['html'], "roster_grades_interactive.html")
         else:
-            plot_filename = f"roster_grades_interactive_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+            plot_filename = "roster_grades_interactive.html"
         output_file(plot_filename)
         
         # Set up the figure with tools
@@ -474,9 +474,9 @@ def create_combined_analysis_plot(team_power_data, roster_grade_data, output_dir
         
         # Create the combined figure with two y-axes
         if output_dirs:
-            plot_filename = os.path.join(output_dirs['html'], f"combined_analysis_{output_dirs['timestamp']}.html")
+            plot_filename = os.path.join(output_dirs['html'], "combined_analysis.html")
         else:
-            plot_filename = f"combined_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+            plot_filename = "combined_analysis.html"
         output_file(plot_filename)
         
         # Create comprehensive explanation panel
@@ -804,9 +804,9 @@ def create_trade_impact_visualization(combined_impacts, transactions_data=None, 
             print(f"🔍 Debug: transactions_data keys: {list(transactions_data.keys())[:5]}")
         
         if output_dirs:
-            plot_filename = os.path.join(output_dirs['html'], f"trade_impacts_{output_dirs['timestamp']}.html")
+            plot_filename = os.path.join(output_dirs['html'], "trade_impacts.html")
         else:
-            plot_filename = f"trade_impacts_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+            plot_filename = "trade_impacts.html"
         output_file(plot_filename)
         
         # Prepare enhanced data with transaction categorization
@@ -990,11 +990,9 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
     try:
         # Setup output file
         if output_dirs and 'html' in output_dirs:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            plot_filename = os.path.join(output_dirs['html'], f"luck_analysis_{timestamp}.html")
+            plot_filename = os.path.join(output_dirs['html'], "luck_analysis.html")
         else:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S") 
-            plot_filename = f"luck_analysis_{timestamp}.html"
+            plot_filename = "luck_analysis.html"
         
         output_file(plot_filename)
         
@@ -1221,11 +1219,9 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
     try:
         # Setup output file
         if output_dirs and 'html' in output_dirs:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            plot_filename = os.path.join(output_dirs['html'], f"power_ranking_leaderboard_{timestamp}.html")
+            plot_filename = os.path.join(output_dirs['html'], "power_ranking_leaderboard.html")
         else:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S") 
-            plot_filename = f"power_ranking_leaderboard_{timestamp}.html"
+            plot_filename = "power_ranking_leaderboard.html"
         
         output_file(plot_filename)
         

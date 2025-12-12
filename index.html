@@ -115,21 +115,6 @@
             text-align: center;
         }
         
-        .league-name {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            padding: 15px 30px;
-            margin: 20px auto 0 auto;
-            border-radius: 25px;
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #ffffff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            text-align: center;
-            max-width: 600px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2rem;
@@ -146,7 +131,6 @@
         <div class="header">
             <h1>🏈 Fantasy Football Analysis</h1>
             <p>Interactive dashboards and comprehensive league insights</p>
-            <div id="leagueName" class="league-name">Loading league information...</div>
         </div>
         
         <div class="last-updated" id="lastUpdated">
@@ -164,16 +148,6 @@
                 <a href="#" class="card-button">View Power Rankings</a>
             </div>
             
-            <div class="dashboard-card" onclick="window.open('power_ranking_leaderboard_latest.html', '_blank')">
-                <div class="card-icon">🏆</div>
-                <div class="card-title">Power Ranking Leaderboard</div>
-                <div class="card-description">
-                    Current power ranking standings with trophy rankings, records, and scoring stats. 
-                    See who's really the best team right now.
-                </div>
-                <a href="#" class="card-button">View Leaderboard</a>
-            </div>
-            
             <div class="dashboard-card" onclick="window.open('roster_grades_interactive_latest.html', '_blank')">
                 <div class="card-icon">📊</div>
                 <div class="card-title">Roster Grades</div>
@@ -184,7 +158,7 @@
                 <a href="#" class="card-button">View Roster Analysis</a>
             </div>
             
-            <div class="dashboard-card" onclick="window.open('luck_analysis_20251209_124401.html_latest.html', '_blank')">
+            <div class="dashboard-card" onclick="window.open('luck_analysis_latest.html', '_blank')">
                 <div class="card-icon">🍀</div>
                 <div class="card-title">Luck Analysis</div>
                 <div class="card-description">
@@ -242,32 +216,21 @@
     </div>
     
     <script>
-        // Load the latest analysis timestamp and league info
+        // Load the latest analysis timestamp
         fetch('data/fantasy_analysis_latest.json')
             .then(response => response.json())
             .then(data => {
                 const timestamp = data.analysis_info?.timestamp;
-                const leagueName = data.analysis_info?.league_name;
                 
                 if (timestamp) {
                     const date = new Date(timestamp);
                     document.getElementById('lastUpdated').innerHTML = 
                         `📅 Last Updated: ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
                 }
-                
-                if (leagueName) {
-                    document.getElementById('leagueName').innerHTML = 
-                        `🏆 ${leagueName}`;
-                    console.log('League name loaded:', leagueName);
-                } else {
-                    document.getElementById('leagueName').innerHTML = '🏆 Fantasy League Dashboard';
-                    console.log('No league name found in data');
-                }
             })
             .catch(error => {
                 console.log('Error loading data:', error);
                 document.getElementById('lastUpdated').innerHTML = '📅 Analysis data loading...';
-                document.getElementById('leagueName').innerHTML = '🏆 Fantasy League Dashboard';
             });
         
         // Update links to point to the actual latest files

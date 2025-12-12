@@ -99,11 +99,15 @@ def get_user_input_interactive():
 
 
 def create_output_directories():
-    """Create organized output directory structure"""
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    """Create organized output directory structure with fixed name and clear existing files"""
     
-    # Create main output directory
-    output_dir = f"fantasy_analysis_output_{timestamp}"
+    # Use fixed directory name
+    output_dir = "fantasy_analysis_output"
+    
+    # Clear and recreate main directory
+    if os.path.exists(output_dir):
+        import shutil
+        shutil.rmtree(output_dir)
     os.makedirs(output_dir, exist_ok=True)
     
     # Create subdirectories
@@ -120,7 +124,7 @@ def create_output_directories():
         'html': html_dir,
         'json': json_dir,
         'text': text_dir,
-        'timestamp': timestamp
+        'timestamp': ''  # Remove timestamp dependency
     }
 
 
@@ -345,7 +349,7 @@ def main():
         # Create organized output directories
         print("\nCreating organized output directories...")
         output_dirs = create_output_directories()
-        print(f"   ✓ Created output directory: {output_dirs['base']}")
+        print(f"   ✓ Cleared and created output directory: {output_dirs['base']}")
         print(f"   ✓ HTML reports: {os.path.basename(output_dirs['html'])}")
         print(f"   ✓ JSON data: {os.path.basename(output_dirs['json'])}")
         print(f"   ✓ Text reports: {os.path.basename(output_dirs['text'])}")
@@ -591,7 +595,6 @@ def main():
         
         # Generate JSON output files for sharing
         print("\nGenerating JSON output files for AI analysis...")
-        timestamp = output_dirs['timestamp']
         
         # Create comprehensive output data structure
         output_data = {
@@ -681,7 +684,7 @@ def main():
         }
         
         # Save main analysis JSON file
-        main_json_file = os.path.join(output_dirs['json'], f"fantasy_analysis_{timestamp}.json")
+        main_json_file = os.path.join(output_dirs['json'], "fantasy_analysis.json")
         with open(main_json_file, 'w', encoding='utf-8') as f:
             json.dump(output_data, f, indent=2, ensure_ascii=False)
         
@@ -689,7 +692,7 @@ def main():
         
         # Save detailed analysis data separately
         if trade_impacts or waiver_impacts:
-            analysis_json_file = os.path.join(output_dirs['json'], f"detailed_analysis_{timestamp}.json")
+            analysis_json_file = os.path.join(output_dirs['json'], "detailed_analysis.json")
             detailed_data = {
                 'analysis_info': output_data['analysis_info'],
                 'raw_trades': all_trades,
@@ -706,7 +709,7 @@ def main():
             print(f"   ✓ Comprehensive analysis saved: {os.path.relpath(analysis_json_file)}")
         
         # Save league roster data
-        roster_json_file = os.path.join(output_dirs['json'], f"roster_data_{timestamp}.json")
+        roster_json_file = os.path.join(output_dirs['json'], "roster_data.json")
         roster_data = {
             'analysis_info': output_data['analysis_info'],
             'managers': {user['user_id']: {
