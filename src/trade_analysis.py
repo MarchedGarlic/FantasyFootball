@@ -599,13 +599,21 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     colors_palette = Category20[max(3, min(20, len(unique_managers)))]
     color_map = {manager: colors_palette[i % len(colors_palette)] for i, manager in enumerate(unique_managers)}
     
-    # Create leaderboard of worst trades
+    # Create leaderboard of worst trades with balanced weighting
     worst_trades = []
     for trade in individual_trades:
+        # Normalize impacts to give more balanced weighting
+        # Power impacts typically range -15 to +25, so divide by 5
+        # Grade impacts typically range -1.5 to +2, so multiply by 3
+        normalized_power = trade['power_impact'] / 5.0
+        normalized_grade = trade['grade_impact'] * 3.0
+        balanced_combined = normalized_power + normalized_grade
+        
         worst_trades.append({
             'manager': trade['manager_name'],
             'week': trade['week'],
-            'combined_impact': trade['combined_impact'],
+            'combined_impact': trade['combined_impact'],  # Keep original for display
+            'balanced_combined': balanced_combined,       # New balanced score for ranking
             'acquired': ', '.join([p.strip() for p in trade['acquired_players']]) if trade['acquired_players'] else 'None',
             'gave_up': ', '.join([p.strip() for p in trade['gave_up_players']]) if trade['gave_up_players'] else 'None',
             'other_manager': trade['other_manager'],
@@ -613,9 +621,42 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
             'grade_impact': trade['grade_impact']
         })
     
-    # Sort by worst impact and save to text file
-    worst_trades.sort(key=lambda x: x['combined_impact'])
+    # Sort by worst balanced impact and create both text and HTML reports
+    worst_trades.sort(key=lambda x: x['balanced_combined'])
     
+    # Print worst trades summary to terminal
+    print("\n" + "="*65)
+    print("WORST TRADES ANALYSIS (Balanced Scoring)")
+    print("="*65)
+    print(f"Total Trades Analyzed: {len(worst_trades)}")
+    if worst_trades:
+        print(f"Worst Balanced Score: {worst_trades[0]['balanced_combined']:+.1f} ({worst_trades[0]['manager']})")
+        print("\nTOP 5 WORST TRADES (Balanced Combined Score):")
+        print(f"{'Rank':<4} {'Manager':<15} {'Week':<4} {'Balanced':<9} {'Trade Summary':<30}")
+        print("-" * 70)
+        for i, trade in enumerate(worst_trades[:5]):
+            trade_summary = f"Got {trade['acquired'][:15]}..." if len(trade['acquired']) > 15 else trade['acquired']
+            print(f"{i+1:<4} {trade['manager'][:14]:<15} {trade['week']:<4} {trade['balanced_combined']:+8.1f} {trade_summary:<30}")
+        
+        # Show worst power impact trades
+        power_sorted = sorted(worst_trades, key=lambda x: x['power_impact'])
+        print(f"\nTOP 5 WORST POWER IMPACT TRADES:")
+        print(f"{'Rank':<4} {'Manager':<15} {'Week':<4} {'Power':<8} {'Trade Summary':<30}")
+        print("-" * 65)
+        for i, trade in enumerate(power_sorted[:5]):
+            trade_summary = f"Got {trade['acquired'][:15]}..." if len(trade['acquired']) > 15 else trade['acquired']
+            print(f"{i+1:<4} {trade['manager'][:14]:<15} {trade['week']:<4} {trade['power_impact']:+7.1f} {trade_summary:<30}")
+        
+        # Show worst roster grade impact trades
+        grade_sorted = sorted(worst_trades, key=lambda x: x['grade_impact'])
+        print(f"\nTOP 5 WORST ROSTER GRADE IMPACT TRADES:")
+        print(f"{'Rank':<4} {'Manager':<15} {'Week':<4} {'Grade':<8} {'Trade Summary':<30}")
+        print("-" * 65)
+        for i, trade in enumerate(grade_sorted[:5]):
+            trade_summary = f"Got {trade['acquired'][:15]}..." if len(trade['acquired']) > 15 else trade['acquired']
+            print(f"{i+1:<4} {trade['manager'][:14]:<15} {trade['week']:<4} {trade['grade_impact']:+7.1f} {trade_summary:<30}")
+    
+    # Save text file
     if output_dirs:
         worst_trades_filename = os.path.join(output_dirs['text'], "worst_trades_report.txt")
     else:
@@ -654,7 +695,19 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
             f.write(f"   Gave Up: {trade['gave_up']}\n")
             f.write(f"   Trading Partner: {trade['other_manager']}\n")
     
-    print(f"\nWorst trades report saved as: {worst_trades_filename}")
+    # Create HTML report
+    html_content = create_worst_trades_html_report(worst_trades, output_dirs)
+    
+    if output_dirs:
+        html_filename = os.path.join(output_dirs['html'], "worst_trades_report.html")
+    else:
+        html_filename = "worst_trades_report.html"
+    
+    with open(html_filename, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+    
+    print(f"Worst trades text report saved as: {worst_trades_filename}")
+    print(f"Worst trades HTML report saved as: {html_filename}")
     
     # Calculate leaderboard statistics
     manager_stats = {}
@@ -1630,6 +1683,375 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     print(f"   Features: Enhanced calculations, leaderboard, toggleable explanation")
     print(f"   Interactive: Working toggles, proper hover data, trend analysis") 
     return plot_filename
+
+
+def create_worst_trades_html_report(worst_trades, output_dirs=None):
+    """Create an HTML report for the worst trades analysis"""
+    
+    html_content = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worst Trades Report - Fantasy Football Analysis</title>
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }}
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 30px;
+        }}
+        .header {{
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #e74c3c;
+            padding-bottom: 20px;
+        }}
+        .header h1 {{
+            color: #e74c3c;
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }}
+        .header p {{
+            color: #666;
+            margin: 10px 0 0 0;
+            font-size: 1.1em;
+        }}
+        .methodology {{
+            background: #f8f9fa;
+            border-left: 5px solid #e74c3c;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }}
+        .methodology h3 {{
+            color: #e74c3c;
+            margin-top: 0;
+        }}
+        .trades-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }}
+        .trades-table th {{
+            background: #e74c3c;
+            color: white;
+            font-weight: bold;
+            padding: 15px 10px;
+            text-align: left;
+        }}
+        .trades-table td {{
+            padding: 12px 10px;
+            border-bottom: 1px solid #e9ecef;
+        }}
+        .trades-table tr:hover {{
+            background: #f8f9fa;
+        }}
+        .rank-1 {{
+            background: rgba(231, 76, 60, 0.1);
+            font-weight: bold;
+        }}
+        .rank-2 {{
+            background: rgba(231, 76, 60, 0.05);
+        }}
+        .rank-3 {{
+            background: rgba(231, 76, 60, 0.03);
+        }}
+        .impact-negative {{
+            color: #e74c3c;
+            font-weight: bold;
+        }}
+        .impact-positive {{
+            color: #27ae60;
+            font-weight: bold;
+        }}
+        .detailed-section {{
+            margin: 40px 0;
+        }}
+        .trade-card {{
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }}
+        .trade-card h4 {{
+            color: #e74c3c;
+            margin-top: 0;
+            font-size: 1.3em;
+        }}
+        .trade-details {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }}
+        .players-section {{
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+        }}
+        .players-section h5 {{
+            margin-top: 0;
+            color: #2c3e50;
+        }}
+        .impact-stats {{
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            text-align: center;
+        }}
+        .stat {{
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            flex: 1;
+            margin: 0 5px;
+        }}
+        .stat .label {{
+            font-size: 0.9em;
+            color: #666;
+        }}
+        .stat .value {{
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }}
+        .footer {{
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+            color: #666;
+        }}
+        @media (max-width: 768px) {{
+            .container {{
+                padding: 15px;
+            }}
+            .trades-table {{
+                font-size: 12px;
+            }}
+            .trades-table th, .trades-table td {{
+                padding: 8px 5px;
+            }}
+            .trade-details {{
+                grid-template-columns: 1fr;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚨 Worst Trades Report</h1>
+            <p>Fantasy Football Analysis - Generated {datetime.now().strftime('%B %d, %Y at %I:%M %p')}</p>
+        </div>
+        
+        <div class="methodology">
+            <h3>📊 Methodology</h3>
+            <ul>
+                <li><strong>Balanced Combined Score</strong> = (Power Impact ÷ 5) + (Grade Impact × 3)</li>
+                <li><strong>Balanced scoring</strong> gives equal weight to power and roster grade impacts</li>
+                <li><strong>Negative values</strong> indicate trades that weakened the team</li>
+                <li><strong>Rankings</strong> based on most negative balanced score</li>
+                <li><strong>Power Impact</strong> measures effect on team's weekly scoring potential</li>
+                <li><strong>Grade Impact</strong> measures effect on roster construction quality</li>
+            </ul>
+        </div>
+
+        <h2>🏆 Top 10 Worst Trades (Balanced Scoring)</h2>
+        <table class="trades-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Manager</th>
+                    <th>Week</th>
+                    <th>Balanced Score</th>
+                    <th>Acquired Players</th>
+                    <th>Gave Up Players</th>
+                    <th>Trading Partner</th>
+                </tr>
+            </thead>
+            <tbody>
+"""
+
+    # Add top 10 worst trades to table
+    for i, trade in enumerate(worst_trades[:10]):
+        rank_class = f"rank-{min(i+1, 3)}"
+        impact_class = "impact-negative" if trade['balanced_combined'] < 0 else "impact-positive"
+        
+        html_content += f"""
+                <tr class="{rank_class}">
+                    <td>#{i+1}</td>
+                    <td><strong>{trade['manager']}</strong></td>
+                    <td>{trade['week']}</td>
+                    <td class="{impact_class}">{trade['balanced_combined']:+.1f}</td>
+                    <td>{trade['acquired']}</td>
+                    <td>{trade['gave_up']}</td>
+                    <td>{trade['other_manager']}</td>
+                </tr>"""
+
+    html_content += """
+            </tbody>
+        </table>
+
+        <div class="detailed-section">
+            <h2>🔍 Detailed Breakdown</h2>
+"""
+
+    # Add detailed breakdown cards for top 10
+    for i, trade in enumerate(worst_trades[:10]):
+        impact_color = "#e74c3c" if trade['balanced_combined'] < 0 else "#27ae60"
+        
+        html_content += f"""
+            <div class="trade-card">
+                <h4>#{i+1} - {trade['manager']} (Week {trade['week']})</h4>
+                
+                <div class="impact-stats">
+                    <div class="stat">
+                        <div class="label">Balanced Score</div>
+                        <div class="value" style="color: {impact_color}">{trade['balanced_combined']:+.1f}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="label">Power Impact</div>
+                        <div class="value">{trade['power_impact']:+.1f}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="label">Grade Impact</div>
+                        <div class="value">{trade['grade_impact']:+.1f}</div>
+                    </div>
+                </div>
+                
+                <div class="trade-details">
+                    <div class="players-section">
+                        <h5>📥 Acquired Players</h5>
+                        <p>{trade['acquired']}</p>
+                    </div>
+                    <div class="players-section">
+                        <h5>📤 Gave Up Players</h5>
+                        <p>{trade['gave_up']}</p>
+                    </div>
+                </div>
+                
+                <p style="text-align: center; margin-top: 15px;">
+                    <strong>Trading Partner:</strong> {trade['other_manager']}
+                </p>
+            </div>"""
+
+    # Add Power Impact Rankings
+    power_sorted = sorted(worst_trades, key=lambda x: x['power_impact'])
+    html_content += f"""
+        </div>
+
+        <div class="detailed-section">
+            <h2>⚡ Worst Power Impact Trades</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                Trades ranked by most negative impact on weekly scoring potential
+            </p>
+            <table class="trades-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Manager</th>
+                        <th>Week</th>
+                        <th>Power Impact</th>
+                        <th>Acquired Players</th>
+                        <th>Gave Up Players</th>
+                        <th>Trading Partner</th>
+                    </tr>
+                </thead>
+                <tbody>"""
+
+    for i, trade in enumerate(power_sorted[:10]):
+        rank_class = f"rank-{min(i+1, 3)}"
+        impact_class = "impact-negative" if trade['power_impact'] < 0 else "impact-positive"
+        
+        html_content += f"""
+                    <tr class="{rank_class}">
+                        <td>#{i+1}</td>
+                        <td><strong>{trade['manager']}</strong></td>
+                        <td>{trade['week']}</td>
+                        <td class="{impact_class}">{trade['power_impact']:+.1f}</td>
+                        <td>{trade['acquired']}</td>
+                        <td>{trade['gave_up']}</td>
+                        <td>{trade['other_manager']}</td>
+                    </tr>"""
+
+    # Add Roster Grade Impact Rankings
+    grade_sorted = sorted(worst_trades, key=lambda x: x['grade_impact'])
+    html_content += f"""
+                </tbody>
+            </table>
+        </div>
+
+        <div class="detailed-section">
+            <h2>📊 Worst Roster Grade Impact Trades</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                Trades ranked by most negative impact on roster construction quality
+            </p>
+            <table class="trades-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Manager</th>
+                        <th>Week</th>
+                        <th>Grade Impact</th>
+                        <th>Acquired Players</th>
+                        <th>Gave Up Players</th>
+                        <th>Trading Partner</th>
+                    </tr>
+                </thead>
+                <tbody>"""
+
+    for i, trade in enumerate(grade_sorted[:10]):
+        rank_class = f"rank-{min(i+1, 3)}"
+        impact_class = "impact-negative" if trade['grade_impact'] < 0 else "impact-positive"
+        
+        html_content += f"""
+                    <tr class="{rank_class}">
+                        <td>#{i+1}</td>
+                        <td><strong>{trade['manager']}</strong></td>
+                        <td>{trade['week']}</td>
+                        <td class="{impact_class}">{trade['grade_impact']:+.1f}</td>
+                        <td>{trade['acquired']}</td>
+                        <td>{trade['gave_up']}</td>
+                        <td>{trade['other_manager']}</td>
+                    </tr>"""
+
+    html_content += """
+                </tbody>
+            </table>
+        </div>"""
+
+    html_content += f"""
+        </div>
+
+        <div class="footer">
+            <p>📈 Analysis based on {len(worst_trades)} total trades</p>
+            <p>Report generated by Fantasy Football Analysis Engine</p>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_content
 
 
 # Legacy support functions for backward compatibility

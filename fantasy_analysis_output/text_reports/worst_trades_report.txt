@@ -1,7 +1,7 @@
 ================================================================================
 WORST TRADES ANALYSIS REPORT
 ================================================================================
-Generated: 2025-12-11 20:26:09
+Generated: 2025-12-11 20:40:55
 
 METHODOLOGY:
 - Combined Impact = Power Rating Impact + Roster Grade Impact
@@ -12,97 +12,97 @@ TOP 10 WORST TRADES:
 --------------------------------------------------------------------------------
 Rank Manager         Week Impact   Acquired             Gave Up             
 --------------------------------------------------------------------------------
-1    jackjohnnsonn2  4       -3.4 Emeka Egbuka, Alvin  Travis Etienne      
-2    CameronMulyk    7       -2.0 Kyler Murray, Chase  Drake Maye          
-3    cmoney2137      11      -1.8 RJ Harvey            Ricky Pearsall, Col 
-4    CameronMulyk    8       -1.5 Tyler Allgeier       Khalil Shakir       
-5    jackjohnnsonn2  11      -1.3 Colston Loveland     None                
-6    jackjohnnsonn2  11      -1.3 Quentin Johnston     Rome Odunze         
-7    Spillywilly69   5       -1.2 Nico Collins         Brian Thomas, Nick  
-8    papabwall69     10      -1.1 Brock Bowers, Kiman  Travis Kelce, Derri 
-9    Richmccc        9       -1.0 Alvin Kamara         Deebo Samuel        
-10   joeyscott31     10      -0.9 None                 Isiah Pacheco       
+1    jackjohnnsonn2  4       -3.9 Emeka Egbuka, Alvin  Travis Etienne      
+2    joeyscott31     10      -1.9 None                 Isiah Pacheco       
+3    joeyscott31     10      -1.9 Joe Burrow           TreVeyon Henderson  
+4    joeyscott31     10      -1.9 Travis Kelce, Derri  Brock Bowers, Kiman 
+5    joeyscott31     10      -1.9 RJ Harvey, Jaylen W  DJ Moore, Deebo Sam 
+6    CameronMulyk    7       -2.6 Kyler Murray, Chase  Drake Maye          
+7    cmoney2137      11      -2.4 RJ Harvey            Ricky Pearsall, Col 
+8    CallMeBeanz     4       -0.5 Michael Pittman      Jordan Mason        
+9    Richmccc        11      -0.9 Kyle Monangai        None                
+10   Richmccc        9       -1.0 Alvin Kamara         Deebo Samuel        
 
 ================================================================================
 DETAILED BREAKDOWN OF WORST 10 TRADES:
 ================================================================================
 
 1. jackjohnnsonn26 (Week 4)
-   Combined Impact: -3.4
+   Combined Impact: -3.9
    Power Impact: -13.3
-   Grade Impact: +0.7
+   Grade Impact: -0.1
    Acquired: Emeka Egbuka, Alvin Kamara
    Gave Up: Travis Etienne
    Trading Partner: Spillywilly69
 
-2. CameronMulyk (Week 7)
-   Combined Impact: -2.0
+2. joeyscott31 (Week 10)
+   Combined Impact: -1.9
+   Power Impact: -4.1
+   Grade Impact: -0.6
+   Acquired: None
+   Gave Up: Isiah Pacheco
+   Trading Partner: coletheman88
+
+3. joeyscott31 (Week 10)
+   Combined Impact: -1.9
+   Power Impact: -4.1
+   Grade Impact: -0.6
+   Acquired: Joe Burrow
+   Gave Up: TreVeyon Henderson
+   Trading Partner: Shockley5
+
+4. joeyscott31 (Week 10)
+   Combined Impact: -1.9
+   Power Impact: -4.1
+   Grade Impact: -0.6
+   Acquired: Travis Kelce, Derrick Henry
+   Gave Up: Brock Bowers, Kimani Vidal
+   Trading Partner: papabwall69
+
+5. joeyscott31 (Week 10)
+   Combined Impact: -1.9
+   Power Impact: -4.1
+   Grade Impact: -0.6
+   Acquired: RJ Harvey, Jaylen Warren
+   Gave Up: DJ Moore, Deebo Samuel
+   Trading Partner: Tcdun
+
+6. CameronMulyk (Week 7)
+   Combined Impact: -2.6
    Power Impact: -6.9
-   Grade Impact: +0.4
+   Grade Impact: -0.3
    Acquired: Kyler Murray, Chase Brown
    Gave Up: Drake Maye
    Trading Partner: coletheman88
 
-3. cmoney2137 (Week 11)
-   Combined Impact: -1.8
+7. cmoney2137 (Week 11)
+   Combined Impact: -2.4
    Power Impact: -6.6
-   Grade Impact: +0.5
+   Grade Impact: -0.3
    Acquired: RJ Harvey
    Gave Up: Ricky Pearsall, Colston Loveland
    Trading Partner: joeyscott31
 
-4. CameronMulyk (Week 8)
-   Combined Impact: -1.5
-   Power Impact: -2.0
-   Grade Impact: -1.0
-   Acquired: Tyler Allgeier
-   Gave Up: Khalil Shakir
-   Trading Partner: cmoney2137
-
-5. jackjohnnsonn26 (Week 11)
-   Combined Impact: -1.3
-   Power Impact: -3.2
-   Grade Impact: -0.3
-   Acquired: Colston Loveland
-   Gave Up: None
-   Trading Partner: joeyscott31
-
-6. jackjohnnsonn26 (Week 11)
-   Combined Impact: -1.3
-   Power Impact: -3.2
-   Grade Impact: -0.3
-   Acquired: Quentin Johnston
-   Gave Up: Rome Odunze
+8. CallMeBeanz (Week 4)
+   Combined Impact: -0.5
+   Power Impact: +0.1
+   Grade Impact: -0.6
+   Acquired: Michael Pittman
+   Gave Up: Jordan Mason
    Trading Partner: papabwall69
 
-7. Spillywilly69 (Week 5)
-   Combined Impact: -1.2
-   Power Impact: -3.7
-   Grade Impact: +0.0
-   Acquired: Nico Collins
-   Gave Up: Brian Thomas, Nick Chubb, Kenneth Gainwell
-   Trading Partner: Shockley5
+9. Richmccc (Week 11)
+   Combined Impact: -0.9
+   Power Impact: -2.2
+   Grade Impact: -0.2
+   Acquired: Kyle Monangai
+   Gave Up: None
+   Trading Partner: Spillywilly69
 
-8. papabwall69 (Week 10)
-   Combined Impact: -1.1
-   Power Impact: -3.2
-   Grade Impact: +0.0
-   Acquired: Brock Bowers, Kimani Vidal
-   Gave Up: Travis Kelce, Derrick Henry
-   Trading Partner: joeyscott31
-
-9. Richmccc (Week 9)
+10. Richmccc (Week 9)
    Combined Impact: -1.0
    Power Impact: -2.7
    Grade Impact: -0.1
    Acquired: Alvin Kamara
    Gave Up: Deebo Samuel
    Trading Partner: joeyscott31
-
-10. joeyscott31 (Week 10)
-   Combined Impact: -0.9
-   Power Impact: -4.1
-   Grade Impact: +0.6
-   Acquired: None
-   Gave Up: Isiah Pacheco
-   Trading Partner: coletheman88
