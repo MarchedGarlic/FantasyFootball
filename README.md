@@ -2,6 +2,36 @@
 
 This repository contains automated fantasy football analysis tools and a web dashboard for sharing results with leaguemates.
 
+## 📁 Project Structure
+
+```
+FantasyFootball/
+├── main.py                     # Main orchestrator script
+├── league_config.json          # League configuration (auto-generated)
+├── requirements.txt            # Python dependencies
+├── package.json                # Node.js dependencies for web interface
+├── netlify.toml               # Netlify deployment configuration
+├── build.js                   # Web interface build script
+├── index.html                 # Main dashboard
+├── src/                       # Source code modules
+│   ├── __init__.py           # Package initialization
+│   ├── api_clients.py        # ESPN and Sleeper API clients
+│   ├── roster_grading.py     # Player ranking and roster analysis
+│   ├── power_rankings.py     # Team power rating calculations
+│   ├── median_record_calculator.py # Median-based record analysis
+│   ├── trade_analysis.py     # Trade and waiver impact analysis
+│   ├── visualizations.py     # Interactive Bokeh visualizations
+│   └── tests/                # Test suite
+├── data/                     # Data storage
+│   ├── league_config.template.json # Configuration template
+│   └── *.json               # Generated analysis data files
+├── dist/                     # Built web interface (auto-generated)
+└── fantasy_analysis_output_*/ # Analysis results (auto-generated)
+    ├── html_reports/         # Interactive HTML visualizations
+    ├── json_data/            # Structured data exports
+    └── text_reports/         # Text-based analysis summaries
+```
+
 ## 🏈 Features
 
 - **Power Rankings**: Interactive progression charts showing team strength over time
