@@ -7,7 +7,7 @@ then combines with regular record for comprehensive team evaluation.
 
 import statistics
 from typing import Dict, List, Tuple
-from api_clients import SleeperAPI
+from .api_clients import SleeperAPI
 
 
 def calculate_median_records(all_weekly_matchups: Dict, rosters: List, user_lookup: Dict) -> Dict:

@@ -16,6 +16,10 @@ yarn-error.log*
 # Configuration (sensitive league info - template provided)
 # league_config.json
 
+# Data folder - only track templates and organized outputs
+data/*.json
+!data/league_config.template.json
+
 # Analysis outputs (keep organized folders, ignore loose files)
 fantasy_analysis_*.json
 detailed_analysis_*.json

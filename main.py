@@ -10,11 +10,11 @@ import json
 from datetime import datetime
 
 # Import all analysis modules
-from api_clients import ESPNAPI, SleeperAPI
-from roster_grading import FantasyAnalyzer
-from power_rankings import calculate_weekly_power_ratings, create_power_rating_plot
-from median_record_calculator import calculate_median_records
-from trade_analysis import (
+from src.api_clients import ESPNAPI, SleeperAPI
+from src.roster_grading import FantasyAnalyzer
+from src.power_rankings import calculate_weekly_power_ratings, create_power_rating_plot
+from src.median_record_calculator import calculate_median_records
+from src.trade_analysis import (
     analyze_real_trades_only, 
     analyze_waiver_pickups,
     calculate_manager_grades,
@@ -23,10 +23,11 @@ from trade_analysis import (
     create_manager_grade_visualization,
     print_trade_analysis_results
 )
-from visualizations import (
+from src.visualizations import (
     create_roster_grade_plot,
     create_trade_impact_visualization,
-    create_luck_analysis_plot
+    create_luck_analysis_plot,
+    create_power_ranking_leaderboard
 )
 
 
@@ -520,6 +521,10 @@ def main():
         # Power Rating plot
         print("   • Creating Power Rating progression plot...")
         create_power_rating_plot(team_power_data, output_dirs)
+        
+        # Power Ranking Leaderboard
+        print("   • Creating Power Ranking leaderboard...")
+        create_power_ranking_leaderboard(team_power_data, output_dirs)
         
         # Roster Grade plot
         print("   • Creating Roster Grade progression plot...")
