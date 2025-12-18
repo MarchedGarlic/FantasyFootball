@@ -262,7 +262,7 @@ def main():
         # Get weekly matchups
         print("Fetching weekly matchups...")
         all_weekly_matchups = {}
-        max_week = 14
+        max_week = 15
         
         for week in range(1, max_week + 1):
             matchups = sleeper_api.get_league_matchups(league_id, week)

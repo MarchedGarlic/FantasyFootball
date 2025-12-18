@@ -404,7 +404,7 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
                         lineup_scores[manager_id].append(lineup_score)
     
     # Calculate weekly manager grades and records using real data
-    for week in range(1, 15):  # Weeks 1-14
+    for week in range(1, 16):  # Weeks 1-15
         # First pass: collect all scores for median calculation
         week_scores = []
         for manager_id in manager_grades.keys():
@@ -1405,8 +1405,8 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             model.fit(X, y)
             slope = model.coef_[0]
             
-            # Extend trend line through week 14
-            trend_weeks = list(range(min(weeks), 15))
+            # Extend trend line through week 15
+            trend_weeks = list(range(min(weeks), 16))
             trend_grades = model.predict(np.array(trend_weeks).reshape(-1, 1)).tolist()
         
         # Calculate proper records using actual data structure
@@ -1500,7 +1500,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         x_axis_label="Week",
         y_axis_label="Manager Grade (0-10 Scale)",
         tools="pan,wheel_zoom,box_zoom,reset,save",
-        x_range=(0.5, 14.5),
+        x_range=(0.5, 15.5),
         y_range=(0, 10)
     )
     
@@ -1658,7 +1658,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     
     reset_callback = CustomJS(args=dict(plot=p), code="""
         plot.x_range.start = 0.5;
-        plot.x_range.end = 14.5;
+        plot.x_range.end = 15.5;
         plot.y_range.start = 0;
         plot.y_range.end = 10;
     """)

@@ -320,7 +320,7 @@ def main():
         # Get all weekly matchups
         print("   • Fetching all weekly matchups...")
         all_weekly_matchups = {}
-        max_week = 14 if SEASON >= 2021 else 16  # NFL changed to 17 games in 2021, but fantasy is still ~14 weeks
+        max_week = 15 if SEASON >= 2021 else 16  # NFL changed to 17 games in 2021, but fantasy is still ~15 weeks
         for week in range(1, max_week + 1):
             matchups = sleeper_api.get_league_matchups(LEAGUE_ID, week)
             if matchups:

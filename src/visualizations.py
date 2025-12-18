@@ -75,8 +75,8 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
                 model.fit(X, y)
                 slope = model.coef_[0]
                 
-                # Generate trend line points extending to week 14
-                trend_weeks = list(range(min(weeks), 15))
+                # Generate trend line points extending to week 15
+                trend_weeks = list(range(min(weeks), 16))
                 trend_grades = model.predict(np.array(trend_weeks).reshape(-1, 1)).tolist()
             
             # Get real record data from team_power_data if available
@@ -166,7 +166,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             x_axis_label="Week",
             y_axis_label="Roster Grade",
             tools="pan,wheel_zoom,box_zoom,reset,save",
-            x_range=(0.5, 14.5)
+            x_range=(0.5, 15.5)
         )
         
         # Create collapsible explanation panel
@@ -501,7 +501,7 @@ def create_combined_analysis_plot(team_power_data, roster_grade_data, output_dir
             x_axis_label="Week",
             y_axis_label="Power Rating",
             tools="pan,wheel_zoom,box_zoom,reset,save",
-            x_range=(0.5, 14.5)
+            x_range=(0.5, 15.5)
         )
         
         # Create second y-axis for roster grades
@@ -1000,12 +1000,12 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         luck_data = []
         
         for user_id, data in team_power_data.items():
-            # Get final regular record (cumulative wins/losses for week 14)
+            # Get final regular record (cumulative wins/losses for week 15)
             cumulative_wins = data.get('cumulative_wins', {})
             cumulative_losses = data.get('cumulative_losses', {})
             
-            # Get week 14 record (latest week)
-            final_week = max(cumulative_wins.keys()) if cumulative_wins else 14
+            # Get week 15 record (latest week)
+            final_week = max(cumulative_wins.keys()) if cumulative_wins else 15
             regular_wins = cumulative_wins.get(final_week, 0)
             regular_losses = cumulative_losses.get(final_week, 0)
             
