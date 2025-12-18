@@ -334,7 +334,7 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
             x_axis_label="Week",
             y_axis_label="Power Rating",
             tools="pan,wheel_zoom,box_zoom,reset,save",
-            x_range=(0.5, 14.5)
+            x_range=(0.5, 15.5)
         )
         
         # Create explanation panel

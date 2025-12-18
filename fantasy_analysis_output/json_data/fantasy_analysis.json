@@ -1,6 +1,6 @@
 {
   "analysis_info": {
-    "timestamp": "2025-12-17T22:55:28.911223",
+    "timestamp": "2025-12-17T23:03:46.895140",
     "league_name": "DeShaun & Justin’s Massage Parlor",
     "season": 2025,
     "league_id": "1260371721257496576",
@@ -323,25 +323,25 @@
       "manager_name": "joeyscott31",
       "weekly_grades": {
         "1": 7.1,
-        "2": 7.3,
-        "3": 7.5,
-        "4": 7.0,
-        "5": 7.1,
-        "6": 7.1,
-        "7": 8.1,
-        "8": 7.4,
-        "9": 6.5,
-        "10": 6.5,
-        "11": 7.4,
-        "12": 7.3,
-        "13": 7.0,
-        "14": 7.4,
-        "15": 7.6
+        "2": 7.5,
+        "3": 7.4,
+        "4": 6.8,
+        "5": 7.0,
+        "6": 7.3,
+        "7": 6.9,
+        "8": 7.3,
+        "9": 7.4,
+        "10": 9.0,
+        "11": 8.2,
+        "12": 7.6,
+        "13": 7.1,
+        "14": 7.3,
+        "15": 7.5
       },
-      "current_grade": 7.6,
-      "average_grade": 7.22,
-      "highest_grade": 8.1,
-      "lowest_grade": 6.5,
+      "current_grade": 7.5,
+      "average_grade": 7.426666666666667,
+      "highest_grade": 9.0,
+      "lowest_grade": 6.8,
       "grade_trend": "improving"
     },
     "858068603554111488": {
@@ -350,13 +350,13 @@
         "1": 5.0,
         "2": 5.0,
         "3": 5.0,
-        "4": 5.1,
-        "5": 5.0,
+        "4": 5.0,
+        "5": 5.1,
         "6": 5.0,
         "7": 5.0,
         "8": 5.0,
         "9": 5.0,
-        "10": 5.4,
+        "10": 5.0,
         "11": 5.0,
         "12": 5.0,
         "13": 5.0,
@@ -364,35 +364,35 @@
         "15": 5.0
       },
       "current_grade": 5.0,
-      "average_grade": 5.033333333333333,
-      "highest_grade": 5.4,
+      "average_grade": 5.006666666666666,
+      "highest_grade": 5.1,
       "lowest_grade": 5.0,
       "grade_trend": "declining"
     },
     "993314024194396160": {
       "manager_name": "Shockley5",
       "weekly_grades": {
-        "1": 5.4,
+        "1": 5.6,
         "2": 5.3,
         "3": 5.2,
-        "4": 6.0,
-        "5": 5.1,
+        "4": 5.4,
+        "5": 5.8,
         "6": 5.2,
-        "7": 5.2,
+        "7": 5.3,
         "8": 5.4,
-        "9": 5.6,
-        "10": 5.0,
-        "11": 5.2,
+        "9": 5.5,
+        "10": 6.4,
+        "11": 5.1,
         "12": 5.2,
-        "13": 5.1,
-        "14": 5.6,
-        "15": 5.7
+        "13": 5.2,
+        "14": 5.5,
+        "15": 5.6
       },
-      "current_grade": 5.7,
-      "average_grade": 5.346666666666667,
-      "highest_grade": 6.0,
-      "lowest_grade": 5.0,
-      "grade_trend": "improving"
+      "current_grade": 5.6,
+      "average_grade": 5.446666666666667,
+      "highest_grade": 6.4,
+      "lowest_grade": 5.1,
+      "grade_trend": "declining"
     },
     "1260463320503169024": {
       "manager_name": "Spillywilly69",
@@ -400,7 +400,7 @@
         "1": 5.0,
         "2": 5.0,
         "3": 5.0,
-        "4": 5.6,
+        "4": 6.0,
         "5": 5.0,
         "6": 5.0,
         "7": 5.0,
@@ -414,107 +414,107 @@
         "15": 5.0
       },
       "current_grade": 5.0,
-      "average_grade": 5.04,
-      "highest_grade": 5.6,
+      "average_grade": 5.066666666666666,
+      "highest_grade": 6.0,
       "lowest_grade": 5.0,
       "grade_trend": "declining"
     },
     "1260463530457452544": {
       "manager_name": "coletheman88",
       "weekly_grades": {
-        "1": 5.5,
-        "2": 5.8,
+        "1": 5.6,
+        "2": 5.9,
         "3": 5.4,
-        "4": 5.4,
-        "5": 5.4,
-        "6": 5.6,
-        "7": 5.4,
-        "8": 5.6,
-        "9": 5.7,
-        "10": 5.3,
-        "11": 5.2,
-        "12": 5.6,
-        "13": 5.4,
-        "14": 5.6,
-        "15": 5.8
+        "4": 5.7,
+        "5": 5.5,
+        "6": 5.8,
+        "7": 5.5,
+        "8": 5.3,
+        "9": 5.9,
+        "10": 5.0,
+        "11": 6.2,
+        "12": 5.3,
+        "13": 5.9,
+        "14": 5.5,
+        "15": 5.5
       },
-      "current_grade": 5.8,
-      "average_grade": 5.513333333333334,
-      "highest_grade": 5.8,
-      "lowest_grade": 5.2,
-      "grade_trend": "improving"
+      "current_grade": 5.5,
+      "average_grade": 5.6,
+      "highest_grade": 6.2,
+      "lowest_grade": 5.0,
+      "grade_trend": "declining"
     },
     "694022020266033152": {
       "manager_name": "CallMeBeanz",
       "weekly_grades": {
         "1": 5.8,
-        "2": 5.6,
-        "3": 5.9,
-        "4": 5.9,
-        "5": 5.4,
-        "6": 5.5,
-        "7": 5.7,
-        "8": 5.5,
+        "2": 5.7,
+        "3": 5.4,
+        "4": 5.7,
+        "5": 5.7,
+        "6": 5.6,
+        "7": 5.6,
+        "8": 5.8,
         "9": 5.4,
-        "10": 5.3,
-        "11": 5.4,
-        "12": 5.3,
-        "13": 5.8,
+        "10": 5.9,
+        "11": 5.5,
+        "12": 5.7,
+        "13": 5.9,
         "14": 5.8,
-        "15": 5.7
+        "15": 5.5
       },
-      "current_grade": 5.7,
-      "average_grade": 5.6,
+      "current_grade": 5.5,
+      "average_grade": 5.666666666666667,
       "highest_grade": 5.9,
-      "lowest_grade": 5.3,
+      "lowest_grade": 5.4,
       "grade_trend": "declining"
     },
     "1260799280998785024": {
       "manager_name": "CameronMulyk",
       "weekly_grades": {
-        "1": 5.2,
-        "2": 5.2,
-        "3": 5.4,
-        "4": 5.4,
-        "5": 5.6,
-        "6": 5.3,
-        "7": 5.4,
-        "8": 5.0,
-        "9": 5.5,
-        "10": 5.6,
-        "11": 5.6,
-        "12": 5.2,
-        "13": 5.4,
-        "14": 5.4,
-        "15": 5.2
+        "1": 5.5,
+        "2": 5.3,
+        "3": 5.1,
+        "4": 5.0,
+        "5": 5.4,
+        "6": 5.4,
+        "7": 5.8,
+        "8": 5.7,
+        "9": 5.1,
+        "10": 5.4,
+        "11": 5.1,
+        "12": 5.3,
+        "13": 5.2,
+        "14": 5.0,
+        "15": 5.5
       },
-      "current_grade": 5.2,
-      "average_grade": 5.36,
-      "highest_grade": 5.6,
+      "current_grade": 5.5,
+      "average_grade": 5.319999999999999,
+      "highest_grade": 5.8,
       "lowest_grade": 5.0,
       "grade_trend": "declining"
     },
     "1260801218851115008": {
       "manager_name": "Richmccc",
       "weekly_grades": {
-        "1": 5.0,
-        "2": 5.1,
+        "1": 5.1,
+        "2": 5.0,
         "3": 5.0,
-        "4": 5.0,
+        "4": 5.1,
         "5": 5.0,
         "6": 5.0,
-        "7": 5.0,
-        "8": 5.2,
+        "7": 5.2,
+        "8": 5.0,
         "9": 5.0,
         "10": 5.0,
         "11": 5.0,
-        "12": 5.2,
+        "12": 5.0,
         "13": 5.0,
-        "14": 5.1,
+        "14": 5.0,
         "15": 5.0
       },
       "current_grade": 5.0,
-      "average_grade": 5.04,
+      "average_grade": 5.026666666666667,
       "highest_grade": 5.2,
       "lowest_grade": 5.0,
       "grade_trend": "declining"
@@ -522,101 +522,101 @@
     "1130755765075136512": {
       "manager_name": "jackjohnnsonn26",
       "weekly_grades": {
-        "1": 5.6,
-        "2": 5.4,
-        "3": 5.5,
-        "4": 5.0,
-        "5": 5.4,
-        "6": 5.7,
-        "7": 5.1,
+        "1": 5.4,
+        "2": 5.6,
+        "3": 5.8,
+        "4": 5.5,
+        "5": 5.5,
+        "6": 5.8,
+        "7": 5.4,
         "8": 5.5,
-        "9": 5.7,
-        "10": 5.3,
-        "11": 5.3,
-        "12": 5.6,
-        "13": 5.3,
-        "14": 5.8,
-        "15": 5.8
+        "9": 5.5,
+        "10": 5.7,
+        "11": 6.4,
+        "12": 5.7,
+        "13": 5.4,
+        "14": 5.5,
+        "15": 5.4
       },
-      "current_grade": 5.8,
-      "average_grade": 5.466666666666667,
-      "highest_grade": 5.8,
-      "lowest_grade": 5.0,
-      "grade_trend": "improving"
+      "current_grade": 5.4,
+      "average_grade": 5.6066666666666665,
+      "highest_grade": 6.4,
+      "lowest_grade": 5.4,
+      "grade_trend": "declining"
     },
     "1260834874474889216": {
       "manager_name": "papabwall69",
       "weekly_grades": {
         "1": 5.0,
-        "2": 5.1,
+        "2": 5.0,
         "3": 5.0,
         "4": 5.0,
         "5": 5.0,
         "6": 5.0,
-        "7": 5.0,
+        "7": 5.1,
         "8": 5.0,
         "9": 5.1,
         "10": 5.0,
-        "11": 5.0,
+        "11": 5.2,
         "12": 5.0,
-        "13": 5.0,
-        "14": 5.0,
+        "13": 5.2,
+        "14": 5.1,
         "15": 5.0
       },
       "current_grade": 5.0,
-      "average_grade": 5.013333333333334,
-      "highest_grade": 5.1,
+      "average_grade": 5.046666666666667,
+      "highest_grade": 5.2,
       "lowest_grade": 5.0,
       "grade_trend": "declining"
     },
     "858530366355525632": {
       "manager_name": "cmoney2137",
       "weekly_grades": {
-        "1": 5.8,
-        "2": 5.4,
+        "1": 5.3,
+        "2": 5.3,
         "3": 5.3,
-        "4": 5.6,
+        "4": 5.7,
         "5": 5.4,
-        "6": 5.2,
-        "7": 5.2,
-        "8": 5.8,
+        "6": 5.4,
+        "7": 5.3,
+        "8": 5.1,
         "9": 5.6,
-        "10": 5.5,
-        "11": 5.1,
-        "12": 5.8,
-        "13": 5.3,
-        "14": 5.4,
-        "15": 5.8
+        "10": 5.3,
+        "11": 5.0,
+        "12": 5.6,
+        "13": 5.7,
+        "14": 5.5,
+        "15": 5.4
       },
-      "current_grade": 5.8,
-      "average_grade": 5.48,
-      "highest_grade": 5.8,
-      "lowest_grade": 5.1,
-      "grade_trend": "declining"
+      "current_grade": 5.4,
+      "average_grade": 5.3933333333333335,
+      "highest_grade": 5.7,
+      "lowest_grade": 5.0,
+      "grade_trend": "improving"
     },
     "1260854493860331520": {
       "manager_name": "djmarino615",
       "weekly_grades": {
-        "1": 5.8,
-        "2": 6.3,
-        "3": 6.5,
-        "4": 6.5,
+        "1": 5.9,
+        "2": 6.0,
+        "3": 6.1,
+        "4": 6.1,
         "5": 6.2,
-        "6": 6.3,
-        "7": 6.4,
-        "8": 6.5,
-        "9": 6.0,
-        "10": 6.4,
-        "11": 6.5,
+        "6": 6.1,
+        "7": 6.5,
+        "8": 6.1,
+        "9": 6.5,
+        "10": 6.3,
+        "11": 6.4,
         "12": 6.3,
-        "13": 6.5,
-        "14": 6.4,
-        "15": 6.6
+        "13": 6.6,
+        "14": 6.3,
+        "15": 6.4
       },
-      "current_grade": 6.6,
-      "average_grade": 6.346666666666667,
+      "current_grade": 6.4,
+      "average_grade": 6.253333333333333,
       "highest_grade": 6.6,
-      "lowest_grade": 5.8,
+      "lowest_grade": 5.9,
       "grade_trend": "improving"
     }
   },
@@ -690,12 +690,12 @@
           "Michael Pittman"
         ],
         "power_impact": 0.09999999999999432,
-        "grade_impact": 0.0,
-        "record_impact": 0.0024999999999998582,
-        "combined_impact": 0.03333333333333144,
+        "grade_impact": 0.2999999999999998,
+        "record_impact": 0.009999999999999854,
+        "combined_impact": 0.28333333333333127,
         "normalized_power": 0.04999999999999716,
-        "normalized_grade": 0.0,
-        "normalized_record": 0.049999999999997165
+        "normalized_grade": 0.5999999999999996,
+        "normalized_record": 0.1999999999999971
       },
       {
         "week": 4,
@@ -746,12 +746,12 @@
           "D'Andre Swift"
         ],
         "power_impact": 0.4000000000000057,
-        "grade_impact": -0.5,
-        "record_impact": -0.0024999999999998582,
-        "combined_impact": -0.28333333333333144,
+        "grade_impact": -0.6000000000000005,
+        "record_impact": -0.004999999999999872,
+        "combined_impact": -0.3666666666666652,
         "normalized_power": 0.20000000000000284,
-        "normalized_grade": -1.0,
-        "normalized_record": -0.049999999999997165
+        "normalized_grade": -1.200000000000001,
+        "normalized_record": -0.09999999999999744
       },
       {
         "week": 4,
@@ -777,12 +777,12 @@
           "Zach Ertz"
         ],
         "power_impact": 3.0,
-        "grade_impact": 0.5999999999999996,
-        "record_impact": 0.09,
-        "combined_impact": 1.4999999999999998,
+        "grade_impact": 1.0,
+        "record_impact": 0.1,
+        "combined_impact": 1.8333333333333333,
         "normalized_power": 1.5,
-        "normalized_grade": 1.1999999999999993,
-        "normalized_record": 1.7999999999999998
+        "normalized_grade": 2.0,
+        "normalized_record": 2.0
       },
       {
         "week": 4,
@@ -804,12 +804,12 @@
           "Travis Etienne"
         ],
         "power_impact": 3.0,
-        "grade_impact": 0.5999999999999996,
-        "record_impact": 0.09,
-        "combined_impact": 1.4999999999999998,
+        "grade_impact": 1.0,
+        "record_impact": 0.1,
+        "combined_impact": 1.8333333333333333,
         "normalized_power": 1.5,
-        "normalized_grade": 1.1999999999999993,
-        "normalized_record": 1.7999999999999998
+        "normalized_grade": 2.0,
+        "normalized_record": 2.0
       },
       {
         "week": 4,
@@ -831,11 +831,11 @@
           "Alvin Kamara"
         ],
         "power_impact": -13.299999999999983,
-        "grade_impact": -0.5,
+        "grade_impact": -0.2999999999999998,
         "record_impact": -0.25,
-        "combined_impact": -4.216666666666664,
+        "combined_impact": -4.08333333333333,
         "normalized_power": -6.6499999999999915,
-        "normalized_grade": -1.0,
+        "normalized_grade": -0.5999999999999996,
         "normalized_record": -5.0
       },
       {
@@ -856,12 +856,12 @@
           "Bhayshul Tuten"
         ],
         "power_impact": 4.800000000000011,
-        "grade_impact": 0.0,
-        "record_impact": 0.12000000000000029,
-        "combined_impact": 1.6000000000000039,
+        "grade_impact": -0.09999999999999964,
+        "record_impact": 0.1175000000000003,
+        "combined_impact": 1.5166666666666708,
         "normalized_power": 2.4000000000000057,
-        "normalized_grade": 0.0,
-        "normalized_record": 2.4000000000000057
+        "normalized_grade": -0.1999999999999993,
+        "normalized_record": 2.350000000000006
       },
       {
         "week": 4,
@@ -910,12 +910,12 @@
           "Amon-Ra St. Brown"
         ],
         "power_impact": 3.0,
-        "grade_impact": 0.5999999999999996,
-        "record_impact": 0.09,
-        "combined_impact": 1.4999999999999998,
+        "grade_impact": 1.0,
+        "record_impact": 0.1,
+        "combined_impact": 1.8333333333333333,
         "normalized_power": 1.5,
-        "normalized_grade": 1.1999999999999993,
-        "normalized_record": 1.7999999999999998
+        "normalized_grade": 2.0,
+        "normalized_record": 2.0
       },
       {
         "week": 4,
@@ -939,12 +939,12 @@
           "Justin Jefferson"
         ],
         "power_impact": 4.800000000000011,
-        "grade_impact": 0.0,
-        "record_impact": 0.12000000000000029,
-        "combined_impact": 1.6000000000000039,
+        "grade_impact": -0.09999999999999964,
+        "record_impact": 0.1175000000000003,
+        "combined_impact": 1.5166666666666708,
         "normalized_power": 2.4000000000000057,
-        "normalized_grade": 0.0,
-        "normalized_record": 2.4000000000000057
+        "normalized_grade": -0.1999999999999993,
+        "normalized_record": 2.350000000000006
       },
       {
         "week": 4,
@@ -960,12 +960,12 @@
         ],
         "other_gave_up": [],
         "power_impact": 0.4000000000000057,
-        "grade_impact": -0.5,
-        "record_impact": -0.0024999999999998582,
-        "combined_impact": -0.28333333333333144,
+        "grade_impact": -0.6000000000000005,
+        "record_impact": -0.004999999999999872,
+        "combined_impact": -0.3666666666666652,
         "normalized_power": 0.20000000000000284,
-        "normalized_grade": -1.0,
-        "normalized_record": -0.049999999999997165
+        "normalized_grade": -1.200000000000001,
+        "normalized_record": -0.09999999999999744
       },
       {
         "week": 4,
@@ -981,11 +981,11 @@
           "Stefon Diggs"
         ],
         "power_impact": 21.39999999999999,
-        "grade_impact": 0.7999999999999998,
+        "grade_impact": 0.20000000000000018,
         "record_impact": 0.5,
-        "combined_impact": 7.433333333333333,
+        "combined_impact": 7.033333333333331,
         "normalized_power": 10.699999999999996,
-        "normalized_grade": 1.5999999999999996,
+        "normalized_grade": 0.40000000000000036,
         "normalized_record": 10.0
       },
       {
@@ -1010,12 +1010,12 @@
           "Kenneth Gainwell"
         ],
         "power_impact": 5.900000000000006,
-        "grade_impact": -0.9000000000000004,
-        "record_impact": 0.12500000000000014,
-        "combined_impact": 1.2166666666666683,
+        "grade_impact": 0.39999999999999947,
+        "record_impact": 0.15750000000000014,
+        "combined_impact": 2.3000000000000016,
         "normalized_power": 2.950000000000003,
-        "normalized_grade": -1.8000000000000007,
-        "normalized_record": 2.5000000000000027
+        "normalized_grade": 0.7999999999999989,
+        "normalized_record": 3.150000000000003
       },
       {
         "week": 5,
@@ -1039,12 +1039,12 @@
           "Nico Collins"
         ],
         "power_impact": -3.6999999999999886,
-        "grade_impact": -0.5999999999999996,
-        "record_impact": -0.1074999999999997,
-        "combined_impact": -1.7333333333333292,
+        "grade_impact": -1.0,
+        "record_impact": -0.11749999999999972,
+        "combined_impact": -2.066666666666663,
         "normalized_power": -1.8499999999999943,
-        "normalized_grade": -1.1999999999999993,
-        "normalized_record": -2.149999999999994
+        "normalized_grade": -2.0,
+        "normalized_record": -2.3499999999999943
       },
       {
         "week": 7,
@@ -1066,11 +1066,11 @@
           "Drake Maye"
         ],
         "power_impact": 15.900000000000006,
-        "grade_impact": -0.1999999999999993,
+        "grade_impact": -0.2999999999999998,
         "record_impact": 0.25,
-        "combined_impact": 4.1833333333333345,
+        "combined_impact": 4.116666666666668,
         "normalized_power": 7.950000000000003,
-        "normalized_grade": -0.3999999999999986,
+        "normalized_grade": -0.5999999999999996,
         "normalized_record": 5.0
       },
       {
@@ -1093,12 +1093,12 @@
           "Chase Brown"
         ],
         "power_impact": -6.900000000000006,
-        "grade_impact": 0.10000000000000053,
-        "record_impact": -0.17000000000000015,
-        "combined_impact": -2.216666666666668,
+        "grade_impact": 0.39999999999999947,
+        "record_impact": -0.16250000000000017,
+        "combined_impact": -1.9666666666666692,
         "normalized_power": -3.450000000000003,
-        "normalized_grade": 0.20000000000000107,
-        "normalized_record": -3.400000000000003
+        "normalized_grade": 0.7999999999999989,
+        "normalized_record": -3.2500000000000036
       },
       {
         "week": 7,
@@ -1120,12 +1120,12 @@
           "Alvin Kamara"
         ],
         "power_impact": 6.099999999999994,
-        "grade_impact": 1.0,
-        "record_impact": 0.17749999999999988,
-        "combined_impact": 2.866666666666665,
+        "grade_impact": -0.39999999999999947,
+        "record_impact": 0.14249999999999988,
+        "combined_impact": 1.6999999999999986,
         "normalized_power": 3.049999999999997,
-        "normalized_grade": 2.0,
-        "normalized_record": 3.5499999999999976
+        "normalized_grade": -0.7999999999999989,
+        "normalized_record": 2.8499999999999974
       },
       {
         "week": 7,
@@ -1147,12 +1147,12 @@
           "Wan'Dale Robinson"
         ],
         "power_impact": -2.8000000000000114,
-        "grade_impact": -0.6000000000000005,
-        "record_impact": -0.0850000000000003,
-        "combined_impact": -1.4333333333333378,
+        "grade_impact": -0.39999999999999947,
+        "record_impact": -0.08000000000000028,
+        "combined_impact": -1.2666666666666702,
         "normalized_power": -1.4000000000000057,
-        "normalized_grade": -1.200000000000001,
-        "normalized_record": -1.700000000000006
+        "normalized_grade": -0.7999999999999989,
+        "normalized_record": -1.6000000000000056
       },
       {
         "week": 8,
@@ -1172,12 +1172,12 @@
           "Tyler Allgeier"
         ],
         "power_impact": -2.0,
-        "grade_impact": -0.40000000000000036,
-        "record_impact": -0.06000000000000001,
-        "combined_impact": -1.0000000000000002,
+        "grade_impact": -0.09999999999999964,
+        "record_impact": -0.05249999999999999,
+        "combined_impact": -0.7499999999999997,
         "normalized_power": -1.0,
-        "normalized_grade": -0.8000000000000007,
-        "normalized_record": -1.2000000000000002
+        "normalized_grade": -0.1999999999999993,
+        "normalized_record": -1.0499999999999998
       },
       {
         "week": 8,
@@ -1197,12 +1197,12 @@
           "Khalil Shakir"
         ],
         "power_impact": 6.699999999999989,
-        "grade_impact": 0.5999999999999996,
-        "record_impact": 0.18249999999999972,
-        "combined_impact": 2.7333333333333294,
+        "grade_impact": -0.20000000000000018,
+        "record_impact": 0.16249999999999973,
+        "combined_impact": 2.066666666666663,
         "normalized_power": 3.3499999999999943,
-        "normalized_grade": 1.1999999999999993,
-        "normalized_record": 3.649999999999994
+        "normalized_grade": -0.40000000000000036,
+        "normalized_record": 3.2499999999999947
       },
       {
         "week": 9,
@@ -1224,12 +1224,12 @@
           "Nico Collins"
         ],
         "power_impact": 2.8000000000000114,
-        "grade_impact": -0.9000000000000004,
-        "record_impact": 0.04750000000000028,
-        "combined_impact": 0.18333333333333682,
+        "grade_impact": 0.10000000000000053,
+        "record_impact": 0.0725000000000003,
+        "combined_impact": 1.0166666666666708,
         "normalized_power": 1.4000000000000057,
-        "normalized_grade": -1.8000000000000007,
-        "normalized_record": 0.9500000000000055
+        "normalized_grade": 0.20000000000000107,
+        "normalized_record": 1.450000000000006
       },
       {
         "week": 9,
@@ -1276,12 +1276,12 @@
           "Deebo Samuel"
         ],
         "power_impact": 2.8000000000000114,
-        "grade_impact": -0.9000000000000004,
-        "record_impact": 0.04750000000000028,
-        "combined_impact": 0.18333333333333682,
+        "grade_impact": 0.10000000000000053,
+        "record_impact": 0.0725000000000003,
+        "combined_impact": 1.0166666666666708,
         "normalized_power": 1.4000000000000057,
-        "normalized_grade": -1.8000000000000007,
-        "normalized_record": 0.9500000000000055
+        "normalized_grade": 0.20000000000000107,
+        "normalized_record": 1.450000000000006
       },
       {
         "week": 9,
@@ -1301,12 +1301,12 @@
           "Alvin Kamara"
         ],
         "power_impact": -2.6999999999999886,
-        "grade_impact": -0.20000000000000018,
-        "record_impact": -0.07249999999999972,
-        "combined_impact": -1.066666666666663,
+        "grade_impact": 0.0,
+        "record_impact": -0.06749999999999971,
+        "combined_impact": -0.8999999999999962,
         "normalized_power": -1.3499999999999943,
-        "normalized_grade": -0.40000000000000036,
-        "normalized_record": -1.4499999999999944
+        "normalized_grade": 0.0,
+        "normalized_record": -1.3499999999999943
       },
       {
         "week": 10,
@@ -1322,12 +1322,12 @@
         ],
         "other_gave_up": [],
         "power_impact": -4.099999999999994,
-        "grade_impact": 0.0,
-        "record_impact": -0.10249999999999987,
-        "combined_impact": -1.3666666666666647,
+        "grade_impact": 1.5999999999999996,
+        "record_impact": -0.06249999999999987,
+        "combined_impact": -0.03333333333333174,
         "normalized_power": -2.049999999999997,
-        "normalized_grade": 0.0,
-        "normalized_record": -2.049999999999997
+        "normalized_grade": 3.1999999999999993,
+        "normalized_record": -1.2499999999999973
       },
       {
         "week": 10,
@@ -1343,12 +1343,12 @@
           "Isiah Pacheco"
         ],
         "power_impact": 5.099999999999994,
-        "grade_impact": -0.40000000000000036,
-        "record_impact": 0.11749999999999985,
-        "combined_impact": 1.3666666666666645,
+        "grade_impact": -0.9000000000000004,
+        "record_impact": 0.10499999999999986,
+        "combined_impact": 0.9499999999999978,
         "normalized_power": 2.549999999999997,
-        "normalized_grade": -0.8000000000000007,
-        "normalized_record": 2.349999999999997
+        "normalized_grade": -1.8000000000000007,
+        "normalized_record": 2.099999999999997
       },
       {
         "week": 10,
@@ -1368,12 +1368,12 @@
           "Joe Burrow"
         ],
         "power_impact": -4.099999999999994,
-        "grade_impact": 0.0,
-        "record_impact": -0.10249999999999987,
-        "combined_impact": -1.3666666666666647,
+        "grade_impact": 1.5999999999999996,
+        "record_impact": -0.06249999999999987,
+        "combined_impact": -0.03333333333333174,
         "normalized_power": -2.049999999999997,
-        "normalized_grade": 0.0,
-        "normalized_record": -2.049999999999997
+        "normalized_grade": 3.1999999999999993,
+        "normalized_record": -1.2499999999999973
       },
       {
         "week": 10,
@@ -1393,12 +1393,12 @@
           "TreVeyon Henderson"
         ],
         "power_impact": 3.0,
-        "grade_impact": -0.5999999999999996,
-        "record_impact": 0.06000000000000001,
-        "combined_impact": 0.5000000000000003,
+        "grade_impact": 0.9000000000000004,
+        "record_impact": 0.09750000000000002,
+        "combined_impact": 1.7500000000000002,
         "normalized_power": 1.5,
-        "normalized_grade": -1.1999999999999993,
-        "normalized_record": 1.2000000000000002
+        "normalized_grade": 1.8000000000000007,
+        "normalized_record": 1.9500000000000004
       },
       {
         "week": 10,
@@ -1420,12 +1420,12 @@
           "Ladd McConkey"
         ],
         "power_impact": 5.099999999999994,
-        "grade_impact": -0.40000000000000036,
-        "record_impact": 0.11749999999999985,
-        "combined_impact": 1.3666666666666645,
+        "grade_impact": -0.9000000000000004,
+        "record_impact": 0.10499999999999986,
+        "combined_impact": 0.9499999999999978,
         "normalized_power": 2.549999999999997,
-        "normalized_grade": -0.8000000000000007,
-        "normalized_record": 2.349999999999997
+        "normalized_grade": -1.8000000000000007,
+        "normalized_record": 2.099999999999997
       },
       {
         "week": 10,
@@ -1476,12 +1476,12 @@
           "Derrick Henry"
         ],
         "power_impact": -4.099999999999994,
-        "grade_impact": 0.0,
-        "record_impact": -0.10249999999999987,
-        "combined_impact": -1.3666666666666647,
+        "grade_impact": 1.5999999999999996,
+        "record_impact": -0.06249999999999987,
+        "combined_impact": -0.03333333333333174,
         "normalized_power": -2.049999999999997,
-        "normalized_grade": 0.0,
-        "normalized_record": -2.049999999999997
+        "normalized_grade": 3.1999999999999993,
+        "normalized_record": -1.2499999999999973
       },
       {
         "week": 10,
@@ -1534,12 +1534,12 @@
           "Jaylen Warren"
         ],
         "power_impact": -4.099999999999994,
-        "grade_impact": 0.0,
-        "record_impact": -0.10249999999999987,
-        "combined_impact": -1.3666666666666647,
+        "grade_impact": 1.5999999999999996,
+        "record_impact": -0.06249999999999987,
+        "combined_impact": -0.03333333333333174,
         "normalized_power": -2.049999999999997,
-        "normalized_grade": 0.0,
-        "normalized_record": -2.049999999999997
+        "normalized_grade": 3.1999999999999993,
+        "normalized_record": -1.2499999999999973
       },
       {
         "week": 10,
@@ -1563,12 +1563,12 @@
           "Deebo Samuel"
         ],
         "power_impact": -2.3999999999999773,
-        "grade_impact": 0.40000000000000036,
-        "record_impact": -0.04999999999999943,
-        "combined_impact": -0.4666666666666588,
+        "grade_impact": 0.0,
+        "record_impact": -0.059999999999999436,
+        "combined_impact": -0.7999999999999924,
         "normalized_power": -1.1999999999999886,
-        "normalized_grade": 0.8000000000000007,
-        "normalized_record": -0.9999999999999886
+        "normalized_grade": 0.0,
+        "normalized_record": -1.1999999999999886
       },
       {
         "week": 10,
@@ -1600,12 +1600,12 @@
           "Kenneth Gainwell"
         ],
         "power_impact": 3.0,
-        "grade_impact": -0.5999999999999996,
-        "record_impact": 0.06000000000000001,
-        "combined_impact": 0.5000000000000003,
+        "grade_impact": 0.9000000000000004,
+        "record_impact": 0.09750000000000002,
+        "combined_impact": 1.7500000000000002,
         "normalized_power": 1.5,
-        "normalized_grade": -1.1999999999999993,
-        "normalized_record": 1.2000000000000002
+        "normalized_grade": 1.8000000000000007,
+        "normalized_record": 1.9500000000000004
       },
       {
         "week": 10,
@@ -1707,12 +1707,12 @@
           "Josh Downs"
         ],
         "power_impact": 1.0999999999999943,
-        "grade_impact": -0.10000000000000053,
-        "record_impact": 0.024999999999999845,
-        "combined_impact": 0.283333333333331,
+        "grade_impact": 0.5,
+        "record_impact": 0.03999999999999986,
+        "combined_impact": 0.7833333333333314,
         "normalized_power": 0.5499999999999972,
-        "normalized_grade": -0.20000000000000107,
-        "normalized_record": 0.4999999999999969
+        "normalized_grade": 1.0,
+        "normalized_record": 0.7999999999999973
       },
       {
         "week": 11,
@@ -1728,12 +1728,12 @@
         ],
         "other_gave_up": [],
         "power_impact": 0.5999999999999943,
-        "grade_impact": 0.9000000000000004,
-        "record_impact": 0.03749999999999987,
-        "combined_impact": 0.9499999999999984,
+        "grade_impact": -0.8000000000000007,
+        "record_impact": -0.0050000000000001606,
+        "combined_impact": -0.46666666666666917,
         "normalized_power": 0.29999999999999716,
-        "normalized_grade": 1.8000000000000007,
-        "normalized_record": 0.7499999999999973
+        "normalized_grade": -1.6000000000000014,
+        "normalized_record": -0.10000000000000321
       },
       {
         "week": 11,
@@ -1749,12 +1749,12 @@
           "Colston Loveland"
         ],
         "power_impact": -3.200000000000017,
-        "grade_impact": 0.0,
-        "record_impact": -0.08000000000000043,
-        "combined_impact": -1.0666666666666724,
+        "grade_impact": 0.7000000000000002,
+        "record_impact": -0.06250000000000043,
+        "combined_impact": -0.48333333333333894,
         "normalized_power": -1.6000000000000085,
-        "normalized_grade": 0.0,
-        "normalized_record": -1.6000000000000085
+        "normalized_grade": 1.4000000000000004,
+        "normalized_record": -1.2500000000000087
       },
       {
         "week": 11,
@@ -1849,12 +1849,12 @@
           "Michael Pittman"
         ],
         "power_impact": -2.3999999999999773,
-        "grade_impact": 0.0,
-        "record_impact": -0.059999999999999436,
-        "combined_impact": -0.7999999999999924,
+        "grade_impact": 0.20000000000000018,
+        "record_impact": -0.05499999999999943,
+        "combined_impact": -0.6333333333333256,
         "normalized_power": -1.1999999999999886,
-        "normalized_grade": 0.0,
-        "normalized_record": -1.1999999999999886
+        "normalized_grade": 0.40000000000000036,
+        "normalized_record": -1.0999999999999885
       },
       {
         "week": 11,
@@ -1874,12 +1874,12 @@
           "Quentin Johnston"
         ],
         "power_impact": -3.200000000000017,
-        "grade_impact": 0.0,
-        "record_impact": -0.08000000000000043,
-        "combined_impact": -1.0666666666666724,
+        "grade_impact": 0.7000000000000002,
+        "record_impact": -0.06250000000000043,
+        "combined_impact": -0.48333333333333894,
         "normalized_power": -1.6000000000000085,
-        "normalized_grade": 0.0,
-        "normalized_record": -1.6000000000000085
+        "normalized_grade": 1.4000000000000004,
+        "normalized_record": -1.2500000000000087
       },
       {
         "week": 11,
@@ -1899,12 +1899,12 @@
           "Rome Odunze"
         ],
         "power_impact": -2.3999999999999773,
-        "grade_impact": 0.0,
-        "record_impact": -0.059999999999999436,
-        "combined_impact": -0.7999999999999924,
+        "grade_impact": 0.20000000000000018,
+        "record_impact": -0.05499999999999943,
+        "combined_impact": -0.6333333333333256,
         "normalized_power": -1.1999999999999886,
-        "normalized_grade": 0.0,
-        "normalized_record": -1.1999999999999886
+        "normalized_grade": 0.40000000000000036,
+        "normalized_record": -1.0999999999999885
       },
       {
         "week": 11,
@@ -1926,12 +1926,12 @@
           "Ladd McConkey"
         ],
         "power_impact": 2.5999999999999943,
-        "grade_impact": -0.40000000000000036,
-        "record_impact": 0.054999999999999855,
-        "combined_impact": 0.5333333333333311,
+        "grade_impact": 0.0,
+        "record_impact": 0.06499999999999986,
+        "combined_impact": 0.8666666666666648,
         "normalized_power": 1.2999999999999972,
-        "normalized_grade": -0.8000000000000007,
-        "normalized_record": 1.099999999999997
+        "normalized_grade": 0.0,
+        "normalized_record": 1.2999999999999972
       },
       {
         "week": 11,
@@ -1953,11 +1953,11 @@
           "Christian McCaffrey"
         ],
         "power_impact": 14.599999999999994,
-        "grade_impact": -0.09999999999999964,
+        "grade_impact": 1.2000000000000002,
         "record_impact": 0.25,
-        "combined_impact": 4.033333333333332,
+        "combined_impact": 4.8999999999999995,
         "normalized_power": 7.299999999999997,
-        "normalized_grade": -0.1999999999999993,
+        "normalized_grade": 2.4000000000000004,
         "normalized_record": 5.0
       },
       {
@@ -1980,12 +1980,12 @@
           "Colston Loveland"
         ],
         "power_impact": 0.5999999999999943,
-        "grade_impact": 0.9000000000000004,
-        "record_impact": 0.03749999999999987,
-        "combined_impact": 0.9499999999999984,
+        "grade_impact": -0.8000000000000007,
+        "record_impact": -0.0050000000000001606,
+        "combined_impact": -0.46666666666666917,
         "normalized_power": 0.29999999999999716,
-        "normalized_grade": 1.8000000000000007,
-        "normalized_record": 0.7499999999999973
+        "normalized_grade": -1.6000000000000014,
+        "normalized_record": -0.10000000000000321
       },
       {
         "week": 11,
@@ -2007,12 +2007,12 @@
           "RJ Harvey"
         ],
         "power_impact": -6.599999999999994,
-        "grade_impact": -0.40000000000000036,
-        "record_impact": -0.17499999999999988,
-        "combined_impact": -2.533333333333332,
+        "grade_impact": -0.2999999999999998,
+        "record_impact": -0.17249999999999988,
+        "combined_impact": -2.449999999999998,
         "normalized_power": -3.299999999999997,
-        "normalized_grade": -0.8000000000000007,
-        "normalized_record": -3.4999999999999973
+        "normalized_grade": -0.5999999999999996,
+        "normalized_record": -3.4499999999999975
       }
     ],
     "waiver_impacts": [
@@ -2243,8 +2243,8 @@
         "player_added": "Troy Franklin",
         "player_dropped": "Tyler Allgeier",
         "power_impact": 0.0,
-        "grade_impact": 0.15000000000000036,
-        "combined_impact": 0.15000000000000036,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
         "transaction_type": "waiver"
       },
       {
@@ -2276,8 +2276,8 @@
         "player_added": "Daniel Jones",
         "player_dropped": "Joe Burrow",
         "power_impact": 0.0,
-        "grade_impact": 0.1999999999999993,
-        "combined_impact": 0.1999999999999993,
+        "grade_impact": -0.29999999999999893,
+        "combined_impact": -0.29999999999999893,
         "transaction_type": "waiver"
       },
       {
@@ -2287,8 +2287,8 @@
         "player_added": "Zach Ertz",
         "player_dropped": "Aaron Rodgers",
         "power_impact": 0.0,
-        "grade_impact": 0.15000000000000036,
-        "combined_impact": 0.15000000000000036,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
         "transaction_type": "waiver"
       },
       {
@@ -2298,8 +2298,8 @@
         "player_added": "Matt Prater",
         "player_dropped": "Chase McLaughlin",
         "power_impact": 0.0,
-        "grade_impact": 0.04999999999999982,
-        "combined_impact": 0.04999999999999982,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
         "transaction_type": "waiver"
       },
       {
@@ -2309,8 +2309,8 @@
         "player_added": "Juwan Johnson",
         "player_dropped": "Ollie Gordon",
         "power_impact": 0.0,
-        "grade_impact": 0.10000000000000053,
-        "combined_impact": 0.10000000000000053,
+        "grade_impact": -0.2499999999999991,
+        "combined_impact": -0.2499999999999991,
         "transaction_type": "waiver"
       },
       {
@@ -2320,8 +2320,8 @@
         "player_added": "Daniel Jones",
         "player_dropped": "C.J. Stroud",
         "power_impact": 0.0,
-        "grade_impact": 0.1999999999999993,
-        "combined_impact": 0.1999999999999993,
+        "grade_impact": -0.29999999999999893,
+        "combined_impact": -0.29999999999999893,
         "transaction_type": "waiver"
       },
       {
@@ -2331,8 +2331,8 @@
         "player_added": "Seattle Seahawks",
         "player_dropped": "Los Angeles Rams",
         "power_impact": 0.0,
-        "grade_impact": 0.15000000000000036,
-        "combined_impact": 0.15000000000000036,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
         "transaction_type": "waiver"
       },
       {
@@ -2342,8 +2342,8 @@
         "player_added": "Matt Prater",
         "player_dropped": "Chase McLaughlin",
         "power_impact": 0.0,
-        "grade_impact": 0.04999999999999982,
-        "combined_impact": 0.04999999999999982,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
         "transaction_type": "waiver"
       },
       {
@@ -2353,8 +2353,8 @@
         "player_added": "Tyler Allgeier",
         "player_dropped": "Josh Downs",
         "power_impact": 0.0,
-        "grade_impact": 0.15000000000000036,
-        "combined_impact": 0.15000000000000036,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
         "transaction_type": "free_agent"
       },
       {
@@ -2364,8 +2364,8 @@
         "player_added": "Aaron Rodgers",
         "player_dropped": "Bryce Young",
         "power_impact": 0.0,
-        "grade_impact": 0.15000000000000036,
-        "combined_impact": 0.15000000000000036,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
         "transaction_type": "free_agent"
       },
       {
@@ -2375,8 +2375,8 @@
         "player_added": "Jordan Love",
         "player_dropped": "None (roster space)",
         "power_impact": 0.0,
-        "grade_impact": 0.04999999999999982,
-        "combined_impact": 0.04999999999999982,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
         "transaction_type": "free_agent"
       },
       {
@@ -2386,8 +2386,8 @@
         "player_added": "Marquise Brown",
         "player_dropped": "Tank Bigsby",
         "power_impact": 0.0,
-        "grade_impact": 0.15000000000000036,
-        "combined_impact": 0.15000000000000036,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
         "transaction_type": "free_agent"
       },
       {
@@ -2397,8 +2397,8 @@
         "player_added": "Trey Benson",
         "player_dropped": "Kyle Monangai",
         "power_impact": 2.433333333333337,
-        "grade_impact": 0.2999999999999998,
-        "combined_impact": 2.733333333333337,
+        "grade_impact": 0.5,
+        "combined_impact": 2.933333333333337,
         "transaction_type": "waiver"
       },
       {
@@ -2408,8 +2408,8 @@
         "player_added": "Tre Tucker",
         "player_dropped": "DeAndre Hopkins",
         "power_impact": 2.433333333333337,
-        "grade_impact": 0.2999999999999998,
-        "combined_impact": 2.733333333333337,
+        "grade_impact": 0.5,
+        "combined_impact": 2.933333333333337,
         "transaction_type": "waiver"
       },
       {
@@ -2419,8 +2419,8 @@
         "player_added": "Michael Pittman",
         "player_dropped": "Jayden Higgins",
         "power_impact": 35.16666666666667,
-        "grade_impact": 0.20000000000000018,
-        "combined_impact": 35.366666666666674,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 35.31666666666667,
         "transaction_type": "waiver"
       },
       {
@@ -2430,8 +2430,8 @@
         "player_added": "Tre Tucker",
         "player_dropped": "Jerome Ford",
         "power_impact": -6.066666666666663,
-        "grade_impact": -0.049999999999998934,
-        "combined_impact": -6.116666666666662,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": -6.116666666666663,
         "transaction_type": "waiver"
       },
       {
@@ -2441,8 +2441,8 @@
         "player_added": "Trey Benson",
         "player_dropped": "None (roster space)",
         "power_impact": 12.216666666666669,
-        "grade_impact": -0.14999999999999947,
-        "combined_impact": 12.06666666666667,
+        "grade_impact": -0.39999999999999947,
+        "combined_impact": 11.81666666666667,
         "transaction_type": "waiver"
       },
       {
@@ -2452,8 +2452,8 @@
         "player_added": "Trey Benson",
         "player_dropped": "Chris Godwin",
         "power_impact": -1.6833333333333087,
-        "grade_impact": -0.09999999999999964,
-        "combined_impact": -1.7833333333333083,
+        "grade_impact": 0.2500000000000009,
+        "combined_impact": -1.4333333333333078,
         "transaction_type": "waiver"
       },
       {
@@ -2463,8 +2463,8 @@
         "player_added": "Woody Marks",
         "player_dropped": "Evan Engram",
         "power_impact": 12.216666666666669,
-        "grade_impact": -0.14999999999999947,
-        "combined_impact": 12.06666666666667,
+        "grade_impact": -0.39999999999999947,
+        "combined_impact": 11.81666666666667,
         "transaction_type": "waiver"
       },
       {
@@ -2474,8 +2474,8 @@
         "player_added": "Trey Benson",
         "player_dropped": "None (roster space)",
         "power_impact": 18.19999999999999,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": 17.899999999999988,
+        "grade_impact": 0.0,
+        "combined_impact": 18.19999999999999,
         "transaction_type": "waiver"
       },
       {
@@ -2485,8 +2485,8 @@
         "player_added": "Michael Pittman",
         "player_dropped": "Jason Myers",
         "power_impact": -20.900000000000006,
-        "grade_impact": -0.04999999999999982,
-        "combined_impact": -20.950000000000006,
+        "grade_impact": 0.0,
+        "combined_impact": -20.900000000000006,
         "transaction_type": "waiver"
       },
       {
@@ -2496,8 +2496,8 @@
         "player_added": "Trey Benson",
         "player_dropped": "Dylan Sampson",
         "power_impact": -20.900000000000006,
-        "grade_impact": -0.04999999999999982,
-        "combined_impact": -20.950000000000006,
+        "grade_impact": 0.0,
+        "combined_impact": -20.900000000000006,
         "transaction_type": "waiver"
       },
       {
@@ -2507,8 +2507,8 @@
         "player_added": "Houston Texans",
         "player_dropped": "Seattle Seahawks",
         "power_impact": 12.216666666666669,
-        "grade_impact": -0.14999999999999947,
-        "combined_impact": 12.06666666666667,
+        "grade_impact": -0.39999999999999947,
+        "combined_impact": 11.81666666666667,
         "transaction_type": "waiver"
       },
       {
@@ -2518,8 +2518,8 @@
         "player_added": "Jason Myers",
         "player_dropped": "Marvin Mims",
         "power_impact": -20.900000000000006,
-        "grade_impact": -0.04999999999999982,
-        "combined_impact": -20.950000000000006,
+        "grade_impact": 0.0,
+        "combined_impact": -20.900000000000006,
         "transaction_type": "free_agent"
       },
       {
@@ -2529,8 +2529,8 @@
         "player_added": "Indianapolis Colts",
         "player_dropped": "None (roster space)",
         "power_impact": 2.5833333333333144,
-        "grade_impact": 0.2999999999999998,
-        "combined_impact": 2.883333333333314,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 2.7833333333333146,
         "transaction_type": "free_agent"
       },
       {
@@ -2540,8 +2540,8 @@
         "player_added": "Kyle Monangai",
         "player_dropped": "None (roster space)",
         "power_impact": 2.433333333333337,
-        "grade_impact": 0.2999999999999998,
-        "combined_impact": 2.733333333333337,
+        "grade_impact": 0.5,
+        "combined_impact": 2.933333333333337,
         "transaction_type": "free_agent"
       },
       {
@@ -2551,8 +2551,8 @@
         "player_added": "Ollie Gordon",
         "player_dropped": "None (roster space)",
         "power_impact": 2.433333333333337,
-        "grade_impact": 0.2999999999999998,
-        "combined_impact": 2.733333333333337,
+        "grade_impact": 0.5,
+        "combined_impact": 2.933333333333337,
         "transaction_type": "waiver"
       },
       {
@@ -2562,8 +2562,8 @@
         "player_added": "DeAndre Hopkins",
         "player_dropped": "Trey Benson",
         "power_impact": 2.433333333333337,
-        "grade_impact": 0.2999999999999998,
-        "combined_impact": 2.733333333333337,
+        "grade_impact": 0.5,
+        "combined_impact": 2.933333333333337,
         "transaction_type": "free_agent"
       },
       {
@@ -2573,8 +2573,8 @@
         "player_added": "New York Giants",
         "player_dropped": "New England Patriots",
         "power_impact": 0.2333333333333485,
-        "grade_impact": -0.049999999999998934,
-        "combined_impact": 0.18333333333334956,
+        "grade_impact": 0.10000000000000053,
+        "combined_impact": 0.333333333333349,
         "transaction_type": "waiver"
       },
       {
@@ -2584,8 +2584,8 @@
         "player_added": "Kareem Hunt",
         "player_dropped": "Washington Commanders",
         "power_impact": 7.76666666666668,
-        "grade_impact": -0.15000000000000036,
-        "combined_impact": 7.61666666666668,
+        "grade_impact": 0.10000000000000053,
+        "combined_impact": 7.8666666666666805,
         "transaction_type": "waiver"
       },
       {
@@ -2595,8 +2595,8 @@
         "player_added": "Kenneth Gainwell",
         "player_dropped": "None (roster space)",
         "power_impact": 35.0,
-        "grade_impact": -0.09999999999999964,
-        "combined_impact": 34.9,
+        "grade_impact": 0.25,
+        "combined_impact": 35.25,
         "transaction_type": "waiver"
       },
       {
@@ -2606,8 +2606,8 @@
         "player_added": "Malik Washington",
         "player_dropped": "None (roster space)",
         "power_impact": 35.0,
-        "grade_impact": -0.09999999999999964,
-        "combined_impact": 34.9,
+        "grade_impact": 0.25,
+        "combined_impact": 35.25,
         "transaction_type": "waiver"
       },
       {
@@ -2617,8 +2617,8 @@
         "player_added": "Kendre Miller",
         "player_dropped": "Malik Nabers",
         "power_impact": 2.8666666666666742,
-        "grade_impact": 0.10000000000000053,
-        "combined_impact": 2.966666666666675,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": 2.8166666666666753,
         "transaction_type": "waiver"
       },
       {
@@ -2628,8 +2628,8 @@
         "player_added": "Kendre Miller",
         "player_dropped": "Malik Nabers",
         "power_impact": 2.8666666666666742,
-        "grade_impact": 0.10000000000000053,
-        "combined_impact": 2.966666666666675,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": 2.8166666666666753,
         "transaction_type": "waiver"
       },
       {
@@ -2639,7 +2639,7 @@
         "player_added": "Darren Waller",
         "player_dropped": "Marquise Brown",
         "power_impact": 18.099999999999994,
-        "grade_impact": -0.3000000000000007,
+        "grade_impact": -0.2999999999999998,
         "combined_impact": 17.799999999999994,
         "transaction_type": "waiver"
       },
@@ -2650,7 +2650,7 @@
         "player_added": "Wan'Dale Robinson",
         "player_dropped": "None (roster space)",
         "power_impact": 18.099999999999994,
-        "grade_impact": -0.3000000000000007,
+        "grade_impact": -0.2999999999999998,
         "combined_impact": 17.799999999999994,
         "transaction_type": "waiver"
       },
@@ -2661,7 +2661,7 @@
         "player_added": "Deshaun Watson",
         "player_dropped": "None (roster space)",
         "power_impact": 18.099999999999994,
-        "grade_impact": -0.3000000000000007,
+        "grade_impact": -0.2999999999999998,
         "combined_impact": 17.799999999999994,
         "transaction_type": "commissioner"
       },
@@ -2672,8 +2672,8 @@
         "player_added": "Darren Waller",
         "player_dropped": "Washington Commanders",
         "power_impact": 7.76666666666668,
-        "grade_impact": -0.15000000000000036,
-        "combined_impact": 7.61666666666668,
+        "grade_impact": 0.10000000000000053,
+        "combined_impact": 7.8666666666666805,
         "transaction_type": "waiver"
       },
       {
@@ -2683,8 +2683,8 @@
         "player_added": "Kenneth Gainwell",
         "player_dropped": "Joey Slye",
         "power_impact": 7.76666666666668,
-        "grade_impact": -0.15000000000000036,
-        "combined_impact": 7.61666666666668,
+        "grade_impact": 0.10000000000000053,
+        "combined_impact": 7.8666666666666805,
         "transaction_type": "waiver"
       },
       {
@@ -2716,7 +2716,7 @@
         "player_added": "New York Giants",
         "player_dropped": "Houston Texans",
         "power_impact": 18.099999999999994,
-        "grade_impact": -0.3000000000000007,
+        "grade_impact": -0.2999999999999998,
         "combined_impact": 17.799999999999994,
         "transaction_type": "waiver"
       },
@@ -2727,7 +2727,7 @@
         "player_added": "Oronde Gadsden",
         "player_dropped": "Elic Ayomanor",
         "power_impact": 18.099999999999994,
-        "grade_impact": -0.3000000000000007,
+        "grade_impact": -0.2999999999999998,
         "combined_impact": 17.799999999999994,
         "transaction_type": "free_agent"
       },
@@ -2738,8 +2738,8 @@
         "player_added": "Ollie Gordon",
         "player_dropped": "Dylan Sampson",
         "power_impact": -22.43333333333331,
-        "grade_impact": -0.04999999999999982,
-        "combined_impact": -22.48333333333331,
+        "grade_impact": 0.0,
+        "combined_impact": -22.43333333333331,
         "transaction_type": "free_agent"
       },
       {
@@ -2782,8 +2782,8 @@
         "player_added": "Chris Godwin",
         "player_dropped": "None (roster space)",
         "power_impact": -8.733333333333348,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": -9.03333333333335,
+        "grade_impact": 0.09999999999999964,
+        "combined_impact": -8.633333333333349,
         "transaction_type": "waiver"
       },
       {
@@ -2793,8 +2793,8 @@
         "player_added": "Chris Godwin",
         "player_dropped": "None (roster space)",
         "power_impact": -8.733333333333348,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": -9.03333333333335,
+        "grade_impact": 0.09999999999999964,
+        "combined_impact": -8.633333333333349,
         "transaction_type": "waiver"
       },
       {
@@ -2804,8 +2804,8 @@
         "player_added": "New England Patriots",
         "player_dropped": "None (roster space)",
         "power_impact": 0.2333333333333485,
-        "grade_impact": -0.049999999999998934,
-        "combined_impact": 0.18333333333334956,
+        "grade_impact": 0.10000000000000053,
+        "combined_impact": 0.333333333333349,
         "transaction_type": "free_agent"
       },
       {
@@ -2815,8 +2815,8 @@
         "player_added": "Joey Slye",
         "player_dropped": "None (roster space)",
         "power_impact": 7.76666666666668,
-        "grade_impact": -0.15000000000000036,
-        "combined_impact": 7.61666666666668,
+        "grade_impact": 0.10000000000000053,
+        "combined_impact": 7.8666666666666805,
         "transaction_type": "free_agent"
       },
       {
@@ -2826,7 +2826,7 @@
         "player_added": "Elic Ayomanor",
         "player_dropped": "None (roster space)",
         "power_impact": 18.099999999999994,
-        "grade_impact": -0.3000000000000007,
+        "grade_impact": -0.2999999999999998,
         "combined_impact": 17.799999999999994,
         "transaction_type": "free_agent"
       },
@@ -2837,8 +2837,8 @@
         "player_added": "Darren Waller",
         "player_dropped": "Bhayshul Tuten",
         "power_impact": -9.066666666666663,
-        "grade_impact": -0.05000000000000071,
-        "combined_impact": -9.116666666666664,
+        "grade_impact": 0.5499999999999998,
+        "combined_impact": -8.516666666666662,
         "transaction_type": "waiver"
       },
       {
@@ -2848,8 +2848,8 @@
         "player_added": "Jake Tonges",
         "player_dropped": "None (roster space)",
         "power_impact": 4.799999999999997,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": 4.499999999999997,
+        "grade_impact": -0.5,
+        "combined_impact": 4.299999999999997,
         "transaction_type": "waiver"
       },
       {
@@ -2859,8 +2859,8 @@
         "player_added": "Chris Boswell",
         "player_dropped": "Ka'imi Fairbairn",
         "power_impact": 20.033333333333317,
-        "grade_impact": 0.34999999999999964,
-        "combined_impact": 20.38333333333332,
+        "grade_impact": 0.0,
+        "combined_impact": 20.033333333333317,
         "transaction_type": "waiver"
       },
       {
@@ -2870,8 +2870,8 @@
         "player_added": "Green Bay Packers",
         "player_dropped": "Arizona Cardinals",
         "power_impact": -2.0999999999999943,
-        "grade_impact": -0.2499999999999991,
-        "combined_impact": -2.3499999999999934,
+        "grade_impact": -0.15000000000000036,
+        "combined_impact": -2.2499999999999947,
         "transaction_type": "waiver"
       },
       {
@@ -2881,8 +2881,8 @@
         "player_added": "Eddy Pineiro",
         "player_dropped": "Daniel Carlson",
         "power_impact": -2.0999999999999943,
-        "grade_impact": -0.2499999999999991,
-        "combined_impact": -2.3499999999999934,
+        "grade_impact": -0.15000000000000036,
+        "combined_impact": -2.2499999999999947,
         "transaction_type": "waiver"
       },
       {
@@ -2892,8 +2892,8 @@
         "player_added": "Darren Waller",
         "player_dropped": "Emari Demercado",
         "power_impact": 20.033333333333317,
-        "grade_impact": 0.34999999999999964,
-        "combined_impact": 20.38333333333332,
+        "grade_impact": 0.0,
+        "combined_impact": 20.033333333333317,
         "transaction_type": "waiver"
       },
       {
@@ -2903,8 +2903,8 @@
         "player_added": "Hassan Haskins",
         "player_dropped": "Dalton Schultz",
         "power_impact": 20.033333333333317,
-        "grade_impact": 0.34999999999999964,
-        "combined_impact": 20.38333333333332,
+        "grade_impact": 0.0,
+        "combined_impact": 20.033333333333317,
         "transaction_type": "waiver"
       },
       {
@@ -2914,8 +2914,8 @@
         "player_added": "Jake Tonges",
         "player_dropped": "None (roster space)",
         "power_impact": 4.799999999999997,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": 4.499999999999997,
+        "grade_impact": -0.5,
+        "combined_impact": 4.299999999999997,
         "transaction_type": "waiver"
       },
       {
@@ -2925,8 +2925,8 @@
         "player_added": "Las Vegas Raiders",
         "player_dropped": "New York Giants",
         "power_impact": 20.033333333333317,
-        "grade_impact": 0.34999999999999964,
-        "combined_impact": 20.38333333333332,
+        "grade_impact": 0.0,
+        "combined_impact": 20.033333333333317,
         "transaction_type": "waiver"
       },
       {
@@ -2936,8 +2936,8 @@
         "player_added": "Kenneth Gainwell",
         "player_dropped": "None (roster space)",
         "power_impact": 4.799999999999997,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": 4.499999999999997,
+        "grade_impact": -0.5,
+        "combined_impact": 4.299999999999997,
         "transaction_type": "waiver"
       },
       {
@@ -2947,8 +2947,8 @@
         "player_added": "Rico Dowdle",
         "player_dropped": "None (roster space)",
         "power_impact": 20.033333333333317,
-        "grade_impact": 0.34999999999999964,
-        "combined_impact": 20.38333333333332,
+        "grade_impact": 0.0,
+        "combined_impact": 20.033333333333317,
         "transaction_type": "free_agent"
       },
       {
@@ -2958,8 +2958,8 @@
         "player_added": "Dalton Schultz",
         "player_dropped": "Taysom Hill",
         "power_impact": 20.033333333333317,
-        "grade_impact": 0.34999999999999964,
-        "combined_impact": 20.38333333333332,
+        "grade_impact": 0.0,
+        "combined_impact": 20.033333333333317,
         "transaction_type": "free_agent"
       },
       {
@@ -2969,8 +2969,8 @@
         "player_added": "Taysom Hill",
         "player_dropped": "Elic Ayomanor",
         "power_impact": 20.033333333333317,
-        "grade_impact": 0.34999999999999964,
-        "combined_impact": 20.38333333333332,
+        "grade_impact": 0.0,
+        "combined_impact": 20.033333333333317,
         "transaction_type": "free_agent"
       },
       {
@@ -2980,8 +2980,8 @@
         "player_added": "Justice Hill",
         "player_dropped": "Jayden Higgins",
         "power_impact": 24.19999999999999,
-        "grade_impact": -0.39999999999999947,
-        "combined_impact": 23.79999999999999,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": 24.149999999999988,
         "transaction_type": "free_agent"
       },
       {
@@ -2991,8 +2991,8 @@
         "player_added": "Jason Myers",
         "player_dropped": "Jake Elliott",
         "power_impact": 4.799999999999997,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": 4.499999999999997,
+        "grade_impact": -0.5,
+        "combined_impact": 4.299999999999997,
         "transaction_type": "free_agent"
       },
       {
@@ -3002,8 +3002,8 @@
         "player_added": "Marquise Brown",
         "player_dropped": "None (roster space)",
         "power_impact": -11.133333333333326,
-        "grade_impact": -0.3000000000000007,
-        "combined_impact": -11.433333333333326,
+        "grade_impact": 0.049999999999998934,
+        "combined_impact": -11.083333333333327,
         "transaction_type": "free_agent"
       },
       {
@@ -3013,8 +3013,8 @@
         "player_added": "Rachaad White",
         "player_dropped": "Tre Tucker",
         "power_impact": -11.133333333333326,
-        "grade_impact": -0.3000000000000007,
-        "combined_impact": -11.433333333333326,
+        "grade_impact": 0.049999999999998934,
+        "combined_impact": -11.083333333333327,
         "transaction_type": "free_agent"
       },
       {
@@ -3024,8 +3024,8 @@
         "player_added": "Michael Carter",
         "player_dropped": "Ollie Gordon",
         "power_impact": -15.599999999999994,
-        "grade_impact": 0.0,
-        "combined_impact": -15.599999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -15.549999999999994,
         "transaction_type": "free_agent"
       },
       {
@@ -3035,8 +3035,8 @@
         "player_added": "Jaxson Dart",
         "player_dropped": "None (roster space)",
         "power_impact": 21.03333333333333,
-        "grade_impact": -0.04999999999999982,
-        "combined_impact": 20.98333333333333,
+        "grade_impact": 0.0,
+        "combined_impact": 21.03333333333333,
         "transaction_type": "free_agent"
       },
       {
@@ -3046,8 +3046,8 @@
         "player_added": "Arizona Cardinals",
         "player_dropped": "New England Patriots",
         "power_impact": -2.0999999999999943,
-        "grade_impact": -0.2499999999999991,
-        "combined_impact": -2.3499999999999934,
+        "grade_impact": -0.15000000000000036,
+        "combined_impact": -2.2499999999999947,
         "transaction_type": "free_agent"
       },
       {
@@ -3057,8 +3057,8 @@
         "player_added": "Troy Franklin",
         "player_dropped": "None (roster space)",
         "power_impact": -2.0999999999999943,
-        "grade_impact": -0.2499999999999991,
-        "combined_impact": -2.3499999999999934,
+        "grade_impact": -0.15000000000000036,
+        "combined_impact": -2.2499999999999947,
         "transaction_type": "waiver"
       },
       {
@@ -3068,8 +3068,8 @@
         "player_added": "Indianapolis Colts",
         "player_dropped": "San Francisco 49ers",
         "power_impact": -15.599999999999994,
-        "grade_impact": 0.0,
-        "combined_impact": -15.599999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -15.549999999999994,
         "transaction_type": "waiver"
       },
       {
@@ -3079,8 +3079,8 @@
         "player_added": "Los Angeles Rams",
         "player_dropped": "Indianapolis Colts",
         "power_impact": 12.733333333333348,
-        "grade_impact": -0.15000000000000036,
-        "combined_impact": 12.583333333333348,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 12.933333333333348,
         "transaction_type": "free_agent"
       },
       {
@@ -3090,8 +3090,8 @@
         "player_added": "Emari Demercado",
         "player_dropped": "Chris Boswell",
         "power_impact": 20.033333333333317,
-        "grade_impact": 0.34999999999999964,
-        "combined_impact": 20.38333333333332,
+        "grade_impact": 0.0,
+        "combined_impact": 20.033333333333317,
         "transaction_type": "free_agent"
       },
       {
@@ -3112,8 +3112,8 @@
         "player_added": "Elic Ayomanor",
         "player_dropped": "None (roster space)",
         "power_impact": 20.033333333333317,
-        "grade_impact": 0.34999999999999964,
-        "combined_impact": 20.38333333333332,
+        "grade_impact": 0.0,
+        "combined_impact": 20.033333333333317,
         "transaction_type": "free_agent"
       },
       {
@@ -3123,8 +3123,8 @@
         "player_added": "Ka'imi Fairbairn",
         "player_dropped": "Troy Franklin",
         "power_impact": 20.033333333333317,
-        "grade_impact": 0.34999999999999964,
-        "combined_impact": 20.38333333333332,
+        "grade_impact": 0.0,
+        "combined_impact": 20.033333333333317,
         "transaction_type": "free_agent"
       },
       {
@@ -3134,8 +3134,8 @@
         "player_added": "Darius Slayton",
         "player_dropped": "None (roster space)",
         "power_impact": 4.799999999999997,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": 4.499999999999997,
+        "grade_impact": -0.5,
+        "combined_impact": 4.299999999999997,
         "transaction_type": "free_agent"
       },
       {
@@ -3145,8 +3145,8 @@
         "player_added": "Chase McLaughlin",
         "player_dropped": "Matt Prater",
         "power_impact": 21.03333333333333,
-        "grade_impact": -0.04999999999999982,
-        "combined_impact": 20.98333333333333,
+        "grade_impact": 0.0,
+        "combined_impact": 21.03333333333333,
         "transaction_type": "free_agent"
       },
       {
@@ -3156,8 +3156,8 @@
         "player_added": "Cleveland Browns",
         "player_dropped": "None (roster space)",
         "power_impact": 21.03333333333333,
-        "grade_impact": -0.04999999999999982,
-        "combined_impact": 20.98333333333333,
+        "grade_impact": 0.0,
+        "combined_impact": 21.03333333333333,
         "transaction_type": "free_agent"
       },
       {
@@ -3167,8 +3167,8 @@
         "player_added": "Brenton Strange",
         "player_dropped": "Joey Slye",
         "power_impact": 12.733333333333348,
-        "grade_impact": -0.15000000000000036,
-        "combined_impact": 12.583333333333348,
+        "grade_impact": 0.20000000000000018,
+        "combined_impact": 12.933333333333348,
         "transaction_type": "free_agent"
       },
       {
@@ -3178,8 +3178,8 @@
         "player_added": "Kimani Vidal",
         "player_dropped": "Darius Slayton",
         "power_impact": 6.800000000000011,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": 6.5000000000000115,
+        "grade_impact": -0.5,
+        "combined_impact": 6.300000000000011,
         "transaction_type": "waiver"
       },
       {
@@ -3189,8 +3189,8 @@
         "player_added": "Kansas City Chiefs",
         "player_dropped": "Las Vegas Raiders",
         "power_impact": 29.03333333333333,
-        "grade_impact": 0.7000000000000002,
-        "combined_impact": 29.73333333333333,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 29.23333333333333,
         "transaction_type": "waiver"
       },
       {
@@ -3200,8 +3200,8 @@
         "player_added": "Kimani Vidal",
         "player_dropped": "Hassan Haskins",
         "power_impact": 29.03333333333333,
-        "grade_impact": 0.7000000000000002,
-        "combined_impact": 29.73333333333333,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 29.23333333333333,
         "transaction_type": "waiver"
       },
       {
@@ -3211,8 +3211,8 @@
         "player_added": "Tez Johnson",
         "player_dropped": "None (roster space)",
         "power_impact": 6.800000000000011,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": 6.5000000000000115,
+        "grade_impact": -0.5,
+        "combined_impact": 6.300000000000011,
         "transaction_type": "waiver"
       },
       {
@@ -3222,8 +3222,8 @@
         "player_added": "Michael Badgley",
         "player_dropped": "Brandon McManus",
         "power_impact": 19.00000000000003,
-        "grade_impact": 0.10000000000000053,
-        "combined_impact": 19.10000000000003,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 19.150000000000027,
         "transaction_type": "free_agent"
       },
       {
@@ -3233,8 +3233,8 @@
         "player_added": "Jalen Coker",
         "player_dropped": "Kimani Vidal",
         "power_impact": 6.800000000000011,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": 6.5000000000000115,
+        "grade_impact": -0.5,
+        "combined_impact": 6.300000000000011,
         "transaction_type": "free_agent"
       },
       {
@@ -3244,8 +3244,8 @@
         "player_added": "Indianapolis Colts",
         "player_dropped": "None (roster space)",
         "power_impact": -12.366666666666674,
-        "grade_impact": -0.05000000000000071,
-        "combined_impact": -12.416666666666675,
+        "grade_impact": -8.881784197001252e-16,
+        "combined_impact": -12.366666666666674,
         "transaction_type": "waiver"
       },
       {
@@ -3255,8 +3255,8 @@
         "player_added": "Mason Taylor",
         "player_dropped": "None (roster space)",
         "power_impact": 29.03333333333333,
-        "grade_impact": 0.7000000000000002,
-        "combined_impact": 29.73333333333333,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 29.23333333333333,
         "transaction_type": "free_agent"
       },
       {
@@ -3266,8 +3266,8 @@
         "player_added": "Indianapolis Colts",
         "player_dropped": "Chicago Bears",
         "power_impact": 6.800000000000011,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": 6.5000000000000115,
+        "grade_impact": -0.5,
+        "combined_impact": 6.300000000000011,
         "transaction_type": "waiver"
       },
       {
@@ -3277,8 +3277,8 @@
         "player_added": "Indianapolis Colts",
         "player_dropped": "New England Patriots",
         "power_impact": -16.599999999999994,
-        "grade_impact": 0.0,
-        "combined_impact": -16.599999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -16.549999999999994,
         "transaction_type": "waiver"
       },
       {
@@ -3288,8 +3288,8 @@
         "player_added": "New England Patriots",
         "player_dropped": "Indianapolis Colts",
         "power_impact": -16.599999999999994,
-        "grade_impact": 0.0,
-        "combined_impact": -16.599999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -16.549999999999994,
         "transaction_type": "free_agent"
       },
       {
@@ -3299,8 +3299,8 @@
         "player_added": "Kimani Vidal",
         "player_dropped": "None (roster space)",
         "power_impact": 6.800000000000011,
-        "grade_impact": -0.2999999999999998,
-        "combined_impact": 6.5000000000000115,
+        "grade_impact": -0.5,
+        "combined_impact": 6.300000000000011,
         "transaction_type": "free_agent"
       },
       {
@@ -3310,8 +3310,8 @@
         "player_added": "Matt Prater",
         "player_dropped": "None (roster space)",
         "power_impact": -16.599999999999994,
-        "grade_impact": 0.0,
-        "combined_impact": -16.599999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -16.549999999999994,
         "transaction_type": "free_agent"
       },
       {
@@ -3321,8 +3321,8 @@
         "player_added": "AJ Barner",
         "player_dropped": "Chig Okonkwo",
         "power_impact": -16.599999999999994,
-        "grade_impact": 0.0,
-        "combined_impact": -16.599999999999994,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -16.549999999999994,
         "transaction_type": "free_agent"
       },
       {
@@ -3332,8 +3332,8 @@
         "player_added": "Brandon McManus",
         "player_dropped": "Cam Little",
         "power_impact": 19.00000000000003,
-        "grade_impact": 0.10000000000000053,
-        "combined_impact": 19.10000000000003,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 19.150000000000027,
         "transaction_type": "free_agent"
       },
       {
@@ -3365,8 +3365,8 @@
         "player_added": "Houston Texans",
         "player_dropped": "None (roster space)",
         "power_impact": 19.53333333333333,
-        "grade_impact": 0.0,
-        "combined_impact": 19.53333333333333,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 19.68333333333333,
         "transaction_type": "waiver"
       },
       {
@@ -3376,8 +3376,8 @@
         "player_added": "Tez Johnson",
         "player_dropped": "None (roster space)",
         "power_impact": 19.53333333333333,
-        "grade_impact": 0.0,
-        "combined_impact": 19.53333333333333,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 19.68333333333333,
         "transaction_type": "waiver"
       },
       {
@@ -3387,8 +3387,8 @@
         "player_added": "Oronde Gadsden",
         "player_dropped": "Mason Taylor",
         "power_impact": 24.53333333333333,
-        "grade_impact": -0.14999999999999947,
-        "combined_impact": 24.383333333333333,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 24.73333333333333,
         "transaction_type": "waiver"
       },
       {
@@ -3409,8 +3409,8 @@
         "player_added": "Kyle Monangai",
         "player_dropped": "Kansas City Chiefs",
         "power_impact": 24.53333333333333,
-        "grade_impact": -0.14999999999999947,
-        "combined_impact": 24.383333333333333,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 24.73333333333333,
         "transaction_type": "waiver"
       },
       {
@@ -3420,8 +3420,8 @@
         "player_added": "Tampa Bay Buccaneers",
         "player_dropped": "Luke McCaffrey",
         "power_impact": 24.53333333333333,
-        "grade_impact": -0.14999999999999947,
-        "combined_impact": 24.383333333333333,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 24.73333333333333,
         "transaction_type": "free_agent"
       },
       {
@@ -3431,8 +3431,8 @@
         "player_added": "Tyler Allgeier",
         "player_dropped": "Justin Fields",
         "power_impact": -3.833333333333343,
-        "grade_impact": 0.3999999999999986,
-        "combined_impact": -3.4333333333333442,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": -3.8833333333333435,
         "transaction_type": "waiver"
       },
       {
@@ -3442,8 +3442,8 @@
         "player_added": "Brashard Smith",
         "player_dropped": "Jordan Whittington",
         "power_impact": -3.833333333333343,
-        "grade_impact": 0.3999999999999986,
-        "combined_impact": -3.4333333333333442,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": -3.8833333333333435,
         "transaction_type": "waiver"
       },
       {
@@ -3464,8 +3464,8 @@
         "player_added": "Brandon McManus",
         "player_dropped": "None (roster space)",
         "power_impact": 1.8999999999999915,
-        "grade_impact": 0.34999999999999964,
-        "combined_impact": 2.249999999999991,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": 1.8499999999999917,
         "transaction_type": "free_agent"
       },
       {
@@ -3475,8 +3475,8 @@
         "player_added": "Chris Moore",
         "player_dropped": "Brock Purdy",
         "power_impact": 8.933333333333323,
-        "grade_impact": 0.0,
-        "combined_impact": 8.933333333333323,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": 8.883333333333322,
         "transaction_type": "free_agent"
       },
       {
@@ -3486,8 +3486,8 @@
         "player_added": "Luke McCaffrey",
         "player_dropped": "None (roster space)",
         "power_impact": 24.53333333333333,
-        "grade_impact": -0.14999999999999947,
-        "combined_impact": 24.383333333333333,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 24.73333333333333,
         "transaction_type": "free_agent"
       },
       {
@@ -3508,8 +3508,8 @@
         "player_added": "Elic Ayomanor",
         "player_dropped": "Josh Downs",
         "power_impact": -3.833333333333343,
-        "grade_impact": 0.3999999999999986,
-        "combined_impact": -3.4333333333333442,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": -3.8833333333333435,
         "transaction_type": "free_agent"
       },
       {
@@ -3519,8 +3519,8 @@
         "player_added": "Kendrick Bourne",
         "player_dropped": "David Njoku",
         "power_impact": -3.833333333333343,
-        "grade_impact": 0.3999999999999986,
-        "combined_impact": -3.4333333333333442,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": -3.8833333333333435,
         "transaction_type": "free_agent"
       },
       {
@@ -3552,8 +3552,8 @@
         "player_added": "Kameron Johnson",
         "player_dropped": "Minnesota Vikings",
         "power_impact": -7.599999999999994,
-        "grade_impact": 0.0,
-        "combined_impact": -7.599999999999994,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": -7.649999999999995,
         "transaction_type": "free_agent"
       },
       {
@@ -3563,8 +3563,8 @@
         "player_added": "Jordan Whittington",
         "player_dropped": "Troy Franklin",
         "power_impact": -3.833333333333343,
-        "grade_impact": 0.3999999999999986,
-        "combined_impact": -3.4333333333333442,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": -3.8833333333333435,
         "transaction_type": "free_agent"
       },
       {
@@ -3574,8 +3574,8 @@
         "player_added": "Josh Downs",
         "player_dropped": "Brian Robinson",
         "power_impact": -3.833333333333343,
-        "grade_impact": 0.3999999999999986,
-        "combined_impact": -3.4333333333333442,
+        "grade_impact": -0.05000000000000071,
+        "combined_impact": -3.8833333333333435,
         "transaction_type": "free_agent"
       },
       {
@@ -3585,8 +3585,8 @@
         "player_added": "Aaron Jones",
         "player_dropped": "Brandon McManus",
         "power_impact": -1.13333333333334,
-        "grade_impact": 0.09999999999999964,
-        "combined_impact": -1.0333333333333403,
+        "grade_impact": 0.7000000000000002,
+        "combined_impact": -0.4333333333333398,
         "transaction_type": "waiver"
       },
       {
@@ -3596,8 +3596,8 @@
         "player_added": "Tyrone Tracy",
         "player_dropped": "Darnell Mooney",
         "power_impact": 16.366666666666674,
-        "grade_impact": -1.0999999999999996,
-        "combined_impact": 15.266666666666675,
+        "grade_impact": 1.0999999999999996,
+        "combined_impact": 17.466666666666676,
         "transaction_type": "waiver"
       },
       {
@@ -3607,8 +3607,8 @@
         "player_added": "Aaron Jones",
         "player_dropped": "None (roster space)",
         "power_impact": -11.600000000000009,
-        "grade_impact": 0.09999999999999964,
-        "combined_impact": -11.500000000000009,
+        "grade_impact": 0.0,
+        "combined_impact": -11.600000000000009,
         "transaction_type": "waiver"
       },
       {
@@ -3618,8 +3618,8 @@
         "player_added": "Tyrone Tracy",
         "player_dropped": "Jake Elliott",
         "power_impact": -4.26666666666668,
-        "grade_impact": 0.04999999999999982,
-        "combined_impact": -4.21666666666668,
+        "grade_impact": 0.0,
+        "combined_impact": -4.26666666666668,
         "transaction_type": "waiver"
       },
       {
@@ -3629,8 +3629,8 @@
         "player_added": "Aaron Jones",
         "player_dropped": "Sterling Shepard",
         "power_impact": -4.26666666666668,
-        "grade_impact": 0.04999999999999982,
-        "combined_impact": -4.21666666666668,
+        "grade_impact": 0.0,
+        "combined_impact": -4.26666666666668,
         "transaction_type": "waiver"
       },
       {
@@ -3640,8 +3640,8 @@
         "player_added": "Aaron Jones",
         "player_dropped": "TreVeyon Henderson",
         "power_impact": 16.366666666666674,
-        "grade_impact": -1.0999999999999996,
-        "combined_impact": 15.266666666666675,
+        "grade_impact": 1.0999999999999996,
+        "combined_impact": 17.466666666666676,
         "transaction_type": "waiver"
       },
       {
@@ -3651,8 +3651,8 @@
         "player_added": "Tyrone Tracy",
         "player_dropped": "Kameron Johnson",
         "power_impact": -3.73333333333332,
-        "grade_impact": -0.25,
-        "combined_impact": -3.98333333333332,
+        "grade_impact": 0.05000000000000071,
+        "combined_impact": -3.6833333333333194,
         "transaction_type": "waiver"
       },
       {
@@ -3673,8 +3673,8 @@
         "player_added": "Aaron Jones",
         "player_dropped": "Brandon McManus",
         "power_impact": -1.13333333333334,
-        "grade_impact": 0.09999999999999964,
-        "combined_impact": -1.0333333333333403,
+        "grade_impact": 0.7000000000000002,
+        "combined_impact": -0.4333333333333398,
         "transaction_type": "waiver"
       },
       {
@@ -3684,8 +3684,8 @@
         "player_added": "Los Angeles Chargers",
         "player_dropped": "Tampa Bay Buccaneers",
         "power_impact": 16.366666666666674,
-        "grade_impact": -1.0999999999999996,
-        "combined_impact": 15.266666666666675,
+        "grade_impact": 1.0999999999999996,
+        "combined_impact": 17.466666666666676,
         "transaction_type": "waiver"
       },
       {
@@ -3695,8 +3695,8 @@
         "player_added": "Tyrone Tracy",
         "player_dropped": "Austin Ekeler",
         "power_impact": -12.300000000000011,
-        "grade_impact": 0.0,
-        "combined_impact": -12.300000000000011,
+        "grade_impact": -0.09999999999999964,
+        "combined_impact": -12.400000000000011,
         "transaction_type": "waiver"
       },
       {
@@ -3717,8 +3717,8 @@
         "player_added": "Aaron Rodgers",
         "player_dropped": "None (roster space)",
         "power_impact": -11.600000000000009,
-        "grade_impact": 0.09999999999999964,
-        "combined_impact": -11.500000000000009,
+        "grade_impact": 0.0,
+        "combined_impact": -11.600000000000009,
         "transaction_type": "free_agent"
       },
       {
@@ -3728,8 +3728,8 @@
         "player_added": "Darnell Mooney",
         "player_dropped": "None (roster space)",
         "power_impact": 16.366666666666674,
-        "grade_impact": -1.0999999999999996,
-        "combined_impact": 15.266666666666675,
+        "grade_impact": 1.0999999999999996,
+        "combined_impact": 17.466666666666676,
         "transaction_type": "free_agent"
       },
       {
@@ -3739,8 +3739,8 @@
         "player_added": "Marcus Mariota",
         "player_dropped": "Chris Moore",
         "power_impact": 5.299999999999997,
-        "grade_impact": 0.20000000000000018,
-        "combined_impact": 5.499999999999997,
+        "grade_impact": 0.0,
+        "combined_impact": 5.299999999999997,
         "transaction_type": "free_agent"
       },
       {
@@ -3750,8 +3750,8 @@
         "player_added": "Dalton Schultz",
         "player_dropped": "None (roster space)",
         "power_impact": -17.40000000000002,
-        "grade_impact": 0.20000000000000018,
-        "combined_impact": -17.20000000000002,
+        "grade_impact": -0.34999999999999964,
+        "combined_impact": -17.75000000000002,
         "transaction_type": "free_agent"
       },
       {
@@ -3761,8 +3761,8 @@
         "player_added": "Isaiah Davis",
         "player_dropped": "Darnell Mooney",
         "power_impact": 10.566666666666677,
-        "grade_impact": 0.0,
-        "combined_impact": 10.566666666666677,
+        "grade_impact": -0.20000000000000018,
+        "combined_impact": 10.366666666666678,
         "transaction_type": "free_agent"
       },
       {
@@ -3772,8 +3772,8 @@
         "player_added": "Kayshon Boutte",
         "player_dropped": "AJ Barner",
         "power_impact": -4.26666666666668,
-        "grade_impact": 0.04999999999999982,
-        "combined_impact": -4.21666666666668,
+        "grade_impact": 0.0,
+        "combined_impact": -4.26666666666668,
         "transaction_type": "free_agent"
       },
       {
@@ -3783,8 +3783,8 @@
         "player_added": "Wil Lutz",
         "player_dropped": "Jake Bates",
         "power_impact": -11.600000000000009,
-        "grade_impact": 0.09999999999999964,
-        "combined_impact": -11.500000000000009,
+        "grade_impact": 0.0,
+        "combined_impact": -11.600000000000009,
         "transaction_type": "free_agent"
       },
       {
@@ -3794,8 +3794,8 @@
         "player_added": "Sterling Shepard",
         "player_dropped": "Tre Tucker",
         "power_impact": -4.26666666666668,
-        "grade_impact": 0.04999999999999982,
-        "combined_impact": -4.21666666666668,
+        "grade_impact": 0.0,
+        "combined_impact": -4.26666666666668,
         "transaction_type": "free_agent"
       },
       {
@@ -3805,8 +3805,8 @@
         "player_added": "Atlanta Falcons",
         "player_dropped": "Jacksonville Jaguars",
         "power_impact": 10.566666666666677,
-        "grade_impact": 0.0,
-        "combined_impact": 10.566666666666677,
+        "grade_impact": -0.20000000000000018,
+        "combined_impact": 10.366666666666678,
         "transaction_type": "free_agent"
       },
       {
@@ -3838,8 +3838,8 @@
         "player_added": "Olamide Zaccheaus",
         "player_dropped": "None (roster space)",
         "power_impact": 3.4666666666666686,
-        "grade_impact": 0.20000000000000018,
-        "combined_impact": 3.6666666666666687,
+        "grade_impact": 0.0,
+        "combined_impact": 3.4666666666666686,
         "transaction_type": "waiver"
       },
       {
@@ -3849,8 +3849,8 @@
         "player_added": "Tre Tucker",
         "player_dropped": "None (roster space)",
         "power_impact": 3.866666666666646,
-        "grade_impact": 0.0,
-        "combined_impact": 3.866666666666646,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": 3.9166666666666456,
         "transaction_type": "waiver"
       },
       {
@@ -3860,8 +3860,8 @@
         "player_added": "Christian Watson",
         "player_dropped": "None (roster space)",
         "power_impact": -1.8333333333333428,
-        "grade_impact": -0.20000000000000018,
-        "combined_impact": -2.033333333333343,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -1.8833333333333417,
         "transaction_type": "waiver"
       },
       {
@@ -3871,8 +3871,8 @@
         "player_added": "Green Bay Packers",
         "player_dropped": "Jacksonville Jaguars",
         "power_impact": 13.799999999999997,
-        "grade_impact": -0.25,
-        "combined_impact": 13.549999999999997,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 13.999999999999996,
         "transaction_type": "waiver"
       },
       {
@@ -3882,8 +3882,8 @@
         "player_added": "Houston Texans",
         "player_dropped": "None (roster space)",
         "power_impact": -1.8333333333333428,
-        "grade_impact": -0.20000000000000018,
-        "combined_impact": -2.033333333333343,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -1.8833333333333417,
         "transaction_type": "waiver"
       },
       {
@@ -3893,8 +3893,8 @@
         "player_added": "Aaron Rodgers",
         "player_dropped": "None (roster space)",
         "power_impact": -1.8333333333333428,
-        "grade_impact": -0.20000000000000018,
-        "combined_impact": -2.033333333333343,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -1.8833333333333417,
         "transaction_type": "waiver"
       },
       {
@@ -3904,8 +3904,8 @@
         "player_added": "Green Bay Packers",
         "player_dropped": "Jacksonville Jaguars",
         "power_impact": 13.799999999999997,
-        "grade_impact": -0.25,
-        "combined_impact": 13.549999999999997,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 13.999999999999996,
         "transaction_type": "waiver"
       },
       {
@@ -3926,8 +3926,8 @@
         "player_added": "Carolina Panthers",
         "player_dropped": "Los Angeles Chargers",
         "power_impact": 4.2333333333333485,
-        "grade_impact": -0.7999999999999998,
-        "combined_impact": 3.4333333333333487,
+        "grade_impact": 1.5,
+        "combined_impact": 5.7333333333333485,
         "transaction_type": "waiver"
       },
       {
@@ -3937,8 +3937,8 @@
         "player_added": "Christian Watson",
         "player_dropped": "Isaiah Davis",
         "power_impact": 13.799999999999997,
-        "grade_impact": -0.25,
-        "combined_impact": 13.549999999999997,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 13.999999999999996,
         "transaction_type": "waiver"
       },
       {
@@ -3948,8 +3948,8 @@
         "player_added": "Parker Washington",
         "player_dropped": "None (roster space)",
         "power_impact": 13.799999999999997,
-        "grade_impact": -0.25,
-        "combined_impact": 13.549999999999997,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 13.999999999999996,
         "transaction_type": "free_agent"
       },
       {
@@ -3959,8 +3959,8 @@
         "player_added": "Kyle Monangai",
         "player_dropped": "None (roster space)",
         "power_impact": 4.2333333333333485,
-        "grade_impact": -0.7999999999999998,
-        "combined_impact": 3.4333333333333487,
+        "grade_impact": 1.5,
+        "combined_impact": 5.7333333333333485,
         "transaction_type": "free_agent"
       },
       {
@@ -3970,8 +3970,8 @@
         "player_added": "Elic Ayomanor",
         "player_dropped": "Emanuel Wilson",
         "power_impact": -1.8333333333333428,
-        "grade_impact": -0.20000000000000018,
-        "combined_impact": -2.033333333333343,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -1.8833333333333417,
         "transaction_type": "free_agent"
       },
       {
@@ -3981,8 +3981,8 @@
         "player_added": "Seattle Seahawks",
         "player_dropped": "None (roster space)",
         "power_impact": -6.36666666666666,
-        "grade_impact": 0.0,
-        "combined_impact": -6.36666666666666,
+        "grade_impact": 0.6000000000000005,
+        "combined_impact": -5.7666666666666595,
         "transaction_type": "free_agent"
       },
       {
@@ -4014,8 +4014,8 @@
         "player_added": "Emanuel Wilson",
         "player_dropped": "Elic Ayomanor",
         "power_impact": -1.8333333333333428,
-        "grade_impact": -0.20000000000000018,
-        "combined_impact": -2.033333333333343,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -1.8833333333333417,
         "transaction_type": "free_agent"
       },
       {
@@ -4025,8 +4025,8 @@
         "player_added": "Colston Loveland",
         "player_dropped": "None (roster space)",
         "power_impact": -1.8333333333333428,
-        "grade_impact": -0.20000000000000018,
-        "combined_impact": -2.033333333333343,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -1.8833333333333417,
         "transaction_type": "free_agent"
       },
       {
@@ -4036,8 +4036,8 @@
         "player_added": "Joshua Karty",
         "player_dropped": "None (roster space)",
         "power_impact": 3.4666666666666686,
-        "grade_impact": 0.20000000000000018,
-        "combined_impact": 3.6666666666666687,
+        "grade_impact": 0.0,
+        "combined_impact": 3.4666666666666686,
         "transaction_type": "free_agent"
       },
       {
@@ -4047,8 +4047,8 @@
         "player_added": "Jacksonville Jaguars",
         "player_dropped": "Atlanta Falcons",
         "power_impact": 13.799999999999997,
-        "grade_impact": -0.25,
-        "combined_impact": 13.549999999999997,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 13.999999999999996,
         "transaction_type": "free_agent"
       },
       {
@@ -4058,8 +4058,8 @@
         "player_added": "Matt Prater",
         "player_dropped": "Sterling Shepard",
         "power_impact": -2.1333333333333258,
-        "grade_impact": 0.0,
-        "combined_impact": -2.1333333333333258,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -2.083333333333326,
         "transaction_type": "free_agent"
       },
       {
@@ -4069,8 +4069,8 @@
         "player_added": "Tyjae Spears",
         "player_dropped": "Jake Elliott",
         "power_impact": -2.1333333333333258,
-        "grade_impact": 0.0,
-        "combined_impact": -2.1333333333333258,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -2.083333333333326,
         "transaction_type": "free_agent"
       },
       {
@@ -4091,8 +4091,8 @@
         "player_added": "Devin Singletary",
         "player_dropped": "None (roster space)",
         "power_impact": 13.799999999999997,
-        "grade_impact": -0.25,
-        "combined_impact": 13.549999999999997,
+        "grade_impact": 0.1999999999999993,
+        "combined_impact": 13.999999999999996,
         "transaction_type": "free_agent"
       },
       {
@@ -4102,8 +4102,8 @@
         "player_added": "Jake Bates",
         "player_dropped": "Michael Badgley",
         "power_impact": 3.866666666666646,
-        "grade_impact": 0.0,
-        "combined_impact": 3.866666666666646,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": 3.9166666666666456,
         "transaction_type": "free_agent"
       },
       {
@@ -4113,8 +4113,8 @@
         "player_added": "Sam Darnold",
         "player_dropped": "Marquise Brown",
         "power_impact": 1.4666666666666686,
-        "grade_impact": -0.25,
-        "combined_impact": 1.2166666666666686,
+        "grade_impact": 8.881784197001252e-16,
+        "combined_impact": 1.4666666666666694,
         "transaction_type": "free_agent"
       },
       {
@@ -4135,8 +4135,8 @@
         "player_added": "Jayden Reed",
         "player_dropped": "None (roster space)",
         "power_impact": 17.5,
-        "grade_impact": -0.25,
-        "combined_impact": 17.25,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 17.65,
         "transaction_type": "waiver"
       },
       {
@@ -4157,8 +4157,8 @@
         "player_added": "Sean Tucker",
         "player_dropped": "None (roster space)",
         "power_impact": 17.5,
-        "grade_impact": -0.25,
-        "combined_impact": 17.25,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 17.65,
         "transaction_type": "waiver"
       },
       {
@@ -4168,8 +4168,8 @@
         "player_added": "Jason Myers",
         "player_dropped": "Matt Gay",
         "power_impact": 17.5,
-        "grade_impact": -0.25,
-        "combined_impact": 17.25,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 17.65,
         "transaction_type": "waiver"
       },
       {
@@ -4179,8 +4179,8 @@
         "player_added": "Aaron Rodgers",
         "player_dropped": "None (roster space)",
         "power_impact": -0.7666666666666515,
-        "grade_impact": 0.39999999999999947,
-        "combined_impact": -0.36666666666665204,
+        "grade_impact": 0.5499999999999998,
+        "combined_impact": -0.21666666666665169,
         "transaction_type": "waiver"
       },
       {
@@ -4190,8 +4190,8 @@
         "player_added": "Los Angeles Rams",
         "player_dropped": "Cleveland Browns",
         "power_impact": -1.7333333333333485,
-        "grade_impact": 0.15000000000000036,
-        "combined_impact": -1.5833333333333481,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -1.6833333333333487,
         "transaction_type": "waiver"
       },
       {
@@ -4212,8 +4212,8 @@
         "player_added": "Baltimore Ravens",
         "player_dropped": "Carolina Panthers",
         "power_impact": -0.7666666666666515,
-        "grade_impact": 0.39999999999999947,
-        "combined_impact": -0.36666666666665204,
+        "grade_impact": 0.5499999999999998,
+        "combined_impact": -0.21666666666665169,
         "transaction_type": "waiver"
       },
       {
@@ -4256,8 +4256,8 @@
         "player_added": "Carolina Panthers",
         "player_dropped": "Seattle Seahawks",
         "power_impact": -0.7666666666666515,
-        "grade_impact": 0.39999999999999947,
-        "combined_impact": -0.36666666666665204,
+        "grade_impact": 0.5499999999999998,
+        "combined_impact": -0.21666666666665169,
         "transaction_type": "waiver"
       },
       {
@@ -4267,8 +4267,8 @@
         "player_added": "Sam Darnold",
         "player_dropped": "Aaron Rodgers",
         "power_impact": -3.5999999999999943,
-        "grade_impact": -0.25,
-        "combined_impact": -3.8499999999999943,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": -3.649999999999994,
         "transaction_type": "waiver"
       },
       {
@@ -4278,8 +4278,8 @@
         "player_added": "Seattle Seahawks",
         "player_dropped": "Jacksonville Jaguars",
         "power_impact": -0.7666666666666515,
-        "grade_impact": 0.39999999999999947,
-        "combined_impact": -0.36666666666665204,
+        "grade_impact": 0.5499999999999998,
+        "combined_impact": -0.21666666666665169,
         "transaction_type": "waiver"
       },
       {
@@ -4289,8 +4289,8 @@
         "player_added": "Jacksonville Jaguars",
         "player_dropped": "None (roster space)",
         "power_impact": -0.7666666666666515,
-        "grade_impact": 0.39999999999999947,
-        "combined_impact": -0.36666666666665204,
+        "grade_impact": 0.5499999999999998,
+        "combined_impact": -0.21666666666665169,
         "transaction_type": "free_agent"
       },
       {
@@ -4300,8 +4300,8 @@
         "player_added": "Isiah Pacheco",
         "player_dropped": "Carolina Panthers",
         "power_impact": -0.7666666666666515,
-        "grade_impact": 0.39999999999999947,
-        "combined_impact": -0.36666666666665204,
+        "grade_impact": 0.5499999999999998,
+        "combined_impact": -0.21666666666665169,
         "transaction_type": "free_agent"
       },
       {
@@ -4311,8 +4311,8 @@
         "player_added": "Emari Demercado",
         "player_dropped": "Tyjae Spears",
         "power_impact": -4.133333333333326,
-        "grade_impact": -0.04999999999999982,
-        "combined_impact": -4.183333333333326,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -4.083333333333326,
         "transaction_type": "free_agent"
       },
       {
@@ -4322,8 +4322,8 @@
         "player_added": "Alec Pierce",
         "player_dropped": "None (roster space)",
         "power_impact": -3.5999999999999943,
-        "grade_impact": -0.25,
-        "combined_impact": -3.8499999999999943,
+        "grade_impact": -0.04999999999999982,
+        "combined_impact": -3.649999999999994,
         "transaction_type": "free_agent"
       },
       {
@@ -4355,8 +4355,8 @@
         "player_added": "Theo Johnson",
         "player_dropped": "Cooper Kupp",
         "power_impact": -4.133333333333326,
-        "grade_impact": -0.04999999999999982,
-        "combined_impact": -4.183333333333326,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -4.083333333333326,
         "transaction_type": "free_agent"
       },
       {
@@ -4366,8 +4366,8 @@
         "player_added": "Green Bay Packers",
         "player_dropped": "Jacksonville Jaguars",
         "power_impact": 17.5,
-        "grade_impact": -0.25,
-        "combined_impact": 17.25,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 17.65,
         "transaction_type": "waiver"
       },
       {
@@ -4377,8 +4377,8 @@
         "player_added": "Cleveland Browns",
         "player_dropped": "Los Angeles Rams",
         "power_impact": -1.7333333333333485,
-        "grade_impact": 0.15000000000000036,
-        "combined_impact": -1.5833333333333481,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -1.6833333333333487,
         "transaction_type": "free_agent"
       },
       {
@@ -4388,8 +4388,8 @@
         "player_added": "Las Vegas Raiders",
         "player_dropped": "Los Angeles Rams",
         "power_impact": -4.833333333333314,
-        "grade_impact": 0.20000000000000018,
-        "combined_impact": -4.633333333333314,
+        "grade_impact": 0.049999999999998934,
+        "combined_impact": -4.7833333333333155,
         "transaction_type": "waiver"
       },
       {
@@ -4399,8 +4399,8 @@
         "player_added": "Michael Wilson",
         "player_dropped": "None (roster space)",
         "power_impact": -2.833333333333343,
-        "grade_impact": 0.20000000000000018,
-        "combined_impact": -2.6333333333333426,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": -2.6833333333333425,
         "transaction_type": "waiver"
       },
       {
@@ -4410,8 +4410,8 @@
         "player_added": "Jacoby Brissett",
         "player_dropped": "None (roster space)",
         "power_impact": -2.433333333333337,
-        "grade_impact": 0.6500000000000004,
-        "combined_impact": -1.7833333333333368,
+        "grade_impact": -0.8499999999999996,
+        "combined_impact": -3.2833333333333368,
         "transaction_type": "waiver"
       },
       {
@@ -4421,8 +4421,8 @@
         "player_added": "Emanuel Wilson",
         "player_dropped": "None (roster space)",
         "power_impact": -0.6333333333333258,
-        "grade_impact": -0.14999999999999947,
-        "combined_impact": -0.7833333333333252,
+        "grade_impact": -0.75,
+        "combined_impact": -1.3833333333333258,
         "transaction_type": "waiver"
       },
       {
@@ -4432,8 +4432,8 @@
         "player_added": "Emanuel Wilson",
         "player_dropped": "None (roster space)",
         "power_impact": -0.6333333333333258,
-        "grade_impact": -0.14999999999999947,
-        "combined_impact": -0.7833333333333252,
+        "grade_impact": -0.75,
+        "combined_impact": -1.3833333333333258,
         "transaction_type": "waiver"
       },
       {
@@ -4443,8 +4443,8 @@
         "player_added": "Jacoby Brissett",
         "player_dropped": "Tre Tucker",
         "power_impact": -4.833333333333314,
-        "grade_impact": 0.20000000000000018,
-        "combined_impact": -4.633333333333314,
+        "grade_impact": 0.049999999999998934,
+        "combined_impact": -4.7833333333333155,
         "transaction_type": "waiver"
       },
       {
@@ -4454,8 +4454,8 @@
         "player_added": "Andrei Iosivas",
         "player_dropped": "None (roster space)",
         "power_impact": 20.69999999999999,
-        "grade_impact": 0.0,
-        "combined_impact": 20.69999999999999,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.849999999999987,
         "transaction_type": "waiver"
       },
       {
@@ -4465,8 +4465,8 @@
         "player_added": "Darnell Mooney",
         "player_dropped": "None (roster space)",
         "power_impact": -2.433333333333337,
-        "grade_impact": 0.6500000000000004,
-        "combined_impact": -1.7833333333333368,
+        "grade_impact": -0.8499999999999996,
+        "combined_impact": -3.2833333333333368,
         "transaction_type": "waiver"
       },
       {
@@ -4487,8 +4487,8 @@
         "player_added": "Will Reichard",
         "player_dropped": "Matt Prater",
         "power_impact": -4.433333333333309,
-        "grade_impact": -0.04999999999999982,
-        "combined_impact": -4.4833333333333085,
+        "grade_impact": 0.04999999999999982,
+        "combined_impact": -4.383333333333309,
         "transaction_type": "free_agent"
       },
       {
@@ -4498,8 +4498,8 @@
         "player_added": "Pat Freiermuth",
         "player_dropped": "None (roster space)",
         "power_impact": -4.966666666666683,
-        "grade_impact": -0.05000000000000071,
-        "combined_impact": -5.0166666666666835,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -5.016666666666682,
         "transaction_type": "free_agent"
       },
       {
@@ -4509,8 +4509,8 @@
         "player_added": "Kansas City Chiefs",
         "player_dropped": "Josh Downs",
         "power_impact": -2.833333333333343,
-        "grade_impact": 0.20000000000000018,
-        "combined_impact": -2.6333333333333426,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": -2.6833333333333425,
         "transaction_type": "free_agent"
       },
       {
@@ -4520,8 +4520,8 @@
         "player_added": "Brock Purdy",
         "player_dropped": "Trevor Lawrence",
         "power_impact": 20.69999999999999,
-        "grade_impact": 0.0,
-        "combined_impact": 20.69999999999999,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.849999999999987,
         "transaction_type": "free_agent"
       },
       {
@@ -4575,8 +4575,8 @@
         "player_added": "Calvin Austin",
         "player_dropped": "None (roster space)",
         "power_impact": -5.099999999999994,
-        "grade_impact": 0.0,
-        "combined_impact": -5.099999999999994,
+        "grade_impact": 0.20000000000000107,
+        "combined_impact": -4.899999999999993,
         "transaction_type": "free_agent"
       },
       {
@@ -4586,8 +4586,8 @@
         "player_added": "Trevor Lawrence",
         "player_dropped": "None (roster space)",
         "power_impact": 20.69999999999999,
-        "grade_impact": 0.0,
-        "combined_impact": 20.69999999999999,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": 20.849999999999987,
         "transaction_type": "free_agent"
       },
       {
@@ -4597,8 +4597,8 @@
         "player_added": "Dalton Kincaid",
         "player_dropped": "Brashard Smith",
         "power_impact": -5.099999999999994,
-        "grade_impact": 0.0,
-        "combined_impact": -5.099999999999994,
+        "grade_impact": 0.20000000000000107,
+        "combined_impact": -4.899999999999993,
         "transaction_type": "waiver"
       },
       {
@@ -4608,8 +4608,8 @@
         "player_added": "Brock Purdy",
         "player_dropped": "None (roster space)",
         "power_impact": -0.8333333333333144,
-        "grade_impact": -0.20000000000000018,
-        "combined_impact": -1.0333333333333146,
+        "grade_impact": 0.0,
+        "combined_impact": -0.8333333333333144,
         "transaction_type": "free_agent"
       },
       {
@@ -4619,8 +4619,8 @@
         "player_added": "Chris Rodriguez",
         "player_dropped": "None (roster space)",
         "power_impact": -2.666666666666657,
-        "grade_impact": 0.25,
-        "combined_impact": -2.416666666666657,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -3.0666666666666575,
         "transaction_type": "waiver"
       },
       {
@@ -4630,8 +4630,8 @@
         "player_added": "Matt Prater",
         "player_dropped": "Jake Bates",
         "power_impact": -5.96666666666664,
-        "grade_impact": 0.0,
-        "combined_impact": -5.96666666666664,
+        "grade_impact": 0.09999999999999964,
+        "combined_impact": -5.8666666666666405,
         "transaction_type": "waiver"
       },
       {
@@ -4641,8 +4641,8 @@
         "player_added": "Los Angeles Rams",
         "player_dropped": "Las Vegas Raiders",
         "power_impact": -5.96666666666664,
-        "grade_impact": 0.0,
-        "combined_impact": -5.96666666666664,
+        "grade_impact": 0.09999999999999964,
+        "combined_impact": -5.8666666666666405,
         "transaction_type": "waiver"
       },
       {
@@ -4652,8 +4652,8 @@
         "player_added": "Los Angeles Chargers",
         "player_dropped": "Baltimore Ravens",
         "power_impact": -0.9666666666666686,
-        "grade_impact": 0.25,
-        "combined_impact": -0.7166666666666686,
+        "grade_impact": -1.4000000000000004,
+        "combined_impact": -2.366666666666669,
         "transaction_type": "waiver"
       },
       {
@@ -4663,8 +4663,8 @@
         "player_added": "Los Angeles Rams",
         "player_dropped": "Green Bay Packers",
         "power_impact": 16.766666666666666,
-        "grade_impact": 0.25,
-        "combined_impact": 17.016666666666666,
+        "grade_impact": 0.10000000000000053,
+        "combined_impact": 16.866666666666667,
         "transaction_type": "waiver"
       },
       {
@@ -4674,8 +4674,8 @@
         "player_added": "Devin Neal",
         "player_dropped": "Trevor Lawrence",
         "power_impact": -2.666666666666657,
-        "grade_impact": 0.25,
-        "combined_impact": -2.416666666666657,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -3.0666666666666575,
         "transaction_type": "waiver"
       },
       {
@@ -4685,8 +4685,8 @@
         "player_added": "Matt Gay",
         "player_dropped": "Will Reichard",
         "power_impact": -2.5999999999999943,
-        "grade_impact": 0.0,
-        "combined_impact": -2.5999999999999943,
+        "grade_impact": 0.05000000000000071,
+        "combined_impact": -2.5499999999999936,
         "transaction_type": "free_agent"
       },
       {
@@ -4696,8 +4696,8 @@
         "player_added": "Bhayshul Tuten",
         "player_dropped": "Emari Demercado",
         "power_impact": -2.5999999999999943,
-        "grade_impact": 0.0,
-        "combined_impact": -2.5999999999999943,
+        "grade_impact": 0.05000000000000071,
+        "combined_impact": -2.5499999999999936,
         "transaction_type": "free_agent"
       },
       {
@@ -4707,8 +4707,8 @@
         "player_added": "Jake Elliott",
         "player_dropped": "None (roster space)",
         "power_impact": -4.400000000000006,
-        "grade_impact": 0.4500000000000002,
-        "combined_impact": -3.9500000000000055,
+        "grade_impact": 0.14999999999999947,
+        "combined_impact": -4.250000000000006,
         "transaction_type": "free_agent"
       },
       {
@@ -4718,8 +4718,8 @@
         "player_added": "Bryce Young",
         "player_dropped": "Aaron Rodgers",
         "power_impact": -0.9666666666666686,
-        "grade_impact": 0.25,
-        "combined_impact": -0.7166666666666686,
+        "grade_impact": -1.4000000000000004,
+        "combined_impact": -2.366666666666669,
         "transaction_type": "free_agent"
       },
       {
@@ -4729,8 +4729,8 @@
         "player_added": "Cooper Kupp",
         "player_dropped": "Tyrell Shavers",
         "power_impact": -2.666666666666657,
-        "grade_impact": 0.25,
-        "combined_impact": -2.416666666666657,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -3.0666666666666575,
         "transaction_type": "free_agent"
       },
       {
@@ -4740,8 +4740,8 @@
         "player_added": "Tony Pollard",
         "player_dropped": "Jordan Love",
         "power_impact": -2.6333333333333258,
-        "grade_impact": -0.20000000000000018,
-        "combined_impact": -2.833333333333326,
+        "grade_impact": 0.0,
+        "combined_impact": -2.6333333333333258,
         "transaction_type": "free_agent"
       },
       {
@@ -4751,8 +4751,8 @@
         "player_added": "Zonovan Knight",
         "player_dropped": "Luke Musgrave",
         "power_impact": -2.6333333333333258,
-        "grade_impact": -0.20000000000000018,
-        "combined_impact": -2.833333333333326,
+        "grade_impact": 0.0,
+        "combined_impact": -2.6333333333333258,
         "transaction_type": "free_agent"
       },
       {
@@ -4762,8 +4762,8 @@
         "player_added": "Trevor Lawrence",
         "player_dropped": "None (roster space)",
         "power_impact": -2.666666666666657,
-        "grade_impact": 0.25,
-        "combined_impact": -2.416666666666657,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -3.0666666666666575,
         "transaction_type": "free_agent"
       },
       {
@@ -4773,8 +4773,8 @@
         "player_added": "Tyrell Shavers",
         "player_dropped": "None (roster space)",
         "power_impact": -2.666666666666657,
-        "grade_impact": 0.25,
-        "combined_impact": -2.416666666666657,
+        "grade_impact": -0.40000000000000036,
+        "combined_impact": -3.0666666666666575,
         "transaction_type": "free_agent"
       },
       {
@@ -4784,8 +4784,8 @@
         "player_added": "Jacksonville Jaguars",
         "player_dropped": "Joe Flacco",
         "power_impact": 1.73333333333332,
-        "grade_impact": 0.04999999999999982,
-        "combined_impact": 1.78333333333332,
+        "grade_impact": 0.0,
+        "combined_impact": 1.73333333333332,
         "transaction_type": "free_agent"
       },
       {
@@ -4795,8 +4795,8 @@
         "player_added": "Tank Bigsby",
         "player_dropped": "None (roster space)",
         "power_impact": -3.333333333333343,
-        "grade_impact": 0.04999999999999982,
-        "combined_impact": -3.283333333333343,
+        "grade_impact": 0.4499999999999993,
+        "combined_impact": -2.8833333333333435,
         "transaction_type": "free_agent"
       },
       {
@@ -4806,8 +4806,8 @@
         "player_added": "San Francisco 49ers",
         "player_dropped": "None (roster space)",
         "power_impact": -3.333333333333343,
-        "grade_impact": 0.04999999999999982,
-        "combined_impact": -3.283333333333343,
+        "grade_impact": 0.4499999999999993,
+        "combined_impact": -2.8833333333333435,
         "transaction_type": "free_agent"
       },
       {
@@ -4817,8 +4817,8 @@
         "player_added": "Daniel Carlson",
         "player_dropped": "Wil Lutz",
         "power_impact": -4.083333333333329,
-        "grade_impact": 0.25,
-        "combined_impact": -3.8333333333333286,
+        "grade_impact": -0.6000000000000005,
+        "combined_impact": -4.683333333333329,
         "transaction_type": "free_agent"
       },
       {
@@ -4828,8 +4828,8 @@
         "player_added": "Cleveland Browns",
         "player_dropped": "Houston Texans",
         "power_impact": -3.333333333333343,
-        "grade_impact": 0.04999999999999982,
-        "combined_impact": -3.283333333333343,
+        "grade_impact": 0.4499999999999993,
+        "combined_impact": -2.8833333333333435,
         "transaction_type": "free_agent"
       },
       {
@@ -4839,8 +4839,8 @@
         "player_added": "Ka'imi Fairbairn",
         "player_dropped": "None (roster space)",
         "power_impact": -3.333333333333343,
-        "grade_impact": 0.04999999999999982,
-        "combined_impact": -3.283333333333343,
+        "grade_impact": 0.4499999999999993,
+        "combined_impact": -2.8833333333333435,
         "transaction_type": "free_agent"
       },
       {
@@ -4850,8 +4850,8 @@
         "player_added": "Tampa Bay Buccaneers",
         "player_dropped": "Los Angeles Chargers",
         "power_impact": 1.4333333333333371,
-        "grade_impact": 0.15000000000000036,
-        "combined_impact": 1.5833333333333375,
+        "grade_impact": -0.4999999999999991,
+        "combined_impact": 0.933333333333338,
         "transaction_type": "waiver"
       },
       {
@@ -4861,8 +4861,8 @@
         "player_added": "Will Reichard",
         "player_dropped": "Daniel Carlson",
         "power_impact": 0.0,
-        "grade_impact": 0.35000000000000053,
-        "combined_impact": 0.35000000000000053,
+        "grade_impact": -0.6000000000000005,
+        "combined_impact": -0.6000000000000005,
         "transaction_type": "waiver"
       },
       {
@@ -4894,8 +4894,8 @@
         "player_added": "Jordan Love",
         "player_dropped": "None (roster space)",
         "power_impact": 10.133333333333326,
-        "grade_impact": 0.29999999999999893,
-        "combined_impact": 10.433333333333325,
+        "grade_impact": -0.25,
+        "combined_impact": 9.883333333333326,
         "transaction_type": "waiver"
       },
       {
@@ -4916,8 +4916,8 @@
         "player_added": "Blake Corum",
         "player_dropped": "None (roster space)",
         "power_impact": 3.950000000000003,
-        "grade_impact": -0.09999999999999964,
-        "combined_impact": 3.850000000000003,
+        "grade_impact": 0.05000000000000071,
+        "combined_impact": 4.0000000000000036,
         "transaction_type": "waiver"
       },
       {
@@ -4927,8 +4927,8 @@
         "player_added": "Jayden Higgins",
         "player_dropped": "Cade Otton",
         "power_impact": -0.2333333333333485,
-        "grade_impact": -0.04999999999999982,
-        "combined_impact": -0.2833333333333483,
+        "grade_impact": 0.0,
+        "combined_impact": -0.2333333333333485,
         "transaction_type": "waiver"
       },
       {
@@ -4938,8 +4938,8 @@
         "player_added": "Greg Dortch",
         "player_dropped": "Chris Godwin",
         "power_impact": 0.0,
-        "grade_impact": 0.40000000000000036,
-        "combined_impact": 0.40000000000000036,
+        "grade_impact": 0.05000000000000071,
+        "combined_impact": 0.05000000000000071,
         "transaction_type": "free_agent"
       },
       {
@@ -4949,8 +4949,8 @@
         "player_added": "Miami Dolphins",
         "player_dropped": "Las Vegas Raiders",
         "power_impact": 0.0,
-        "grade_impact": 0.09999999999999964,
-        "combined_impact": 0.09999999999999964,
+        "grade_impact": 0.0,
+        "combined_impact": 0.0,
         "transaction_type": "free_agent"
       },
       {
@@ -4960,8 +4960,8 @@
         "player_added": "Mike Evans",
         "player_dropped": "Sean Tucker",
         "power_impact": 10.133333333333326,
-        "grade_impact": 0.29999999999999893,
-        "combined_impact": 10.433333333333325,
+        "grade_impact": -0.25,
+        "combined_impact": 9.883333333333326,
         "transaction_type": "free_agent"
       },
       {
@@ -4971,8 +4971,8 @@
         "player_added": "C.J. Stroud",
         "player_dropped": "Cooper Kupp",
         "power_impact": 0.0,
-        "grade_impact": 0.5499999999999998,
-        "combined_impact": 0.5499999999999998,
+        "grade_impact": 0.39999999999999947,
+        "combined_impact": 0.39999999999999947,
         "transaction_type": "waiver"
       },
       {
@@ -4982,8 +4982,8 @@
         "player_added": "Los Angeles Chargers",
         "player_dropped": "New England Patriots",
         "power_impact": 0.0,
-        "grade_impact": 0.0,
-        "combined_impact": 0.0,
+        "grade_impact": -0.09999999999999964,
+        "combined_impact": -0.09999999999999964,
         "transaction_type": "free_agent"
       },
       {
@@ -4993,8 +4993,8 @@
         "player_added": "Harrison Mevis",
         "player_dropped": "Matt Gay",
         "power_impact": 0.0,
-        "grade_impact": 0.0,
-        "combined_impact": 0.0,
+        "grade_impact": -0.09999999999999964,
+        "combined_impact": -0.09999999999999964,
         "transaction_type": "free_agent"
       },
       {
@@ -5004,8 +5004,8 @@
         "player_added": "Tre Tucker",
         "player_dropped": "Bhayshul Tuten",
         "power_impact": 0.0,
-        "grade_impact": 0.0,
-        "combined_impact": 0.0,
+        "grade_impact": -0.09999999999999964,
+        "combined_impact": -0.09999999999999964,
         "transaction_type": "free_agent"
       },
       {
@@ -5015,8 +5015,8 @@
         "player_added": "Jacoby Brissett",
         "player_dropped": "Romeo Doubs",
         "power_impact": 0.0,
-        "grade_impact": 0.1999999999999993,
-        "combined_impact": 0.1999999999999993,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -0.049999999999998934,
         "transaction_type": "free_agent"
       },
       {
@@ -5026,8 +5026,8 @@
         "player_added": "Kyle Pitts",
         "player_dropped": "Darren Waller",
         "power_impact": 0.0,
-        "grade_impact": 0.1999999999999993,
-        "combined_impact": 0.1999999999999993,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -0.049999999999998934,
         "transaction_type": "free_agent"
       },
       {
@@ -5037,8 +5037,8 @@
         "player_added": "Houston Texans",
         "player_dropped": "Chicago Bears",
         "power_impact": 0.0,
-        "grade_impact": 0.4499999999999993,
-        "combined_impact": 0.4499999999999993,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 0.15000000000000036,
         "transaction_type": "free_agent"
       },
       {
@@ -5048,8 +5048,8 @@
         "player_added": "Chicago Bears",
         "player_dropped": "None (roster space)",
         "power_impact": 0.0,
-        "grade_impact": 0.4499999999999993,
-        "combined_impact": 0.4499999999999993,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 0.15000000000000036,
         "transaction_type": "free_agent"
       },
       {
@@ -5059,8 +5059,8 @@
         "player_added": "Deshaun Watson",
         "player_dropped": "None (roster space)",
         "power_impact": 0.0,
-        "grade_impact": 0.4499999999999993,
-        "combined_impact": 0.4499999999999993,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 0.15000000000000036,
         "transaction_type": "free_agent"
       },
       {
@@ -5081,8 +5081,8 @@
         "player_added": "Brenton Strange",
         "player_dropped": "Oronde Gadsden",
         "power_impact": 0.0,
-        "grade_impact": 0.4499999999999993,
-        "combined_impact": 0.4499999999999993,
+        "grade_impact": 0.15000000000000036,
+        "combined_impact": 0.15000000000000036,
         "transaction_type": "free_agent"
       },
       {
@@ -5092,8 +5092,8 @@
         "player_added": "Devaughn Vele",
         "player_dropped": "Andrei Iosivas",
         "power_impact": 0.0,
-        "grade_impact": 0.2999999999999998,
-        "combined_impact": 0.2999999999999998,
+        "grade_impact": -0.09999999999999964,
+        "combined_impact": -0.09999999999999964,
         "transaction_type": "free_agent"
       },
       {
@@ -5103,8 +5103,8 @@
         "player_added": "Samaje Perine",
         "player_dropped": "None (roster space)",
         "power_impact": 0.0,
-        "grade_impact": 0.2999999999999998,
-        "combined_impact": 0.2999999999999998,
+        "grade_impact": -0.09999999999999964,
+        "combined_impact": -0.09999999999999964,
         "transaction_type": "free_agent"
       },
       {
@@ -5114,8 +5114,8 @@
         "player_added": "Baltimore Ravens",
         "player_dropped": "Miami Dolphins",
         "power_impact": 0.0,
-        "grade_impact": 0.1999999999999993,
-        "combined_impact": 0.1999999999999993,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -0.049999999999998934,
         "transaction_type": "free_agent"
       },
       {
@@ -5125,8 +5125,8 @@
         "player_added": "Darren Waller",
         "player_dropped": "None (roster space)",
         "power_impact": 0.0,
-        "grade_impact": 0.1999999999999993,
-        "combined_impact": 0.1999999999999993,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -0.049999999999998934,
         "transaction_type": "free_agent"
       },
       {
@@ -5136,8 +5136,8 @@
         "player_added": "Jake Bates",
         "player_dropped": "Matt Prater",
         "power_impact": 0.0,
-        "grade_impact": 0.1999999999999993,
-        "combined_impact": 0.1999999999999993,
+        "grade_impact": -0.049999999999998934,
+        "combined_impact": -0.049999999999998934,
         "transaction_type": "free_agent"
       },
       {
@@ -5288,26 +5288,26 @@
       "694022020266033152": {
         "name": "CallMeBeanz",
         "weekly_grades": {
-          "1": 3.8267023358585854,
-          "2": 3.6657023358585863,
-          "3": 3.6867023358585858,
-          "4": 3.6884523358585852,
-          "5": 3.7637023358585857,
-          "6": 3.4679523358585858,
-          "7": 3.4889523358585857,
-          "8": 3.499452335858586,
-          "9": 3.5012023358585855,
-          "10": 3.520452335858586,
-          "11": 3.502952335858586,
-          "12": 3.509952335858586,
-          "13": 3.4487023358585858,
-          "14": 3.413702335858586,
-          "15": 2.8607847222222222
+          "1": 3.854362058080808,
+          "2": 3.6933620580808086,
+          "3": 3.714362058080808,
+          "4": 3.7161120580808076,
+          "5": 3.791362058080808,
+          "6": 3.495612058080808,
+          "7": 3.516612058080808,
+          "8": 3.5271120580808084,
+          "9": 3.528862058080808,
+          "10": 3.5481120580808083,
+          "11": 3.5306120580808082,
+          "12": 3.5376120580808084,
+          "13": 3.476362058080808,
+          "14": 3.4413620580808084,
+          "15": 2.888444444444444
         },
-        "trade_performance": 5.039583333333333,
-        "waiver_performance": 3.254444444444444,
+        "trade_performance": 5.133333333333333,
+        "waiver_performance": 3.275555555555555,
         "lineup_performance": 6.040284090909092,
-        "overall_grade": 3.523024494949495,
+        "overall_grade": 3.550684217171717,
         "record": {
           "wins": 0,
           "losses": 0
@@ -5320,26 +5320,26 @@
       "858068603554111488": {
         "name": "Tcdun",
         "weekly_grades": {
-          "1": 2.7317362410873445,
-          "2": 2.944236241087345,
-          "3": 3.4027362410873447,
-          "4": 3.4009862410873444,
-          "5": 3.614486241087345,
-          "6": 3.549736241087345,
-          "7": 3.6407362410873447,
-          "8": 3.6617362410873446,
-          "9": 3.7072362410873447,
-          "10": 3.665236241087345,
-          "11": 3.7107362410873446,
-          "12": 3.6582362410873444,
-          "13": 3.6827362410873445,
-          "14": 3.6494862410873448,
-          "15": 3.6127362410873447
+          "1": 2.730951927361854,
+          "2": 2.9434519273618536,
+          "3": 3.4019519273618544,
+          "4": 3.400201927361854,
+          "5": 3.6137019273618542,
+          "6": 3.548951927361854,
+          "7": 3.6399519273618544,
+          "8": 3.660951927361854,
+          "9": 3.7064519273618535,
+          "10": 3.6644519273618545,
+          "11": 3.709951927361854,
+          "12": 3.657451927361854,
+          "13": 3.681951927361854,
+          "14": 3.6487019273618544,
+          "15": 3.6119519273618543
         },
-        "trade_performance": 5.008333333333335,
-        "waiver_performance": 6.091176470588236,
+        "trade_performance": 5.008333333333334,
+        "waiver_performance": 6.087254901960784,
         "lineup_performance": 4.245784090909091,
-        "overall_grade": 3.508852907754011,
+        "overall_grade": 3.508068594028521,
         "record": {
           "wins": 7,
           "losses": 8
@@ -5352,26 +5352,26 @@
       "858530366355525632": {
         "name": "cmoney2137",
         "weekly_grades": {
-          "1": 3.580558418234065,
-          "2": 3.666308418234065,
-          "3": 3.386308418234065,
-          "4": 3.573558418234065,
-          "5": 3.6838084182340647,
-          "6": 3.524558418234065,
-          "7": 3.437058418234065,
-          "8": 3.554308418234065,
-          "9": 3.4860584182340646,
-          "10": 3.5403084182340647,
-          "11": 3.424808418234065,
-          "12": 3.454558418234065,
-          "13": 3.4090584182340646,
-          "14": 3.449308418234065,
-          "15": 3.4178084182340642
+          "1": 3.566122355015674,
+          "2": 3.6518723550156738,
+          "3": 3.3718723550156735,
+          "4": 3.5591223550156736,
+          "5": 3.669372355015674,
+          "6": 3.510122355015674,
+          "7": 3.4226223550156742,
+          "8": 3.5398723550156737,
+          "9": 3.4716223550156737,
+          "10": 3.5258723550156734,
+          "11": 3.4103723550156735,
+          "12": 3.4401223550156743,
+          "13": 3.3946223550156733,
+          "14": 3.434872355015674,
+          "15": 3.403372355015674
         },
-        "trade_performance": 5.025,
-        "waiver_performance": 4.1419540229885055,
+        "trade_performance": 4.9520833333333325,
+        "waiver_performance": 4.160919540229885,
         "lineup_performance": 5.359450757575758,
-        "overall_grade": 3.505891751567398,
+        "overall_grade": 3.4914556883490073,
         "record": {
           "wins": 8,
           "losses": 7
@@ -5384,26 +5384,26 @@
       "993314024194396160": {
         "name": "Shockley5",
         "weekly_grades": {
-          "1": 2.9931834315375982,
-          "2": 3.0526834315375986,
-          "3": 3.2049334315375986,
-          "4": 3.579433431537599,
-          "5": 3.6826834315375985,
-          "6": 3.6529334315375985,
-          "7": 3.7526834315375988,
-          "8": 3.701933431537598,
-          "9": 3.6301834315375987,
-          "10": 3.6826834315375985,
-          "11": 3.7159334315375983,
-          "12": 3.7596834315375984,
-          "13": 3.6301834315375987,
-          "14": 3.5916834315375983,
-          "15": 3.6669334315375988
+          "1": 3.0251452370931537,
+          "2": 3.084645237093154,
+          "3": 3.236895237093154,
+          "4": 3.611395237093154,
+          "5": 3.714645237093154,
+          "6": 3.684895237093154,
+          "7": 3.7846452370931543,
+          "8": 3.7338952370931535,
+          "9": 3.662145237093154,
+          "10": 3.714645237093154,
+          "11": 3.7478952370931538,
+          "12": 3.791645237093154,
+          "13": 3.662145237093154,
+          "14": 3.623645237093154,
+          "15": 3.6988952370931543
         },
-        "trade_performance": 5.603125,
-        "waiver_performance": 5.881172839506173,
+        "trade_performance": 5.802083333333333,
+        "waiver_performance": 5.792283950617285,
         "lineup_performance": 4.087784090909092,
-        "overall_grade": 3.5531834315375983,
+        "overall_grade": 3.585145237093154,
         "record": {
           "wins": 7,
           "losses": 8
@@ -5416,26 +5416,26 @@
       "1127729098148655104": {
         "name": "joeyscott31",
         "weekly_grades": {
-          "1": 3.410056709513165,
-          "2": 4.041806709513165,
-          "3": 3.833556709513165,
-          "4": 3.840556709513165,
-          "5": 3.828306709513165,
-          "6": 4.150306709513165,
-          "7": 4.257056709513165,
-          "8": 4.360306709513165,
-          "9": 4.4093067095131655,
-          "10": 4.337556709513166,
-          "11": 4.348056709513165,
-          "12": 4.304306709513165,
-          "13": 4.334056709513165,
-          "14": 4.341056709513165,
-          "15": 4.369056709513165
+          "1": 3.4214557408097375,
+          "2": 4.053205740809737,
+          "3": 3.8449557408097372,
+          "4": 3.851955740809737,
+          "5": 3.8397057408097375,
+          "6": 4.161705740809737,
+          "7": 4.2684557408097366,
+          "8": 4.3717057408097375,
+          "9": 4.420705740809737,
+          "10": 4.348955740809737,
+          "11": 4.359455740809737,
+          "12": 4.3157057408097375,
+          "13": 4.3454557408097365,
+          "14": 4.352455740809737,
+          "15": 4.380455740809737
         },
-        "trade_performance": 4.979545454545455,
-        "waiver_performance": 7.4325136612021865,
+        "trade_performance": 5.043939393939394,
+        "waiver_performance": 7.409016393442624,
         "lineup_performance": 5.335784090909091,
-        "overall_grade": 4.144356709513165,
+        "overall_grade": 4.155755740809737,
         "record": {
           "wins": 9,
           "losses": 6
@@ -5448,26 +5448,26 @@
       "1130755765075136512": {
         "name": "jackjohnnsonn26",
         "weekly_grades": {
-          "1": 2.715412984006734,
-          "2": 3.523912984006734,
-          "3": 3.711162984006734,
-          "4": 3.4784129840067344,
-          "5": 3.522162984006734,
-          "6": 3.3139129840067336,
-          "7": 3.2649129840067337,
-          "8": 3.191412984006734,
-          "9": 3.1511629840067337,
-          "10": 3.198412984006734,
-          "11": 3.142412984006734,
-          "12": 3.0951629840067336,
-          "13": 3.070662984006734,
-          "14": 3.1144129840067336,
-          "15": 2.94474537037037
+          "1": 2.7237463173400673,
+          "2": 3.5322463173400678,
+          "3": 3.7194963173400675,
+          "4": 3.4867463173400672,
+          "5": 3.5304963173400674,
+          "6": 3.3222463173400674,
+          "7": 3.2732463173400674,
+          "8": 3.1997463173400673,
+          "9": 3.159496317340067,
+          "10": 3.2067463173400674,
+          "11": 3.150746317340067,
+          "12": 3.1034963173400674,
+          "13": 3.078996317340067,
+          "14": 3.1227463173400674,
+          "15": 2.9530787037037034
         },
-        "trade_performance": 4.610833333333333,
-        "waiver_performance": 4.210185185185185,
+        "trade_performance": 4.684166666666666,
+        "waiver_performance": 4.160185185185185,
         "lineup_performance": 4.88385551948052,
-        "overall_grade": 3.2292184764309764,
+        "overall_grade": 3.2375518097643097,
         "record": {
           "wins": 0,
           "losses": 0
@@ -5480,26 +5480,26 @@
       "1260463320503169024": {
         "name": "Spillywilly69",
         "weekly_grades": {
-          "1": 3.227277882996633,
-          "2": 3.353277882996633,
-          "3": 3.265777882996633,
-          "4": 3.3182778829966333,
-          "5": 3.253527882996633,
-          "6": 3.4267778829966327,
-          "7": 3.4215278829966334,
-          "8": 3.3410278829966336,
-          "9": 3.432027882996633,
-          "10": 3.4197778829966334,
-          "11": 3.388277882996633,
-          "12": 3.384777882996633,
-          "13": 3.4390278829966334,
-          "14": 3.4862778829966334,
-          "15": 3.4181102693602696
+          "1": 3.230392361111112,
+          "2": 3.3563923611111113,
+          "3": 3.268892361111111,
+          "4": 3.321392361111111,
+          "5": 3.2566423611111115,
+          "6": 3.4298923611111114,
+          "7": 3.4246423611111116,
+          "8": 3.3441423611111114,
+          "9": 3.4351423611111116,
+          "10": 3.4228923611111113,
+          "11": 3.3913923611111114,
+          "12": 3.3878923611111116,
+          "13": 3.4421423611111113,
+          "14": 3.4893923611111113,
+          "15": 3.4212247474747475
         },
-        "trade_performance": 5.078703703703703,
-        "waiver_performance": 5.9921717171717175,
+        "trade_performance": 5.097222222222222,
+        "waiver_performance": 5.984595959595961,
         "lineup_performance": 3.870998376623377,
-        "overall_grade": 3.371716708754209,
+        "overall_grade": 3.374831186868687,
         "record": {
           "wins": 0,
           "losses": 0
@@ -5512,26 +5512,26 @@
       "1260463530457452544": {
         "name": "coletheman88",
         "weekly_grades": {
-          "1": 4.444622474747475,
-          "2": 4.075372474747475,
-          "3": 4.045622474747475,
-          "4": 3.968622474747475,
-          "5": 3.9441224747474743,
-          "6": 4.012372474747474,
-          "7": 4.290622474747475,
-          "8": 4.1891224747474745,
-          "9": 4.122622474747475,
-          "10": 4.211872474747475,
-          "11": 4.467372474747475,
-          "12": 4.537372474747475,
-          "13": 4.516372474747475,
-          "14": 4.556622474747474,
-          "15": 4.609122474747474
+          "1": 4.445168308080809,
+          "2": 4.075918308080808,
+          "3": 4.046168308080808,
+          "4": 3.969168308080808,
+          "5": 3.944668308080808,
+          "6": 4.012918308080808,
+          "7": 4.291168308080808,
+          "8": 4.189668308080808,
+          "9": 4.123168308080809,
+          "10": 4.2124183080808075,
+          "11": 4.467918308080808,
+          "12": 4.537918308080807,
+          "13": 4.516918308080808,
+          "14": 4.557168308080808,
+          "15": 4.609668308080808
         },
-        "trade_performance": 5.684374999999999,
-        "waiver_performance": 8.355555555555556,
+        "trade_performance": 5.682291666666666,
+        "waiver_performance": 8.360888888888889,
         "lineup_performance": 4.652784090909091,
-        "overall_grade": 4.266122474747474,
+        "overall_grade": 4.266668308080808,
         "record": {
           "wins": 8,
           "losses": 7
@@ -5544,26 +5544,26 @@
       "1260799280998785024": {
         "name": "CameronMulyk",
         "weekly_grades": {
-          "1": 3.2147868265993274,
-          "2": 3.127286826599327,
-          "3": 3.263786826599327,
-          "4": 3.347786826599327,
-          "5": 3.2935368265993272,
-          "6": 3.179786826599327,
-          "7": 3.0590368265993266,
-          "8": 3.024036826599327,
-          "9": 2.968036826599327,
-          "10": 2.801786826599327,
-          "11": 2.849036826599327,
-          "12": 2.822786826599327,
-          "13": 2.866536826599327,
-          "14": 2.880536826599327,
-          "15": 2.906786826599327
+          "1": 3.236661826599327,
+          "2": 3.1491618265993266,
+          "3": 3.285661826599327,
+          "4": 3.369661826599327,
+          "5": 3.3154118265993273,
+          "6": 3.201661826599327,
+          "7": 3.080911826599327,
+          "8": 3.0459118265993266,
+          "9": 2.9899118265993265,
+          "10": 2.8236618265993267,
+          "11": 2.8709118265993268,
+          "12": 2.844661826599327,
+          "13": 2.888411826599327,
+          "14": 2.9024118265993266,
+          "15": 2.9286618265993267
         },
-        "trade_performance": 4.998958333333334,
-        "waiver_performance": 2.748148148148149,
+        "trade_performance": 5.019791666666666,
+        "waiver_performance": 2.8314814814814824,
         "lineup_performance": 4.844450757575758,
-        "overall_grade": 3.0403701599326607,
+        "overall_grade": 3.06224515993266,
         "record": {
           "wins": 8,
           "losses": 7
@@ -5576,26 +5576,26 @@
       "1260801218851115008": {
         "name": "Richmccc",
         "weekly_grades": {
-          "1": 3.488223169191919,
-          "2": 3.3184731691919196,
-          "3": 3.157473169191919,
-          "4": 3.4392231691919193,
-          "5": 3.3447231691919193,
-          "6": 3.3867231691919195,
-          "7": 3.2922231691919195,
-          "8": 3.208223169191919,
-          "9": 3.1609731691919194,
-          "10": 3.1277231691919196,
-          "11": 3.089223169191919,
-          "12": 3.1784731691919195,
-          "13": 3.213473169191919,
-          "14": 3.157473169191919,
-          "15": 3.0979731691919197
+          "1": 3.490862058080808,
+          "2": 3.3211120580808084,
+          "3": 3.160112058080808,
+          "4": 3.441862058080808,
+          "5": 3.347362058080808,
+          "6": 3.3893620580808084,
+          "7": 3.2948620580808083,
+          "8": 3.210862058080808,
+          "9": 3.1636120580808083,
+          "10": 3.1303620580808085,
+          "11": 3.0918620580808085,
+          "12": 3.1811120580808083,
+          "13": 3.216112058080808,
+          "14": 3.160112058080808,
+          "15": 3.1006120580808085
         },
-        "trade_performance": 4.7972222222222225,
-        "waiver_performance": 3.4749999999999996,
+        "trade_performance": 4.811111111111111,
+        "waiver_performance": 3.470833333333333,
         "lineup_performance": 5.155117424242425,
-        "overall_grade": 3.2440398358585862,
+        "overall_grade": 3.246678724747475,
         "record": {
           "wins": 6,
           "losses": 9
@@ -5608,26 +5608,26 @@
       "1260834874474889216": {
         "name": "papabwall69",
         "weekly_grades": {
-          "1": 4.121124445468197,
-          "2": 3.3021244454681957,
-          "3": 3.3843744454681954,
-          "4": 3.496374445468196,
-          "5": 3.394874445468196,
-          "6": 3.146374445468196,
-          "7": 3.088624445468196,
-          "8": 3.1288744454681954,
-          "9": 3.186624445468196,
-          "10": 3.1306244454681953,
-          "11": 3.088624445468196,
-          "12": 3.0326244454681954,
-          "13": 3.0658744454681957,
-          "14": 3.114874445468196,
-          "15": 3.088624445468196
+          "1": 4.125291112134863,
+          "2": 3.3062911121348626,
+          "3": 3.3885411121348623,
+          "4": 3.5005411121348624,
+          "5": 3.3990411121348627,
+          "6": 3.1505411121348628,
+          "7": 3.092791112134863,
+          "8": 3.1330411121348627,
+          "9": 3.1907911121348627,
+          "10": 3.134791112134862,
+          "11": 3.092791112134863,
+          "12": 3.0367911121348623,
+          "13": 3.0700411121348625,
+          "14": 3.119041112134863,
+          "15": 3.092791112134863
         },
-        "trade_performance": 5.075833333333334,
+        "trade_performance": 5.092500000000001,
         "waiver_performance": 2.9924924924924925,
         "lineup_performance": 5.252784090909091,
-        "overall_grade": 3.251374445468196,
+        "overall_grade": 3.2555411121348627,
         "record": {
           "wins": 7,
           "losses": 8
@@ -5640,26 +5640,26 @@
       "1260854493860331520": {
         "name": "djmarino615",
         "weekly_grades": {
-          "1": 3.8721160263347767,
-          "2": 4.216866026334777,
-          "3": 4.204616026334777,
-          "4": 3.9508660263347766,
-          "5": 4.069866026334777,
-          "6": 4.248366026334777,
-          "7": 4.383116026334776,
-          "8": 4.4093660263347765,
-          "9": 4.430366026334776,
-          "10": 4.454866026334777,
-          "11": 4.388366026334777,
-          "12": 4.400616026334777,
-          "13": 4.342866026334777,
-          "14": 4.297366026334776,
-          "15": 3.4451984126984128
+          "1": 3.8722350739538243,
+          "2": 4.216985073953825,
+          "3": 4.204735073953824,
+          "4": 3.950985073953824,
+          "5": 4.069985073953824,
+          "6": 4.248485073953824,
+          "7": 4.383235073953824,
+          "8": 4.4094850739538245,
+          "9": 4.430485073953824,
+          "10": 4.454985073953824,
+          "11": 4.388485073953824,
+          "12": 4.4007350739538245,
+          "13": 4.342985073953824,
+          "14": 4.297485073953824,
+          "15": 3.445317460317461
         },
         "trade_performance": 5.0,
-        "waiver_performance": 6.225992063492065,
+        "waiver_performance": 6.226587301587302,
         "lineup_performance": 6.347069805194805,
-        "overall_grade": 4.207654852092352,
+        "overall_grade": 4.2077738997114,
         "record": {
           "wins": 0,
           "losses": 0
@@ -5685,7 +5685,7 @@
     "roster_grades": {
       "highest": {
         "manager": "joeyscott31",
-        "grade": 7.6
+        "grade": 7.5
       },
       "lowest": {
         "manager": "papabwall69",
