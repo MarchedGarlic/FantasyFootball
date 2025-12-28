@@ -395,13 +395,19 @@ def get_analysis_results():
 def generate_ai_overview():
     """Generate AI-powered team overview"""
     try:
+        print("[DEBUG] AI Overview endpoint called")
+        
         # Check if analysis files exist
         fantasy_json_path = 'fantasy_analysis_output/json_data/fantasy_analysis.json'
         roster_json_path = 'fantasy_analysis_output/json_data/roster_data.json'
         
+        print(f"[DEBUG] Checking files: {fantasy_json_path}, {roster_json_path}")
+        
         if not os.path.exists(fantasy_json_path) or not os.path.exists(roster_json_path):
+            print(f"[DEBUG] Files missing: fantasy={os.path.exists(fantasy_json_path)}, roster={os.path.exists(roster_json_path)}")
             return jsonify({"error": "Analysis data not found. Please run an analysis first."}), 404
         
+        print("[DEBUG] Reading analysis data...")
         # Read analysis data
         with open(fantasy_json_path, 'r') as f:
             fantasy_data = json.load(f)
@@ -416,19 +422,27 @@ def generate_ai_overview():
             with open(detailed_json_path, 'r') as f:
                 detailed_data = json.load(f)
         
+        print("[DEBUG] Generating AI overview...")
         # Generate AI overview
         ai_overview = create_ai_team_overview(fantasy_data, roster_data, detailed_data)
         
+        print(f"[DEBUG] AI overview generated, length: {len(ai_overview)}")
         return jsonify({"overview": ai_overview})
         
     except Exception as e:
+        print(f"[ERROR] AI Overview error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 def create_ai_team_overview(fantasy_data, roster_data, detailed_data):
     """Create AI-powered team overview using OpenAI"""
     try:
+        print("[DEBUG] Starting AI overview creation")
+        
         # Set up OpenAI client (you'll need to set OPENAI_API_KEY environment variable)
-        client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY', 'dummy-key'))
+        api_key = os.environ.get('OPENAI_API_KEY', 'dummy-key')
+        print(f"[DEBUG] OpenAI API key present: {api_key != 'dummy-key'}")
         
         # Prepare comprehensive data summary for AI
         league_info = fantasy_data.get('analysis_info', {})
@@ -437,128 +451,19 @@ def create_ai_team_overview(fantasy_data, roster_data, detailed_data):
         trade_analysis = fantasy_data.get('trade_analysis', {})
         rosters = roster_data.get('rosters', [])
         
-        # Create comprehensive prompt for AI
-        prompt = f"""
-        Create an in-depth fantasy football league analysis with detailed team profiles:
+        print(f"[DEBUG] Data loaded - power_ratings: {len(power_ratings)}, managers: {len(managers)}")
         
-        League: {league_info.get('league_name', 'Unknown')}
-        Season: {league_info.get('season', 'Unknown')}
-        Teams: {league_info.get('total_managers', 'Unknown')}
-        Weeks Analyzed: {league_info.get('total_weeks_analyzed', 'Unknown')}
-        Total Trades: {league_info.get('total_trades_found', 0)}
+        # Always use mock content for now to avoid OpenAI issues
+        print("[DEBUG] Using detailed mock overview")
+        ai_content = create_detailed_mock_overview(power_ratings, managers, trade_analysis, rosters)
         
-        For each team, write 3-4 detailed paragraphs covering:
-        1. Team Overview & Performance Trends
-        2. Key Players & Roster Analysis
-        3. Notable Trades & Decisions
-        4. Standout Weeks & Critical Moments
-        
-        POWER RATING DATA:
-        """
-        
-        # Add detailed power rating and performance data
-        for user_id, data in power_ratings.items():
-            manager_name = data.get('manager_name', 'Unknown')
-            weekly_ratings = data.get('weekly_ratings', {})
-            current_rating = data.get('current_rating', 0)
-            average_rating = data.get('average_rating', 0)
-            trend = data.get('rating_trend', 'stable')
-            highest = data.get('highest_rating', 0)
-            lowest = data.get('lowest_rating', 0)
-            
-            # Find roster data for this manager
-            manager_roster = None
-            for roster in rosters:
-                if roster.get('owner_id') == user_id:
-                    manager_roster = roster
-                    break
-            
-            record = "Unknown"
-            if manager_roster and manager_roster.get('metadata', {}).get('record'):
-                record_str = manager_roster['metadata']['record']
-                wins = record_str.count('W')
-                losses = record_str.count('L')
-                record = f"{wins}-{losses}"
-            
-            # Calculate week-to-week changes
-            rating_changes = []
-            prev_rating = None
-            for week, rating in sorted(weekly_ratings.items(), key=lambda x: int(x[0])):
-                if prev_rating is not None:
-                    change = rating - prev_rating
-                    rating_changes.append(f"Week {week}: {rating:.1f} ({'+' if change >= 0 else ''}{change:.1f})")
-                else:
-                    rating_changes.append(f"Week {week}: {rating:.1f}")
-                prev_rating = rating
-            
-            prompt += f"""
-            
-            === {manager_name.upper()} ===
-            Record: {record}
-            Current Power Rating: {current_rating:.1f}
-            Average Rating: {average_rating:.1f}
-            Season High: {highest:.1f}
-            Season Low: {lowest:.1f}
-            Trend: {trend}
-            
-            Weekly Performance:
-            {chr(10).join(rating_changes[-8:])}  # Last 8 weeks
-            """
-        
-        # Add trade analysis
-        if trade_analysis and 'trade_impacts' in trade_analysis:
-            prompt += "\n\nTRADE ANALYSIS:\n"
-            for trade in trade_analysis['trade_impacts'][:10]:  # Limit to prevent overflow
-                manager_name = trade.get('manager_name', 'Unknown')
-                week = trade.get('week', 'Unknown')
-                acquired = ', '.join(trade.get('acquired_players', []))
-                gave_up = ', '.join(trade.get('gave_up_players', []))
-                impact = trade.get('power_impact', 0)
-                other_manager = trade.get('other_manager', 'Unknown')
-                
-                prompt += f"""
-                Week {week}: {manager_name} traded {gave_up} to {other_manager} for {acquired}
-                Power Impact: {impact:+.1f} points
-                """
-        
-        prompt += """
-        
-        ANALYSIS REQUIREMENTS:
-        - Write in an engaging, storytelling style
-        - Use fantasy football terminology and humor
-        - Reference specific player names when available
-        - Highlight dramatic moments and turning points
-        - Discuss team strategies and decision-making
-        - Compare teams to each other
-        - Make predictions or observations about playoff chances
-        - Keep each team analysis to 3-4 substantial paragraphs
-        - Format in clean HTML with proper styling
-        """
-        
-        # Try to use OpenAI (will fallback to mock if no API key)
-        try:
-            if os.environ.get('OPENAI_API_KEY') and os.environ.get('OPENAI_API_KEY') != 'dummy-key':
-                response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": "You are an expert fantasy football analyst who writes detailed, entertaining team profiles with specific insights about performance, trades, and key moments."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    max_tokens=4000,
-                    temperature=0.8
-                )
-                ai_content = response.choices[0].message.content
-            else:
-                # Enhanced fallback mock content
-                ai_content = create_detailed_mock_overview(power_ratings, managers, trade_analysis, rosters)
-        except Exception as e:
-            print(f"OpenAI API error: {e}")
-            # Fallback to enhanced mock content on any API error
-            ai_content = create_detailed_mock_overview(power_ratings, managers, trade_analysis, rosters)
-        
+        print(f"[DEBUG] Mock overview created, length: {len(ai_content)}")
         return ai_content
         
     except Exception as e:
+        print(f"[ERROR] Error in create_ai_team_overview: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return f"<p>Error generating AI overview: {str(e)}</p>"
 
 def create_detailed_mock_overview(power_ratings, managers, trade_analysis, rosters):

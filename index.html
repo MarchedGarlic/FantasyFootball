@@ -473,6 +473,9 @@
                 <span id="fetchBtnText">Find My Leagues</span>
                 <span id="fetchBtnLoading" class="loading hidden"></span>
             </button>
+            <button onclick="forceResetApp()" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 8px; margin-left: 10px; font-size: 1rem; cursor: pointer;">
+                Clear Cache
+            </button>
             <div id="usernameError" class="error hidden"></div>
         </div>
 
@@ -520,6 +523,20 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM loaded, initializing...');
             
+            // Check for forced reset in URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('reset') || urlParams.has('clear')) {
+                console.log('Reset requested via URL parameter');
+                forceResetApp();
+                // Remove reset parameter from URL without page reload
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+                return; // Skip state restoration
+            }
+            
+            // Restore saved state if available
+            restoreAnalysisState();
+            
             // Force reset all loading states
             const loadingSpinners = document.querySelectorAll('.loading');
             loadingSpinners.forEach(spinner => {
@@ -541,6 +558,127 @@
             
             console.log('Initial state reset complete');
         });
+
+        // State management functions
+        function saveAnalysisState() {
+            const state = {
+                username: document.getElementById('username').value,
+                step2Visible: !document.getElementById('step2').classList.contains('hidden'),
+                step3Visible: !document.getElementById('step3').classList.contains('hidden'),
+                step4Visible: !document.getElementById('step4').classList.contains('hidden'),
+                selectedLeague: window.selectedLeague || null,
+                leagues: window.userLeagues || null,
+                analysisComplete: window.analysisComplete || false,
+                timestamp: Date.now()
+            };
+            
+            localStorage.setItem('fantasyAnalysisState', JSON.stringify(state));
+        }
+
+        function restoreAnalysisState() {
+            try {
+                const savedState = localStorage.getItem('fantasyAnalysisState');
+                if (!savedState) return;
+                
+                const state = JSON.parse(savedState);
+                
+                // Only restore if less than 24 hours old
+                if (Date.now() - state.timestamp > 24 * 60 * 60 * 1000) {
+                    localStorage.removeItem('fantasyAnalysisState');
+                    return;
+                }
+                
+                // Restore username
+                if (state.username) {
+                    document.getElementById('username').value = state.username;
+                }
+                
+                // Restore step visibility
+                if (state.step2Visible) {
+                    document.getElementById('step2').classList.remove('hidden');
+                    window.userLeagues = state.leagues;
+                }
+                
+                if (state.step3Visible) {
+                    document.getElementById('step3').classList.remove('hidden');
+                    window.selectedLeague = state.selectedLeague;
+                    
+                    // Update step 3 content if league is selected
+                    if (state.selectedLeague) {
+                        const step3Content = document.getElementById('step3').querySelector('.step-content');
+                        step3Content.innerHTML = `
+                            <h3>✅ League Selected</h3>
+                            <div class="selected-league">
+                                <p><strong>League:</strong> ${state.selectedLeague.name}</p>
+                                <p><strong>Season:</strong> ${state.selectedLeague.season}</p>
+                                <p><strong>Teams:</strong> ${state.selectedLeague.total_rosters}</p>
+                            </div>
+                        `;
+                    }
+                }
+                
+                if (state.step4Visible) {
+                    document.getElementById('step4').classList.remove('hidden');
+                    window.analysisComplete = state.analysisComplete;
+                    
+                    // If analysis was complete, restore the results
+                    if (state.analysisComplete) {
+                        loadResults();
+                    }
+                }
+                
+                console.log('Analysis state restored');
+            } catch (error) {
+                console.error('Error restoring state:', error);
+                localStorage.removeItem('fantasyAnalysisState');
+            }
+        }
+
+        function clearAnalysisState() {
+            localStorage.removeItem('fantasyAnalysisState');
+            // Also clear any other potential storage
+            localStorage.clear();
+            sessionStorage.clear();
+            console.log('All browser storage cleared');
+        }
+
+        // Add a debug function to completely reset everything
+        function forceResetApp() {
+            // Clear all storage
+            clearAnalysisState();
+            
+            // Clear form data
+            document.getElementById('username').value = '';
+            
+            // Reset all global variables
+            selectedLeague = null;
+            window.selectedLeague = null;
+            window.userLeagues = null;
+            currentAnalysisId = null;
+            window.analysisComplete = false;
+            
+            // Hide all steps
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step4').classList.add('hidden');
+            document.getElementById('analyzeBtn').classList.add('hidden');
+            
+            // Clear any error messages
+            hideError('usernameError');
+            hideError('leagueError');
+            
+            // Clear containers
+            const userInfo = document.getElementById('userInfo');
+            if (userInfo) userInfo.innerHTML = '';
+            
+            const leaguesContainer = document.getElementById('leaguesContainer');
+            if (leaguesContainer) leaguesContainer.innerHTML = '';
+            
+            const resultsContainer = document.getElementById('resultsContainer');
+            if (resultsContainer) resultsContainer.innerHTML = '';
+            
+            console.log('App completely reset');
+        }
 
         // Step 1: Fetch leagues for username
         document.getElementById('fetchLeaguesBtn').addEventListener('click', async () => {
@@ -570,6 +708,9 @@
                 // Show user info and leagues
                 showUserLeagues(data.user, data.leagues);
                 document.getElementById('step2').classList.remove('hidden');
+                
+                // Save state after showing leagues
+                saveAnalysisState();
 
             } catch (error) {
                 console.error('Error fetching leagues:', error);
@@ -614,9 +755,15 @@
                         league_name: league.name,
                         username: user.username
                     };
+                    
+                    // Update window reference
+                    window.selectedLeague = selectedLeague;
 
                     // Show analyze button
                     document.getElementById('analyzeBtn').classList.remove('hidden');
+                    
+                    // Save state after league selection
+                    saveAnalysisState();
                 });
 
                 container.appendChild(card);
@@ -650,6 +797,9 @@
 
                 currentAnalysisId = data.analysis_id;
                 document.getElementById('step3').classList.remove('hidden');
+                
+                // Save state after starting analysis
+                saveAnalysisState();
                 
                 // Start polling for status
                 pollAnalysisStatus();
@@ -722,8 +872,11 @@
         // Load and display results
         async function loadResults() {
             try {
+                console.log('[DEBUG] Loading results...');
                 const response = await fetch('/api/results');
                 const results = await response.json();
+                
+                console.log('[DEBUG] Results received:', results);
 
                 const container = document.getElementById('resultsContainer');
                 container.innerHTML = '';
@@ -743,13 +896,21 @@
 
                 // Create result cards for HTML reports
                 if (results.html_reports) {
-                    results.html_reports.forEach(file => {
+                    console.log(`[DEBUG] Processing ${results.html_reports.length} HTML reports:`, results.html_reports);
+                    results.html_reports.forEach((file, index) => {
+                        console.log(`[DEBUG] Creating card ${index + 1}: ${file}`);
                         const card = createResultCard(file, 'html_reports');
                         container.appendChild(card);
                     });
+                } else {
+                    console.log('[DEBUG] No html_reports found in results');
                 }
 
                 document.getElementById('step4').classList.remove('hidden');
+                
+                // Mark analysis as complete and save state
+                window.analysisComplete = true;
+                saveAnalysisState();
 
             } catch (error) {
                 console.error('Failed to load results:', error);
@@ -792,7 +953,12 @@
             // Reset form
             document.getElementById('username').value = '';
             selectedLeague = null;
+            window.selectedLeague = null;
             currentAnalysisId = null;
+            window.analysisComplete = false;
+            
+            // Clear saved state
+            clearAnalysisState();
             
             // Hide buttons
             document.getElementById('analyzeBtn').classList.add('hidden');
@@ -863,38 +1029,39 @@
                 if (response.ok) {
                     // Create new window with AI overview
                     const newWindow = window.open('', '_blank');
-                    newWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <title>🤖 AI Team Overview</title>
-                            <style>
-                                body {
-                                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                                    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-                                    color: white;
-                                    margin: 0;
-                                    padding: 20px;
-                                    min-height: 100vh;
-                                }
-                                .container {
-                                    max-width: 1200px;
-                                    margin: 0 auto;
-                                }
-                                .header {
-                                    text-align: center;
-                                    margin-bottom: 40px;
-                                    padding: 30px;
-                                    background: rgba(255, 255, 255, 0.1);
-                                    border-radius: 20px;
-                                    backdrop-filter: blur(10px);
-                                }
-                                .ai-overview {
-                                    display: grid;
-                                    gap: 30px;
-                                }
+                    if (newWindow) {
+                        newWindow.document.write(`
+                            <!DOCTYPE html>
+                            <html lang="en">
+                            <head>
+                                <meta charset="UTF-8">
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                <title>🤖 AI Team Overview</title>
+                                <style>
+                                    body {
+                                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                                        color: white;
+                                        margin: 0;
+                                        padding: 20px;
+                                        min-height: 100vh;
+                                    }
+                                    .container {
+                                        max-width: 1200px;
+                                        margin: 0 auto;
+                                    }
+                                    .header {
+                                        text-align: center;
+                                        margin-bottom: 40px;
+                                        padding: 30px;
+                                        background: rgba(255, 255, 255, 0.1);
+                                        border-radius: 20px;
+                                        backdrop-filter: blur(10px);
+                                    }
+                                    .ai-overview {
+                                        display: grid;
+                                        gap: 30px;
+                                    }
                                 .team-overview-card {
                                     background: rgba(255, 255, 255, 0.15);
                                     border-radius: 15px;
@@ -970,99 +1137,99 @@
                                     font-weight: 600;
                                     font-size: 0.95rem;
                                 }
-                                .team-overview-card {
-                                    background: rgba(255, 255, 255, 0.15);
-                                    border-radius: 15px;
-                                    padding: 25px;
-                                    backdrop-filter: blur(10px);
-                                    border: 1px solid rgba(255, 255, 255, 0.2);
-                                    transition: transform 0.3s ease;
-                                }
-                                .team-overview-card:hover {
-                                    transform: translateY(-5px);
-                                }
-                                .team-overview-card h3 {
-                                    margin: 0 0 15px 0;
-                                    font-size: 1.4rem;
-                                    color: #ff6b6b;
-                                }
-                                .team-stats {
-                                    display: flex;
-                                    gap: 15px;
-                                    margin-bottom: 15px;
-                                    flex-wrap: wrap;
-                                }
-                                .power-rating {
-                                    background: rgba(255, 107, 107, 0.2);
-                                    padding: 5px 10px;
-                                    border-radius: 15px;
-                                    font-size: 0.9rem;
-                                }
-                                .trend {
-                                    padding: 5px 10px;
-                                    border-radius: 15px;
-                                    font-size: 0.9rem;
-                                }
-                                .trend-improving {
-                                    background: rgba(81, 207, 102, 0.2);
-                                    color: #51cf66;
-                                }
-                                .trend-declining {
-                                    background: rgba(255, 107, 107, 0.2);
-                                    color: #ff6b6b;
-                                }
-                                .trend-stable {
-                                    background: rgba(255, 193, 7, 0.2);
-                                    color: #ffc107;
-                                }
-                                .team-description {
-                                    margin-bottom: 15px;
-                                    line-height: 1.6;
-                                }
-                                .volatility {
-                                    margin-bottom: 15px;
-                                    font-style: italic;
-                                }
-                                .key-weeks {
-                                    display: flex;
-                                    gap: 15px;
-                                    flex-wrap: wrap;
-                                }
-                                .best-week {
-                                    background: rgba(81, 207, 102, 0.2);
-                                    color: #51cf66;
-                                    padding: 5px 10px;
-                                    border-radius: 10px;
-                                    font-size: 0.9rem;
-                                }
-                                .worst-week {
-                                    background: rgba(255, 107, 107, 0.2);
-                                    color: #ff6b6b;
-                                    padding: 5px 10px;
-                                    border-radius: 10px;
-                                    font-size: 0.9rem;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="container">
-                                <div class="header">
-                                    <h1>🤖 AI Team Overview</h1>
-                                    <p>AI-powered insights into team performance and personalities</p>
-                                </div>
-                                ${data.overview}
-                            </div>
-                        </body>
-                        </html>
-                    `);
-                } else {
-                    alert('Error generating AI overview: ' + data.error);
-                }
-
-                // Reset button state
-                aiBtn.textContent = originalText;
-                aiBtn.disabled = false;
-
+                                        .team-overview-card {
+                                            background: rgba(255, 255, 255, 0.15);
+                                            border-radius: 15px;
+                                            padding: 25px;
+                                            backdrop-filter: blur(10px);
+                                            border: 1px solid rgba(255, 255, 255, 0.2);
+                                            transition: transform 0.3s ease;
+                                        }
+                                        .team-overview-card:hover {
+                                            transform: translateY(-5px);
+                                        }
+                                        .team-overview-card h3 {
+                                            margin: 0 0 15px 0;
+                                            font-size: 1.4rem;
+                                            color: #ff6b6b;
+                                        }
+                                        .team-stats {
+                                            display: flex;
+                                            gap: 15px;
+                                            margin-bottom: 15px;
+                                            flex-wrap: wrap;
+                                        }
+                                        .power-rating {
+                                            background: rgba(255, 107, 107, 0.2);
+                                            padding: 5px 10px;
+                                            border-radius: 15px;
+                                            font-size: 0.9rem;
+                                        }
+                                        .trend {
+                                            padding: 5px 10px;
+                                            border-radius: 15px;
+                                            font-size: 0.9rem;
+                                        }
+                                        .trend-improving {
+                                            background: rgba(81, 207, 102, 0.2);
+                                            color: #51cf66;
+                                        }
+                                        .trend-declining {
+                                            background: rgba(255, 107, 107, 0.2);
+                                            color: #ff6b6b;
+                                        }
+                                        .trend-stable {
+                                            background: rgba(255, 193, 7, 0.2);
+                                            color: #ffc107;
+                                        }
+                                        .team-description {
+                                            margin-bottom: 15px;
+                                            line-height: 1.6;
+                                        }
+                                        .volatility {
+                                            margin-bottom: 15px;
+                                            font-style: italic;
+                                        }
+                                        .key-weeks {
+                                            display: flex;
+                                            gap: 15px;
+                                            flex-wrap: wrap;
+                                        }
+                                        .best-week {
+                                            background: rgba(81, 207, 102, 0.2);
+                                            color: #51cf66;
+                                            padding: 5px 10px;
+                                            border-radius: 10px;
+                                            font-size: 0.9rem;
+                                        }
+                                        .worst-week {
+                                            background: rgba(255, 107, 107, 0.2);
+                                            color: #ff6b6b;
+                                            padding: 5px 10px;
+                                            border-radius: 10px;
+                                            font-size: 0.9rem;
+                                        }
+                                    </style>
+                                </head>
+                                <body>
+                                    <div class="container">
+                                        <div class="header">
+                                            <h1>🤖 AI Team Overview</h1>
+                                            <p>AI-powered insights into team performance and personalities</p>
+                                        </div>
+                                        ${data.overview}
+                                    </div>
+                                </body>
+                                </html>
+                            `);
+                            newWindow.document.close();
+                        } else {
+                            // Fallback if popup is blocked
+                            alert('Popup blocked! Please allow popups for this site.');
+                        }
+                    } else {
+                        alert('Error generating AI overview: ' + data.error);
+                    }
             } catch (error) {
                 console.error('Failed to generate AI overview:', error);
                 alert('Failed to generate AI overview. Please try again.');
