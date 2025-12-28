@@ -158,7 +158,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             plot_filename = "roster_grades_interactive.html"
         output_file(plot_filename)
         
-        # Set up the figure with tools
+        # Set up the figure with tools (mobile-responsive)
         p = figure(
             width=1200, 
             height=700,
@@ -166,7 +166,10 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             x_axis_label="Week",
             y_axis_label="Roster Grade",
             tools="pan,wheel_zoom,box_zoom,reset,save",
-            x_range=(0.5, 15.5)
+            x_range=(0.5, 15.5),
+            sizing_mode="scale_width",
+            max_width=1200,
+            min_width=300
         )
         
         # Create collapsible explanation panel
@@ -197,7 +200,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         </div>
         """
         
-        explanation_div = Div(text=explanation_text, width=1200, height=0, visible=False)
+        explanation_div = Div(text=explanation_text, width=1200, height=0, visible=False, sizing_mode="scale_width", max_width=1200)
         
         # Create leaderboard
         leaderboard_html = """
@@ -227,7 +230,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             </tr>"""
         
         leaderboard_html += "</table>"
-        leaderboard_div = Div(text=leaderboard_html, width=500, height=200)
+        leaderboard_div = Div(text=leaderboard_html, width=500, height=200, sizing_mode="scale_width", max_width=500)
         
         # Add hover tool with detailed tooltips including combined record
         hover = HoverTool(tooltips=[
@@ -405,6 +408,9 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         # Show the interactive plot
         show(layout)
         
+        # Make the generated HTML mobile-friendly
+        _make_html_mobile_friendly(plot_filename)
+        
         print(f"\nInteractive Roster Grade plot saved as: {plot_filename}")
         print("\nInteractive Features:")
         print("   • 'Toggle All Teams' button: Show/hide all team roster grade lines")
@@ -491,9 +497,9 @@ def create_combined_analysis_plot(team_power_data, roster_grade_data, output_dir
         <p style="margin:2px;"><b>Scale:</b> Higher values on both axes indicate better performance and talent</p>
         """
         
-        explanation_div = Div(text=explanation_text, width=1200, height=110)
+        explanation_div = Div(text=explanation_text, width=1200, height=110, sizing_mode="scale_width", max_width=1200)
         
-        # Set up main figure
+        # Set up main figure (mobile-responsive)
         p1 = figure(
             width=1200, 
             height=800,
@@ -501,7 +507,10 @@ def create_combined_analysis_plot(team_power_data, roster_grade_data, output_dir
             x_axis_label="Week",
             y_axis_label="Power Rating",
             tools="pan,wheel_zoom,box_zoom,reset,save",
-            x_range=(0.5, 15.5)
+            x_range=(0.5, 15.5),
+            sizing_mode="scale_width",
+            max_width=1200,
+            min_width=300
         )
         
         # Create second y-axis for roster grades
@@ -764,6 +773,9 @@ def create_combined_analysis_plot(team_power_data, roster_grade_data, output_dir
         layout = column(explanation_div, p1, button_row)
         show(layout)
         
+        # Make the generated HTML mobile-friendly
+        _make_html_mobile_friendly(plot_filename)
+        
         print(f"\nCombined analysis plot saved as: {plot_filename}")
         print("\nInteractive Features:")
         print("   • Left Legend: Click to toggle Power Rating lines (circles + solid)")
@@ -882,14 +894,17 @@ def create_trade_impact_visualization(combined_impacts, transactions_data=None, 
             'players_info': players_info
         })
         
-        # Create plot
+        # Create plot (mobile-responsive)
         p = figure(
             width=1200,
             height=700,
             title="Enhanced Trade Impact Analysis: Combined Score by Week (Color = Roster)",
             x_axis_label="Trade Week",
             y_axis_label="Combined Impact Score",
-            tools="pan,wheel_zoom,box_zoom,reset,save"
+            tools="pan,wheel_zoom,box_zoom,reset,save",
+            sizing_mode="scale_width",
+            max_width=1200,
+            min_width=300
         )
         
         # Add zero line
@@ -956,6 +971,9 @@ def create_trade_impact_visualization(combined_impacts, transactions_data=None, 
             p.legend.click_policy = "hide"
         
         show(p)
+        
+        # Make the generated HTML mobile-friendly
+        _make_html_mobile_friendly(plot_filename)
         
         print(f"\nEnhanced Trade Impact plot saved as: {plot_filename}")
         print("Interactive Features:")
@@ -1078,14 +1096,17 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         max_wins = max(max([d['regular_wins'] for d in luck_data]), max([d['median_wins'] for d in luck_data]))
         axis_max = max_wins + 1
         
-        # Create figure
+        # Create figure (mobile-responsive)
         p = figure(
             title="Fantasy Football Luck Analysis: Regular Wins vs Median Wins",
             x_axis_label="Median Wins (Skill-Based Performance)", 
             y_axis_label="Regular Wins (Head-to-Head Record)",
             width=900, height=700,
             x_range=(0, axis_max),
-            y_range=(0, axis_max)
+            y_range=(0, axis_max),
+            sizing_mode="scale_width",
+            max_width=900,
+            min_width=300
         )
         
         # Add line of fairness (y = x)
@@ -1124,7 +1145,9 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
             <p style="margin:10px 0px 2px 0px; font-style: italic; color: #666;"><b>Note:</b> This analysis focuses on luck related to matchups and scheduling. It does not factor in injuries or other external circumstances that may affect team performance.</p>
             """,
             width=900, height=170,
-            visible=False
+            visible=False,
+            sizing_mode="scale_width",
+            max_width=900
         )
         
         # Create leaderboard
@@ -1154,7 +1177,9 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         
         leaderboard_div = Div(
             text=leaderboard_html,
-            width=450, height=400
+            width=450, height=400,
+            sizing_mode="scale_width",
+            max_width=450
         )
         
         # Create buttons
@@ -1186,6 +1211,9 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         )
         
         show(layout)
+        
+        # Make the generated HTML mobile-friendly
+        _make_html_mobile_friendly(plot_filename)
         
         print(f"\nLuck Analysis plot saved as: {plot_filename}")
         print("Interactive Features:")
@@ -1344,13 +1372,18 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         main_content = Div(
             text=leaderboard_html + explanation_html,
             width=1000,
-            height=700
+            height=700,
+            sizing_mode="scale_width",
+            max_width=1000
         )
         
         # Layout
         layout = bokeh_column(main_content, spacing=20)
         
         show(layout)
+        
+        # Make the generated HTML mobile-friendly
+        _make_html_mobile_friendly(plot_filename)
         
         print(f"\nPower Ranking Leaderboard saved as: {plot_filename}")
         print("Features:")
@@ -1364,6 +1397,162 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         
     except Exception as e:
         print(f"\n❌ Error creating power ranking leaderboard: {e}")
+
+
+def _make_html_mobile_friendly(filename):
+    """Add mobile viewport and responsive CSS to Bokeh-generated HTML files"""
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            content = file.read()
+        
+        # Check if viewport is already present
+        if 'name="viewport"' in content:
+            return
+            
+        # Add viewport meta tag after charset
+        content = content.replace(
+            '<meta charset="utf-8">',
+            '<meta charset="utf-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">'
+        )
+        
+        # Add mobile-friendly CSS
+        mobile_css = """
+    <style>
+        /* Mobile responsive improvements */
+        @media (max-width: 768px) {
+            .bk-root .bk {
+                font-size: 12px !important;
+            }
+            
+            .bk-root .bk-toolbar {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+            }
+            
+            .bk-root .bk-toolbar-button {
+                margin: 2px !important;
+                padding: 4px !important;
+            }
+            
+            /* Make legends more compact on mobile */
+            .bk-root .bk-legend {
+                font-size: 10px !important;
+            }
+            
+            /* Ensure plots scale properly */
+            .bk-root .bk-canvas-wrapper {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            /* Make buttons responsive */
+            .bk-root .bk-btn {
+                font-size: 11px !important;
+                padding: 6px 10px !important;
+                margin: 2px !important;
+                min-width: auto !important;
+                width: auto !important;
+                max-width: 140px !important;
+            }
+            
+            /* Button containers */
+            .bk-root .bk-layout-grid-item {
+                margin: 2px !important;
+            }
+            
+            /* Make tables responsive */
+            .bk-root table {
+                font-size: 10px !important;
+                width: 100% !important;
+            }
+            
+            .bk-root th, .bk-root td {
+                padding: 4px !important;
+                font-size: 10px !important;
+            }
+            
+            /* Div content responsive */
+            .bk-root .bk-markup {
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow-x: auto !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .bk-root .bk {
+                font-size: 10px !important;
+            }
+            
+            .bk-root .bk-legend {
+                font-size: 8px !important;
+                max-width: 150px !important;
+                overflow: hidden !important;
+            }
+            
+            .bk-root .bk-btn {
+                font-size: 9px !important;
+                padding: 4px 6px !important;
+                margin: 1px !important;
+                max-width: 100px !important;
+            }
+            
+            .bk-root table {
+                font-size: 8px !important;
+            }
+            
+            .bk-root th, .bk-root td {
+                padding: 2px !important;
+                font-size: 8px !important;
+            }
+            
+            /* Hide some elements that take too much space */
+            .bk-root .bk-toolbar .bk-button-bar {
+                flex-wrap: wrap !important;
+            }
+        }
+        
+        /* Improve touch targets */
+        .bk-root .bk-toolbar-button {
+            min-height: 44px !important;
+            min-width: 44px !important;
+        }
+        
+        .bk-root .bk-btn {
+            min-height: 44px !important;
+            min-width: 44px !important;
+        }
+        
+        /* Better spacing for mobile */
+        .bk-root {
+            padding: 5px !important;
+        }
+        
+        /* Ensure content fits */
+        html, body {
+            overflow-x: auto !important;
+            width: 100% !important;
+        }
+        
+        /* Responsive tables */
+        .bk-root table {
+            table-layout: auto !important;
+            word-wrap: break-word !important;
+        }
+    </style>"""
+        
+        # Insert CSS before closing head tag
+        content = content.replace('</head>', mobile_css + '\n</head>')
+        
+        # Save the modified content
+        with open(filename, 'w', encoding='utf-8') as file:
+            file.write(content)
+            
+        print(f"   ✓ Added mobile responsiveness to {filename}")
+        
+    except Exception as e:
+        print(f"   ⚠️  Warning: Could not add mobile responsiveness to {filename}: {e}")
         import traceback
         traceback.print_exc()
         return None

@@ -12,6 +12,17 @@
             box-sizing: border-box;
         }
         
+        /* Better touch interaction for mobile */
+        * {
+            -webkit-tap-highlight-color: rgba(255, 107, 107, 0.2);
+        }
+        
+        html {
+            /* Improve text rendering on mobile */
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
@@ -105,7 +116,7 @@
         
         .leagues-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
@@ -231,7 +242,7 @@
 
         .results-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
         }
 
@@ -334,6 +345,113 @@
             opacity: 0.7 !important;
             cursor: not-allowed !important;
             transform: none !important;
+        }
+        
+        /* Mobile Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+            
+            .step-container {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .step-title {
+                font-size: 1.3rem;
+            }
+            
+            .leagues-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .league-card {
+                padding: 15px;
+            }
+            
+            .league-name {
+                font-size: 1.2rem;
+            }
+            
+            .btn {
+                padding: 15px 20px;
+                font-size: 1.1rem;
+                min-height: 44px; /* iOS touch target size */
+            }
+            
+            .ai-btn {
+                padding: 15px 20px;
+                font-size: 1.1rem;
+                min-height: 44px;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .result-card {
+                padding: 15px;
+            }
+            
+            .result-card h3 {
+                font-size: 1.1rem;
+            }
+            
+            /* Make click targets larger for mobile */
+            .input-group input {
+                padding: 15px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .header p {
+                font-size: 0.9rem;
+            }
+            
+            .step-container {
+                padding: 15px;
+            }
+            
+            .step-title {
+                font-size: 1.2rem;
+            }
+            
+            .league-card {
+                padding: 12px;
+            }
+            
+            .league-name {
+                font-size: 1.1rem;
+            }
+            
+            .league-details {
+                font-size: 0.8rem;
+            }
+            
+            body {
+                padding: 5px;
+            }
         }
     </style>
 </head>
