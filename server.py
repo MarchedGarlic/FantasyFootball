@@ -13,6 +13,7 @@ import threading
 from datetime import datetime
 import requests
 import openai
+import re
 
 app = Flask(__name__)
 CORS(app)
@@ -90,6 +91,14 @@ def get_user_leagues(username):
             return jsonify({"error": "Username is required"}), 400
         
         username = username.strip()
+        
+        # Server-side input validation
+        if len(username) > 30:
+            return jsonify({"error": "Username must be 30 characters or less"}), 400
+        
+        # Check for alphanumeric characters only (English letters and numbers)
+        if not re.match(r'^[a-zA-Z0-9]+$', username):
+            return jsonify({"error": "Username can only contain English letters (a-z, A-Z) and numbers (0-9)"}), 400
         
         # Get user info first
         user = sleeper_api.get_user_by_username(username)
