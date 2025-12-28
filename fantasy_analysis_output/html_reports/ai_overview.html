@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 AI Team Overview</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .ai-overview {
+            display: grid;
+            gap: 30px;
+        }
+        .team-overview-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+        .detailed-card {
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .team-header {
+            margin-bottom: 25px;
+            border-bottom: 2px solid rgba(255, 107, 107, 0.3);
+            padding-bottom: 15px;
+        }
+        .team-header h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.8rem;
+            color: #ff6b6b;
+        }
+        .team-tier {
+            display: inline-block;
+            background: rgba(255, 107, 107, 0.2);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 5px 0;
+        }
+        .team-record {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .analysis-section {
+            margin-bottom: 25px;
+        }
+        .analysis-section h4 {
+            color: #ffc107;
+            margin: 20px 0 10px 0;
+            font-size: 1.1rem;
+            border-left: 3px solid #ffc107;
+            padding-left: 10px;
+        }
+        .analysis-section p {
+            line-height: 1.7;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        .team-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-label {
+            display: block;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .team-overview-card:hover {
+            transform: translateY(-5px);
+        }
+        .team-overview-card h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.4rem;
+            color: #ff6b6b;
+        }
+        .team-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .power-rating {
+            background: rgba(255, 107, 107, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+        .trend {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+        .trend-improving {
+            background: rgba(81, 207, 102, 0.2);
+            color: #51cf66;
+        }
+        .trend-declining {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+        .trend-stable {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+        .team-description {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .volatility {
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        .key-weeks {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .best-week {
+            background: rgba(81, 207, 102, 0.2);
+            color: #51cf66;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+        .worst-week {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Team Overview</h1>
+            <p>AI-powered insights into team performance and personalities</p>
+        </div>
+        <div class='ai-overview'>
+        <div class='team-overview-card detailed-card'>
+            <div class='team-header'>
+                <h2>🥇 jramage7</h2>
+                <div class='team-tier'>Championship Contender</div>
+                <div class='team-record'>Record: 22-6 | Power Rating: 166.2</div>
+            </div>
+            
+            <div class='analysis-section'>
+                <h4>🎯 Season Overview</h4>
+                <p>This powerhouse team has established itself as a legitimate title threat with consistently dominant performances. Currently gaining momentum with their recent stretch exceeding their season average. With a season-high of 172.3 in Week 4 and their lowest point of 141.6 in Week 7, this team has shown a range of 30.7 points throughout the campaign.</p>
+                
+                <h4>📊 Performance Analysis</h4>
+                <p>Shows solid consistency with occasional spike weeks that can steal victories from higher-ranked opponents. Their current trend is improving, which suggests they're peaking at the right time. The team averages 160.8 points but has proven they can reach 172.3 when everything clicks.</p>
+                
+                <h4>💼 Strategic Decisions</h4>
+                <p>Made 3 trade(s) this season. Best move: acquiring Ashton Jeanty, Drake London for Tee Higgins, Javonte Williams in Week 2 (+19.3 power points). Their willingness to make moves has paid dividends so far this season.</p>
+                
+                <h4>🔥 Key Moments & Outlook</h4>
+                <p>Week 4 stands out as their season-defining performance with a massive 172.3 points, while Week 7 (141.6 points) represents the type of showing they'll want to avoid in crunch time. As we head toward playoffs, this team has the momentum and talent to make noise.</p>
+            </div>
+            
+            <div class='team-stats-grid'>
+                <div class='stat-item'>
+                    <span class='stat-label'>Trend</span>
+                    <span class='stat-value trend-improving'>Improving</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Best Week</span>
+                    <span class='stat-value best-week'>Week 4: 172.3</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Worst Week</span>
+                    <span class='stat-value worst-week'>Week 7: 141.6</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Volatility</span>
+                    <span class='stat-value'>30.7 pts</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class='team-overview-card detailed-card'>
+            <div class='team-header'>
+                <h2>🥈 Tommythoma</h2>
+                <div class='team-tier'>Playoff Hopeful</div>
+                <div class='team-record'>Record: 24-4 | Power Rating: 156.0</div>
+            </div>
+            
+            <div class='analysis-section'>
+                <h4>🎯 Season Overview</h4>
+                <p>A solid team with playoff aspirations, showing the ability to compete with anyone on any given week. Currently gaining momentum with their recent stretch exceeding their season average. With a season-high of 156.5 in Week 12 and their lowest point of 89.3 in Week 1, this team has shown a range of 67.2 points throughout the campaign.</p>
+                
+                <h4>📊 Performance Analysis</h4>
+                <p>This team epitomizes the 'any given Sunday' mentality with explosive ceiling games balanced by concerning floor weeks. Fantasy managers facing this squad never know which version will show up. Their current trend is improving, which suggests they're peaking at the right time. The team averages 145.0 points but has proven they can reach 156.5 when everything clicks.</p>
+                
+                <h4>💼 Strategic Decisions</h4>
+                <p>Made 2 trade(s) this season. Best move: acquiring Cam Skattebo for Chris Olave in Week 3 (+8.3 power points). Their willingness to make moves has paid dividends so far this season.</p>
+                
+                <h4>🔥 Key Moments & Outlook</h4>
+                <p>Week 12 stands out as their season-defining performance with a massive 156.5 points, while Week 1 (89.3 points) represents the type of showing they'll want to avoid in crunch time. As we head toward playoffs, this team has the momentum and talent to make noise.</p>
+            </div>
+            
+            <div class='team-stats-grid'>
+                <div class='stat-item'>
+                    <span class='stat-label'>Trend</span>
+                    <span class='stat-value trend-improving'>Improving</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Best Week</span>
+                    <span class='stat-value best-week'>Week 12: 156.5</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Worst Week</span>
+                    <span class='stat-value worst-week'>Week 1: 89.3</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Volatility</span>
+                    <span class='stat-value'>67.2 pts</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class='team-overview-card detailed-card'>
+            <div class='team-header'>
+                <h2>🥉 haydenpierce</h2>
+                <div class='team-tier'>Playoff Hopeful</div>
+                <div class='team-record'>Record: 17-11 | Power Rating: 144.0</div>
+            </div>
+            
+            <div class='analysis-section'>
+                <h4>🎯 Season Overview</h4>
+                <p>A solid team with playoff aspirations, showing the ability to compete with anyone on any given week. Currently losing momentum with their recent stretch falling short of their season average. With a season-high of 158.2 in Week 2 and their lowest point of 127.9 in Week 1, this team has shown a range of 30.3 points throughout the campaign.</p>
+                
+                <h4>📊 Performance Analysis</h4>
+                <p>Shows solid consistency with occasional spike weeks that can steal victories from higher-ranked opponents. Their current trend is improving, which suggests they're peaking at the right time. The team averages 148.0 points but has proven they can reach 158.2 when everything clicks.</p>
+                
+                <h4>💼 Strategic Decisions</h4>
+                <p>Made 1 trade(s) this season. Best move: acquiring Jacory Croskey-Merritt for Emeka Egbuka in Week 3 (+-20.9 power points). Their willingness to make moves has struggled to deliver results so far this season.</p>
+                
+                <h4>🔥 Key Moments & Outlook</h4>
+                <p>Week 2 stands out as their season-defining performance with a massive 158.2 points, while Week 1 (127.9 points) represents the type of showing they'll want to avoid in crunch time. As we head toward playoffs, this team has the momentum and talent to make noise.</p>
+            </div>
+            
+            <div class='team-stats-grid'>
+                <div class='stat-item'>
+                    <span class='stat-label'>Trend</span>
+                    <span class='stat-value trend-improving'>Improving</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Best Week</span>
+                    <span class='stat-value best-week'>Week 2: 158.2</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Worst Week</span>
+                    <span class='stat-value worst-week'>Week 1: 127.9</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Volatility</span>
+                    <span class='stat-value'>30.3 pts</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class='team-overview-card detailed-card'>
+            <div class='team-header'>
+                <h2>#4 joeyscott31</h2>
+                <div class='team-tier'>Playoff Hopeful</div>
+                <div class='team-record'>Record: 16-12 | Power Rating: 141.0</div>
+            </div>
+            
+            <div class='analysis-section'>
+                <h4>🎯 Season Overview</h4>
+                <p>A solid team with playoff aspirations, showing the ability to compete with anyone on any given week. Currently losing momentum with their recent stretch falling short of their season average. With a season-high of 181.7 in Week 2 and their lowest point of 134.2 in Week 14, this team has shown a range of 47.5 points throughout the campaign.</p>
+                
+                <h4>📊 Performance Analysis</h4>
+                <p>Shows solid consistency with occasional spike weeks that can steal victories from higher-ranked opponents. Their current trend is declining, which indicates they may be struggling with recent roster decisions. The team averages 157.6 points but has proven they can reach 181.7 when everything clicks.</p>
+                
+                <h4>💼 Strategic Decisions</h4>
+                <p>Made 2 trade(s) this season. Best move: acquiring D'Andre Swift for Chris Olave in Week 8 (+-9.3 power points). Their willingness to make moves has struggled to deliver results so far this season.</p>
+                
+                <h4>🔥 Key Moments & Outlook</h4>
+                <p>Week 2 stands out as their season-defining performance with a massive 181.7 points, while Week 14 (134.2 points) represents the type of showing they'll want to avoid in crunch time. They'll need to find their early-season form to make a playoff push.</p>
+            </div>
+            
+            <div class='team-stats-grid'>
+                <div class='stat-item'>
+                    <span class='stat-label'>Trend</span>
+                    <span class='stat-value trend-declining'>Declining</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Best Week</span>
+                    <span class='stat-value best-week'>Week 2: 181.7</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Worst Week</span>
+                    <span class='stat-value worst-week'>Week 14: 134.2</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Volatility</span>
+                    <span class='stat-value'>47.5 pts</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class='team-overview-card detailed-card'>
+            <div class='team-header'>
+                <h2>#5 Bobguyiv</h2>
+                <div class='team-tier'>Middle Tier Competitor</div>
+                <div class='team-record'>Record: 15-13 | Power Rating: 133.3</div>
+            </div>
+            
+            <div class='analysis-section'>
+                <h4>🎯 Season Overview</h4>
+                <p>Right in the thick of things with potential for both breakthrough weeks and disappointing performances. Currently losing momentum with their recent stretch falling short of their season average. With a season-high of 179.2 in Week 1 and their lowest point of 115.6 in Week 8, this team has shown a range of 63.6 points throughout the campaign.</p>
+                
+                <h4>📊 Performance Analysis</h4>
+                <p>This team epitomizes the 'any given Sunday' mentality with explosive ceiling games balanced by concerning floor weeks. Fantasy managers facing this squad never know which version will show up. Their current trend is declining, which indicates they may be struggling with recent roster decisions. The team averages 134.6 points but has proven they can reach 179.2 when everything clicks.</p>
+                
+                <h4>💼 Strategic Decisions</h4>
+                <p>This manager has taken a patient approach, avoiding major trades and sticking with their drafted core. Their conservative strategy has struggled to deliver results so far this season.</p>
+                
+                <h4>🔥 Key Moments & Outlook</h4>
+                <p>Week 1 stands out as their season-defining performance with a massive 179.2 points, while Week 8 (115.6 points) represents the type of showing they'll want to avoid in crunch time. They'll need to find their early-season form to make a playoff push.</p>
+            </div>
+            
+            <div class='team-stats-grid'>
+                <div class='stat-item'>
+                    <span class='stat-label'>Trend</span>
+                    <span class='stat-value trend-declining'>Declining</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Best Week</span>
+                    <span class='stat-value best-week'>Week 1: 179.2</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Worst Week</span>
+                    <span class='stat-value worst-week'>Week 8: 115.6</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Volatility</span>
+                    <span class='stat-value'>63.6 pts</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class='team-overview-card detailed-card'>
+            <div class='team-header'>
+                <h2>#6 QBallx</h2>
+                <div class='team-tier'>Middle Tier Competitor</div>
+                <div class='team-record'>Record: 15-13 | Power Rating: 131.8</div>
+            </div>
+            
+            <div class='analysis-section'>
+                <h4>🎯 Season Overview</h4>
+                <p>Right in the thick of things with potential for both breakthrough weeks and disappointing performances. Currently losing momentum with their recent stretch falling short of their season average. With a season-high of 164.0 in Week 3 and their lowest point of 128.0 in Week 12, this team has shown a range of 36.0 points throughout the campaign.</p>
+                
+                <h4>📊 Performance Analysis</h4>
+                <p>Shows solid consistency with occasional spike weeks that can steal victories from higher-ranked opponents. Their current trend is declining, which indicates they may be struggling with recent roster decisions. The team averages 142.0 points but has proven they can reach 164.0 when everything clicks.</p>
+                
+                <h4>💼 Strategic Decisions</h4>
+                <p>This manager has taken a patient approach, avoiding major trades and sticking with their drafted core. Their conservative strategy has struggled to deliver results so far this season.</p>
+                
+                <h4>🔥 Key Moments & Outlook</h4>
+                <p>Week 3 stands out as their season-defining performance with a massive 164.0 points, while Week 12 (128.0 points) represents the type of showing they'll want to avoid in crunch time. They'll need to find their early-season form to make a playoff push.</p>
+            </div>
+            
+            <div class='team-stats-grid'>
+                <div class='stat-item'>
+                    <span class='stat-label'>Trend</span>
+                    <span class='stat-value trend-declining'>Declining</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Best Week</span>
+                    <span class='stat-value best-week'>Week 3: 164.0</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Worst Week</span>
+                    <span class='stat-value worst-week'>Week 12: 128.0</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Volatility</span>
+                    <span class='stat-value'>36.0 pts</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class='team-overview-card detailed-card'>
+            <div class='team-header'>
+                <h2>#7 EliHY</h2>
+                <div class='team-tier'>Middle Tier Competitor</div>
+                <div class='team-record'>Record: 11-17 | Power Rating: 129.2</div>
+            </div>
+            
+            <div class='analysis-section'>
+                <h4>🎯 Season Overview</h4>
+                <p>Right in the thick of things with potential for both breakthrough weeks and disappointing performances. Currently losing momentum with their recent stretch falling short of their season average. With a season-high of 152.7 in Week 6 and their lowest point of 101.1 in Week 1, this team has shown a range of 51.6 points throughout the campaign.</p>
+                
+                <h4>📊 Performance Analysis</h4>
+                <p>This team epitomizes the 'any given Sunday' mentality with explosive ceiling games balanced by concerning floor weeks. Fantasy managers facing this squad never know which version will show up. Their current trend is improving, which suggests they're peaking at the right time. The team averages 131.8 points but has proven they can reach 152.7 when everything clicks.</p>
+                
+                <h4>💼 Strategic Decisions</h4>
+                <p>Made 3 trade(s) this season. Best move: acquiring Hunter Henry, Baker Mayfield for Tyreek Hill, Daniel Jones in Week 3 (+18.4 power points). Their willingness to make moves has struggled to deliver results so far this season.</p>
+                
+                <h4>🔥 Key Moments & Outlook</h4>
+                <p>Week 6 stands out as their season-defining performance with a massive 152.7 points, while Week 1 (101.1 points) represents the type of showing they'll want to avoid in crunch time. Consistency will be key as they look to maintain their position.</p>
+            </div>
+            
+            <div class='team-stats-grid'>
+                <div class='stat-item'>
+                    <span class='stat-label'>Trend</span>
+                    <span class='stat-value trend-improving'>Improving</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Best Week</span>
+                    <span class='stat-value best-week'>Week 6: 152.7</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Worst Week</span>
+                    <span class='stat-value worst-week'>Week 1: 101.1</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Volatility</span>
+                    <span class='stat-value'>51.6 pts</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class='team-overview-card detailed-card'>
+            <div class='team-header'>
+                <h2>#8 cmoney2137</h2>
+                <div class='team-tier'>Middle Tier Competitor</div>
+                <div class='team-record'>Record: 17-11 | Power Rating: 125.2</div>
+            </div>
+            
+            <div class='analysis-section'>
+                <h4>🎯 Season Overview</h4>
+                <p>Right in the thick of things with potential for both breakthrough weeks and disappointing performances. Currently losing momentum with their recent stretch falling short of their season average. With a season-high of 168.1 in Week 1 and their lowest point of 115.8 in Week 3, this team has shown a range of 52.3 points throughout the campaign.</p>
+                
+                <h4>📊 Performance Analysis</h4>
+                <p>This team epitomizes the 'any given Sunday' mentality with explosive ceiling games balanced by concerning floor weeks. Fantasy managers facing this squad never know which version will show up. Their current trend is declining, which indicates they may be struggling with recent roster decisions. The team averages 138.2 points but has proven they can reach 168.1 when everything clicks.</p>
+                
+                <h4>💼 Strategic Decisions</h4>
+                <p>This manager has taken a patient approach, avoiding major trades and sticking with their drafted core. Their conservative strategy has struggled to deliver results so far this season.</p>
+                
+                <h4>🔥 Key Moments & Outlook</h4>
+                <p>Week 1 stands out as their season-defining performance with a massive 168.1 points, while Week 3 (115.8 points) represents the type of showing they'll want to avoid in crunch time. They'll need to find their early-season form to make a playoff push.</p>
+            </div>
+            
+            <div class='team-stats-grid'>
+                <div class='stat-item'>
+                    <span class='stat-label'>Trend</span>
+                    <span class='stat-value trend-declining'>Declining</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Best Week</span>
+                    <span class='stat-value best-week'>Week 1: 168.1</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Worst Week</span>
+                    <span class='stat-value worst-week'>Week 3: 115.8</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Volatility</span>
+                    <span class='stat-value'>52.3 pts</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class='team-overview-card detailed-card'>
+            <div class='team-header'>
+                <h2>#9 stephenmcdowell</h2>
+                <div class='team-tier'>Middle Tier Competitor</div>
+                <div class='team-record'>Record: 9-19 | Power Rating: 120.1</div>
+            </div>
+            
+            <div class='analysis-section'>
+                <h4>🎯 Season Overview</h4>
+                <p>Right in the thick of things with potential for both breakthrough weeks and disappointing performances. Currently gaining momentum with their recent stretch exceeding their season average. With a season-high of 120.1 in Week 15 and their lowest point of 89.8 in Week 2, this team has shown a range of 30.3 points throughout the campaign.</p>
+                
+                <h4>📊 Performance Analysis</h4>
+                <p>Shows solid consistency with occasional spike weeks that can steal victories from higher-ranked opponents. Their current trend is improving, which suggests they're peaking at the right time. The team averages 107.7 points but has proven they can reach 120.1 when everything clicks.</p>
+                
+                <h4>💼 Strategic Decisions</h4>
+                <p>Made 2 trade(s) this season. Best move: acquiring Chris Olave for D'Andre Swift in Week 8 (+8.8 power points). Their willingness to make moves has paid dividends so far this season.</p>
+                
+                <h4>🔥 Key Moments & Outlook</h4>
+                <p>Week 15 stands out as their season-defining performance with a massive 120.1 points, while Week 2 (89.8 points) represents the type of showing they'll want to avoid in crunch time. Consistency will be key as they look to maintain their position.</p>
+            </div>
+            
+            <div class='team-stats-grid'>
+                <div class='stat-item'>
+                    <span class='stat-label'>Trend</span>
+                    <span class='stat-value trend-improving'>Improving</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Best Week</span>
+                    <span class='stat-value best-week'>Week 15: 120.1</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Worst Week</span>
+                    <span class='stat-value worst-week'>Week 2: 89.8</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Volatility</span>
+                    <span class='stat-value'>30.3 pts</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class='team-overview-card detailed-card'>
+            <div class='team-header'>
+                <h2>#10 Tcdun</h2>
+                <div class='team-tier'>Rebuilding Squad</div>
+                <div class='team-record'>Record: 10-18 | Power Rating: 117.3</div>
+            </div>
+            
+            <div class='analysis-section'>
+                <h4>🎯 Season Overview</h4>
+                <p>Facing challenges this season but still capable of playing spoiler and building for the future. Currently gaining momentum with their recent stretch exceeding their season average. With a season-high of 118.5 in Week 14 and their lowest point of 94.8 in Week 1, this team has shown a range of 23.7 points throughout the campaign.</p>
+                
+                <h4>📊 Performance Analysis</h4>
+                <p>The definition of reliability - you know exactly what you're getting week after week, making them a predictable but formidable opponent. Their current trend is improving, which suggests they're peaking at the right time. The team averages 110.9 points but has proven they can reach 118.5 when everything clicks.</p>
+                
+                <h4>💼 Strategic Decisions</h4>
+                <p>Made 2 trade(s) this season. Best move: acquiring Tyreek Hill, Daniel Jones for Hunter Henry, Baker Mayfield in Week 3 (+0.1 power points). Their willingness to make moves has paid dividends so far this season.</p>
+                
+                <h4>🔥 Key Moments & Outlook</h4>
+                <p>Week 14 stands out as their season-defining performance with a massive 118.5 points, while Week 1 (94.8 points) represents the type of showing they'll want to avoid in crunch time. Consistency will be key as they look to maintain their position.</p>
+            </div>
+            
+            <div class='team-stats-grid'>
+                <div class='stat-item'>
+                    <span class='stat-label'>Trend</span>
+                    <span class='stat-value trend-improving'>Improving</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Best Week</span>
+                    <span class='stat-value best-week'>Week 14: 118.5</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Worst Week</span>
+                    <span class='stat-value worst-week'>Week 1: 94.8</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Volatility</span>
+                    <span class='stat-value'>23.7 pts</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class='team-overview-card detailed-card'>
+            <div class='team-header'>
+                <h2>#11 Danielkat2</h2>
+                <div class='team-tier'>Rebuilding Squad</div>
+                <div class='team-record'>Record: 6-22 | Power Rating: 102.7</div>
+            </div>
+            
+            <div class='analysis-section'>
+                <h4>🎯 Season Overview</h4>
+                <p>Facing challenges this season but still capable of playing spoiler and building for the future. Currently gaining momentum with their recent stretch exceeding their season average. With a season-high of 109.4 in Week 5 and their lowest point of 85.6 in Week 1, this team has shown a range of 23.8 points throughout the campaign.</p>
+                
+                <h4>📊 Performance Analysis</h4>
+                <p>The definition of reliability - you know exactly what you're getting week after week, making them a predictable but formidable opponent. Their current trend is improving, which suggests they're peaking at the right time. The team averages 99.1 points but has proven they can reach 109.4 when everything clicks.</p>
+                
+                <h4>💼 Strategic Decisions</h4>
+                <p>Made 1 trade(s) this season. Best move: acquiring Keenan Allen for Brian Thomas in Week 4 (+5.2 power points). Their willingness to make moves has paid dividends so far this season.</p>
+                
+                <h4>🔥 Key Moments & Outlook</h4>
+                <p>Week 5 stands out as their season-defining performance with a massive 109.4 points, while Week 1 (85.6 points) represents the type of showing they'll want to avoid in crunch time. Consistency will be key as they look to maintain their position.</p>
+            </div>
+            
+            <div class='team-stats-grid'>
+                <div class='stat-item'>
+                    <span class='stat-label'>Trend</span>
+                    <span class='stat-value trend-improving'>Improving</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Best Week</span>
+                    <span class='stat-value best-week'>Week 5: 109.4</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Worst Week</span>
+                    <span class='stat-value worst-week'>Week 1: 85.6</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Volatility</span>
+                    <span class='stat-value'>23.8 pts</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class='team-overview-card detailed-card'>
+            <div class='team-header'>
+                <h2>#12 Bpuckel</h2>
+                <div class='team-tier'>Rebuilding Squad</div>
+                <div class='team-record'>Record: 6-22 | Power Rating: 99.9</div>
+            </div>
+            
+            <div class='analysis-section'>
+                <h4>🎯 Season Overview</h4>
+                <p>Facing challenges this season but still capable of playing spoiler and building for the future. Currently losing momentum with their recent stretch falling short of their season average. With a season-high of 148.6 in Week 1 and their lowest point of 97.2 in Week 12, this team has shown a range of 51.4 points throughout the campaign.</p>
+                
+                <h4>📊 Performance Analysis</h4>
+                <p>This team epitomizes the 'any given Sunday' mentality with explosive ceiling games balanced by concerning floor weeks. Fantasy managers facing this squad never know which version will show up. Their current trend is declining, which indicates they may be struggling with recent roster decisions. The team averages 114.4 points but has proven they can reach 148.6 when everything clicks.</p>
+                
+                <h4>💼 Strategic Decisions</h4>
+                <p>This manager has taken a patient approach, avoiding major trades and sticking with their drafted core. Their conservative strategy has struggled to deliver results so far this season.</p>
+                
+                <h4>🔥 Key Moments & Outlook</h4>
+                <p>Week 1 stands out as their season-defining performance with a massive 148.6 points, while Week 12 (97.2 points) represents the type of showing they'll want to avoid in crunch time. They'll need to find their early-season form to make a playoff push.</p>
+            </div>
+            
+            <div class='team-stats-grid'>
+                <div class='stat-item'>
+                    <span class='stat-label'>Trend</span>
+                    <span class='stat-value trend-declining'>Declining</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Best Week</span>
+                    <span class='stat-value best-week'>Week 1: 148.6</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Worst Week</span>
+                    <span class='stat-value worst-week'>Week 12: 97.2</span>
+                </div>
+                <div class='stat-item'>
+                    <span class='stat-label'>Volatility</span>
+                    <span class='stat-value'>51.4 pts</span>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</body>
+</html>

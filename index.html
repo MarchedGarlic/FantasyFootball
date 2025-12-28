@@ -888,8 +888,8 @@
                     <div class="ai-icon">🤖</div>
                     <h3>AI Team Overview</h3>
                     <p>Get AI-powered insights about each team's performance, key players, and standout weeks</p>
-                    <button class="btn ai-btn" onclick="openAIOverview()">
-                        Generate AI Overview
+                    <button class="btn ai-btn" onclick="openResult('ai_overview.html', 'html_reports')">
+                        View AI Overview
                     </button>
                 `;
                 container.appendChild(aiCard);
@@ -938,9 +938,18 @@
             return card;
         }
 
-        // Open result in new tab
+        // Open result in new tab - mobile Safari friendly
         function openResult(filename, type) {
-            window.open(`/results/${filename}`, '_blank');
+            // Create a link element and programmatically click it - works better on mobile Safari
+            const link = document.createElement('a');
+            link.href = `/results/${filename}`;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            
+            // Temporarily add to DOM and click
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         // Start new analysis
@@ -1014,232 +1023,8 @@
             }
         });
 
-        // AI Overview function
-        async function openAIOverview() {
-            try {
-                // Show loading state
-                const aiBtn = document.querySelector('.ai-btn');
-                const originalText = aiBtn.textContent;
-                aiBtn.textContent = 'Generating AI Overview...';
-                aiBtn.disabled = true;
+        // AI Overview function removed - now using standard openResult() approach
 
-                const response = await fetch('/api/ai-overview');
-                const data = await response.json();
-
-                if (response.ok) {
-                    // Create new window with AI overview
-                    const newWindow = window.open('', '_blank');
-                    if (newWindow) {
-                        newWindow.document.write(`
-                            <!DOCTYPE html>
-                            <html lang="en">
-                            <head>
-                                <meta charset="UTF-8">
-                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                <title>🤖 AI Team Overview</title>
-                                <style>
-                                    body {
-                                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                                        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-                                        color: white;
-                                        margin: 0;
-                                        padding: 20px;
-                                        min-height: 100vh;
-                                    }
-                                    .container {
-                                        max-width: 1200px;
-                                        margin: 0 auto;
-                                    }
-                                    .header {
-                                        text-align: center;
-                                        margin-bottom: 40px;
-                                        padding: 30px;
-                                        background: rgba(255, 255, 255, 0.1);
-                                        border-radius: 20px;
-                                        backdrop-filter: blur(10px);
-                                    }
-                                    .ai-overview {
-                                        display: grid;
-                                        gap: 30px;
-                                    }
-                                .team-overview-card {
-                                    background: rgba(255, 255, 255, 0.15);
-                                    border-radius: 15px;
-                                    padding: 25px;
-                                    backdrop-filter: blur(10px);
-                                    border: 1px solid rgba(255, 255, 255, 0.2);
-                                    transition: transform 0.3s ease;
-                                }
-                                .detailed-card {
-                                    padding: 30px;
-                                    margin-bottom: 20px;
-                                }
-                                .team-header {
-                                    margin-bottom: 25px;
-                                    border-bottom: 2px solid rgba(255, 107, 107, 0.3);
-                                    padding-bottom: 15px;
-                                }
-                                .team-header h2 {
-                                    margin: 0 0 10px 0;
-                                    font-size: 1.8rem;
-                                    color: #ff6b6b;
-                                }
-                                .team-tier {
-                                    display: inline-block;
-                                    background: rgba(255, 107, 107, 0.2);
-                                    padding: 5px 15px;
-                                    border-radius: 15px;
-                                    font-size: 0.9rem;
-                                    font-weight: 600;
-                                    margin: 5px 0;
-                                }
-                                .team-record {
-                                    color: rgba(255, 255, 255, 0.8);
-                                    font-size: 1rem;
-                                    font-weight: 500;
-                                }
-                                .analysis-section {
-                                    margin-bottom: 25px;
-                                }
-                                .analysis-section h4 {
-                                    color: #ffc107;
-                                    margin: 20px 0 10px 0;
-                                    font-size: 1.1rem;
-                                    border-left: 3px solid #ffc107;
-                                    padding-left: 10px;
-                                }
-                                .analysis-section p {
-                                    line-height: 1.7;
-                                    margin-bottom: 15px;
-                                    text-align: justify;
-                                }
-                                .team-stats-grid {
-                                    display: grid;
-                                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                                    gap: 15px;
-                                    margin-top: 20px;
-                                    padding-top: 20px;
-                                    border-top: 1px solid rgba(255, 255, 255, 0.2);
-                                }
-                                .stat-item {
-                                    background: rgba(255, 255, 255, 0.1);
-                                    padding: 12px;
-                                    border-radius: 10px;
-                                    text-align: center;
-                                }
-                                .stat-label {
-                                    display: block;
-                                    font-size: 0.8rem;
-                                    color: rgba(255, 255, 255, 0.7);
-                                    margin-bottom: 5px;
-                                }
-                                .stat-value {
-                                    font-weight: 600;
-                                    font-size: 0.95rem;
-                                }
-                                        .team-overview-card {
-                                            background: rgba(255, 255, 255, 0.15);
-                                            border-radius: 15px;
-                                            padding: 25px;
-                                            backdrop-filter: blur(10px);
-                                            border: 1px solid rgba(255, 255, 255, 0.2);
-                                            transition: transform 0.3s ease;
-                                        }
-                                        .team-overview-card:hover {
-                                            transform: translateY(-5px);
-                                        }
-                                        .team-overview-card h3 {
-                                            margin: 0 0 15px 0;
-                                            font-size: 1.4rem;
-                                            color: #ff6b6b;
-                                        }
-                                        .team-stats {
-                                            display: flex;
-                                            gap: 15px;
-                                            margin-bottom: 15px;
-                                            flex-wrap: wrap;
-                                        }
-                                        .power-rating {
-                                            background: rgba(255, 107, 107, 0.2);
-                                            padding: 5px 10px;
-                                            border-radius: 15px;
-                                            font-size: 0.9rem;
-                                        }
-                                        .trend {
-                                            padding: 5px 10px;
-                                            border-radius: 15px;
-                                            font-size: 0.9rem;
-                                        }
-                                        .trend-improving {
-                                            background: rgba(81, 207, 102, 0.2);
-                                            color: #51cf66;
-                                        }
-                                        .trend-declining {
-                                            background: rgba(255, 107, 107, 0.2);
-                                            color: #ff6b6b;
-                                        }
-                                        .trend-stable {
-                                            background: rgba(255, 193, 7, 0.2);
-                                            color: #ffc107;
-                                        }
-                                        .team-description {
-                                            margin-bottom: 15px;
-                                            line-height: 1.6;
-                                        }
-                                        .volatility {
-                                            margin-bottom: 15px;
-                                            font-style: italic;
-                                        }
-                                        .key-weeks {
-                                            display: flex;
-                                            gap: 15px;
-                                            flex-wrap: wrap;
-                                        }
-                                        .best-week {
-                                            background: rgba(81, 207, 102, 0.2);
-                                            color: #51cf66;
-                                            padding: 5px 10px;
-                                            border-radius: 10px;
-                                            font-size: 0.9rem;
-                                        }
-                                        .worst-week {
-                                            background: rgba(255, 107, 107, 0.2);
-                                            color: #ff6b6b;
-                                            padding: 5px 10px;
-                                            border-radius: 10px;
-                                            font-size: 0.9rem;
-                                        }
-                                    </style>
-                                </head>
-                                <body>
-                                    <div class="container">
-                                        <div class="header">
-                                            <h1>🤖 AI Team Overview</h1>
-                                            <p>AI-powered insights into team performance and personalities</p>
-                                        </div>
-                                        ${data.overview}
-                                    </div>
-                                </body>
-                                </html>
-                            `);
-                            newWindow.document.close();
-                        } else {
-                            // Fallback if popup is blocked
-                            alert('Popup blocked! Please allow popups for this site.');
-                        }
-                    } else {
-                        alert('Error generating AI overview: ' + data.error);
-                    }
-            } catch (error) {
-                console.error('Failed to generate AI overview:', error);
-                alert('Failed to generate AI overview. Please try again.');
-                
-                // Reset button state
-                const aiBtn = document.querySelector('.ai-btn');
-                aiBtn.textContent = 'Generate AI Overview';
-                aiBtn.disabled = false;
-            }
-        }
     </script>
 </body>
 </html>

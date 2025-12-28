@@ -317,6 +317,13 @@ def start_analysis():
                     # Restore original print
                     builtins.print = original_print
                     
+                    # Generate AI overview HTML file after successful analysis
+                    try:
+                        print("[DEBUG] Generating AI overview HTML file...")
+                        generate_ai_overview_file()
+                    except Exception as e:
+                        print(f"[WARNING] Failed to generate AI overview file: {e}")
+                    
                     # Final completion update
                     analysis_status[analysis_id].update({
                         "status": "completed",
@@ -662,6 +669,234 @@ def create_mock_ai_overview(power_ratings, managers):
     
     html_content += "</div>"
     return html_content
+
+def generate_ai_overview_file():
+    """Generate AI overview as a static HTML file"""
+    try:
+        # Check if analysis files exist
+        fantasy_json_path = 'fantasy_analysis_output/json_data/fantasy_analysis.json'
+        roster_json_path = 'fantasy_analysis_output/json_data/roster_data.json'
+        
+        if not os.path.exists(fantasy_json_path) or not os.path.exists(roster_json_path):
+            print(f"[DEBUG] Cannot generate AI overview - missing data files")
+            return
+        
+        # Read analysis data
+        with open(fantasy_json_path, 'r') as f:
+            fantasy_data = json.load(f)
+        
+        with open(roster_json_path, 'r') as f:
+            roster_data = json.load(f)
+            
+        # Try to read detailed analysis if it exists
+        detailed_json_path = 'fantasy_analysis_output/json_data/detailed_analysis.json'
+        detailed_data = {}
+        if os.path.exists(detailed_json_path):
+            with open(detailed_json_path, 'r') as f:
+                detailed_data = json.load(f)
+        
+        # Generate AI overview content
+        ai_overview_content = create_ai_team_overview(fantasy_data, roster_data, detailed_data)
+        
+        # Create complete HTML page
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 AI Team Overview</title>
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }}
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+        }}
+        .header {{
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }}
+        .ai-overview {{
+            display: grid;
+            gap: 30px;
+        }}
+        .team-overview-card {{
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }}
+        .detailed-card {{
+            padding: 30px;
+            margin-bottom: 20px;
+        }}
+        .team-header {{
+            margin-bottom: 25px;
+            border-bottom: 2px solid rgba(255, 107, 107, 0.3);
+            padding-bottom: 15px;
+        }}
+        .team-header h2 {{
+            margin: 0 0 10px 0;
+            font-size: 1.8rem;
+            color: #ff6b6b;
+        }}
+        .team-tier {{
+            display: inline-block;
+            background: rgba(255, 107, 107, 0.2);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 5px 0;
+        }}
+        .team-record {{
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            font-weight: 500;
+        }}
+        .analysis-section {{
+            margin-bottom: 25px;
+        }}
+        .analysis-section h4 {{
+            color: #ffc107;
+            margin: 20px 0 10px 0;
+            font-size: 1.1rem;
+            border-left: 3px solid #ffc107;
+            padding-left: 10px;
+        }}
+        .analysis-section p {{
+            line-height: 1.7;
+            margin-bottom: 15px;
+            text-align: justify;
+        }}
+        .team-stats-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }}
+        .stat-item {{
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }}
+        .stat-label {{
+            display: block;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 5px;
+        }}
+        .stat-value {{
+            font-weight: 600;
+            font-size: 0.95rem;
+        }}
+        .team-overview-card:hover {{
+            transform: translateY(-5px);
+        }}
+        .team-overview-card h3 {{
+            margin: 0 0 15px 0;
+            font-size: 1.4rem;
+            color: #ff6b6b;
+        }}
+        .team-stats {{
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }}
+        .power-rating {{
+            background: rgba(255, 107, 107, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }}
+        .trend {{
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }}
+        .trend-improving {{
+            background: rgba(81, 207, 102, 0.2);
+            color: #51cf66;
+        }}
+        .trend-declining {{
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }}
+        .trend-stable {{
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }}
+        .team-description {{
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }}
+        .volatility {{
+            margin-bottom: 15px;
+            font-style: italic;
+        }}
+        .key-weeks {{
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }}
+        .best-week {{
+            background: rgba(81, 207, 102, 0.2);
+            color: #51cf66;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }}
+        .worst-week {{
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Team Overview</h1>
+            <p>AI-powered insights into team performance and personalities</p>
+        </div>
+        {ai_overview_content}
+    </div>
+</body>
+</html>"""
+        
+        # Ensure the html_reports directory exists
+        html_dir = 'fantasy_analysis_output/html_reports'
+        os.makedirs(html_dir, exist_ok=True)
+        
+        # Write the HTML file
+        output_path = os.path.join(html_dir, 'ai_overview.html')
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        print(f"[DEBUG] AI overview HTML file generated: {output_path}")
+        
+    except Exception as e:
+        print(f"[ERROR] Failed to generate AI overview file: {e}")
+        import traceback
+        traceback.print_exc()
 
 @app.route('/results/<path:filename>')
 def serve_results(filename):
