@@ -30,10 +30,23 @@ class SleeperAPI:
         try:
             response = requests.get(f"{self.base_url}/user/{username}")
             if response.status_code == 200:
-                return response.json()
+                try:
+                    return response.json()
+                except ValueError:
+                    # Response is not valid JSON
+                    print(f"Invalid JSON response for user {username}")
+                    return None
+            elif response.status_code == 404:
+                print(f"User {username} not found")
+                return None
+            else:
+                print(f"API error {response.status_code} for user {username}")
+                return None
+        except requests.exceptions.RequestException as e:
+            print(f"Network error fetching user {username}: {e}")
             return None
         except Exception as e:
-            print(f"Error fetching user: {e}")
+            print(f"Unexpected error fetching user {username}: {e}")
             return None
     
     def get_user_leagues(self, user_id, season):
@@ -41,10 +54,23 @@ class SleeperAPI:
         try:
             response = requests.get(f"{self.base_url}/user/{user_id}/leagues/nfl/{season}")
             if response.status_code == 200:
-                return response.json()
+                try:
+                    return response.json()
+                except ValueError:
+                    # Response is not valid JSON
+                    print(f"Invalid JSON response for leagues {user_id}")
+                    return []
+            elif response.status_code == 404:
+                print(f"No leagues found for user {user_id} in season {season}")
+                return []
+            else:
+                print(f"API error {response.status_code} for user {user_id} leagues")
+                return []
+        except requests.exceptions.RequestException as e:
+            print(f"Network error fetching leagues for {user_id}: {e}")
             return []
         except Exception as e:
-            print(f"Error fetching leagues: {e}")
+            print(f"Unexpected error fetching leagues for {user_id}: {e}")
             return []
 
 sleeper_api = SleeperAPI()
@@ -58,18 +84,36 @@ def serve_index():
 def get_user_leagues(username):
     """Get all leagues for a given Sleeper username"""
     try:
+        # Validate username
+        if not username or not username.strip():
+            return jsonify({"error": "Username is required"}), 400
+        
+        username = username.strip()
+        
         # Get user info first
         user = sleeper_api.get_user_by_username(username)
         if not user:
-            return jsonify({"error": "User not found"}), 404
+            return jsonify({"error": f"Sleeper user '{username}' not found. Please check the username and try again."}), 404
         
         user_id = user.get('user_id')
         if not user_id:
-            return jsonify({"error": "Invalid user data"}), 400
+            return jsonify({"error": "Invalid user data received from Sleeper"}), 400
         
         # Get leagues for current season (2025)
         current_season = 2025
         leagues = sleeper_api.get_user_leagues(user_id, current_season)
+        
+        # Check if user has any leagues
+        if not leagues:
+            return jsonify({
+                "user": {
+                    "username": user.get('username'),
+                    "display_name": user.get('display_name'),
+                    "user_id": user_id
+                },
+                "leagues": [],
+                "message": f"No leagues found for {username} in the {current_season} season."
+            })
         
         # Format league data for frontend
         formatted_leagues = []
@@ -96,7 +140,8 @@ def get_user_leagues(username):
         })
         
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Unexpected error in get_user_leagues: {e}")
+        return jsonify({"error": "An unexpected error occurred. Please try again."}), 500
 
 @app.route('/api/analyze', methods=['POST'])
 def start_analysis():
