@@ -1,7 +1,7 @@
 ================================================================================
 WORST TRADES ANALYSIS REPORT
 ================================================================================
-Generated: 2025-12-27 20:41:26
+Generated: 2025-12-27 21:52:12
 
 METHODOLOGY:
 - Combined Impact = Power Rating Impact + Roster Grade Impact
@@ -12,97 +12,97 @@ TOP 10 WORST TRADES:
 --------------------------------------------------------------------------------
 Rank Manager         Week Impact   Acquired             Gave Up             
 --------------------------------------------------------------------------------
-1    jackjohnnsonn2  4       -3.9 Emeka Egbuka, Alvin  Travis Etienne      
-2    Spillywilly69   5       -1.8 Nico Collins         Brian Thomas, Nick  
-3    cmoney2137      11      -2.6 RJ Harvey            Ricky Pearsall, Col 
-4    joeyscott31     10      -1.8 None                 Isiah Pacheco       
-5    joeyscott31     10      -1.8 Joe Burrow           TreVeyon Henderson  
-6    joeyscott31     10      -1.8 Travis Kelce, Derri  Brock Bowers, Kiman 
-7    joeyscott31     10      -1.8 RJ Harvey, Jaylen W  DJ Moore, Deebo Sam 
-8    CameronMulyk    7       -2.4 Kyler Murray, Chase  Drake Maye          
-9    CallMeBeanz     10      -0.1 Troy Franklin, Matt  Baker Mayfield, Mic 
-10   Shockley5       5       +1.2 Brian Thomas, Nick   Nico Collins        
+1    haydenpierce    3       -6.8 Jacory Croskey-Merr  Emeka Egbuka        
+2    joeyscott31     3       -3.8 Chris Olave          Cam Skattebo        
+3    Tommythoma      4       -2.6 Brian Thomas         Keenan Allen        
+4    joeyscott31     8       -3.1 D'Andre Swift        Chris Olave         
+5    EliHY           6       -0.3 Kimani Vidal         Harold Fannin, Trav 
+6    Tcdun           3       -0.4 Tyreek Hill, Daniel  Hunter Henry, Baker 
+7    Tcdun           9       -0.2 Harold Fannin, Asht  Ladd McConkey, Trey 
+8    stephenmcdowel  8       +2.7 Chris Olave          D'Andre Swift       
+9    Danielkat2      4       +1.7 Keenan Allen         Brian Thomas        
+10   jramage7        6       -0.7 Harold Fannin, Trav  Kimani Vidal        
 
 ================================================================================
 DETAILED BREAKDOWN OF WORST 10 TRADES:
 ================================================================================
 
-1. jackjohnnsonn26 (Week 4)
-   Combined Impact: -3.9
-   Power Impact: -13.3
-   Grade Impact: -0.1
-   Acquired: Emeka Egbuka, Alvin Kamara
-   Gave Up: Travis Etienne
-   Trading Partner: Spillywilly69
+1. haydenpierce (Week 3)
+   Combined Impact: -6.8
+   Power Impact: -20.9
+   Grade Impact: +0.0
+   Acquired: Jacory Croskey-Merritt
+   Gave Up: Emeka Egbuka
+   Trading Partner: EliHY
 
-2. Spillywilly69 (Week 5)
-   Combined Impact: -1.8
-   Power Impact: -3.7
-   Grade Impact: -0.7
-   Acquired: Nico Collins
-   Gave Up: Brian Thomas, Nick Chubb, Kenneth Gainwell
-   Trading Partner: Shockley5
+2. joeyscott31 (Week 3)
+   Combined Impact: -3.8
+   Power Impact: -12.5
+   Grade Impact: +0.0
+   Acquired: Chris Olave
+   Gave Up: Cam Skattebo
+   Trading Partner: Tommythoma
 
-3. cmoney2137 (Week 11)
+3. Tommythoma (Week 4)
    Combined Impact: -2.6
-   Power Impact: -6.6
+   Power Impact: -7.2
+   Grade Impact: -0.2
+   Acquired: Brian Thomas
+   Gave Up: Keenan Allen
+   Trading Partner: Danielkat2
+
+4. joeyscott31 (Week 8)
+   Combined Impact: -3.1
+   Power Impact: -9.3
+   Grade Impact: +0.0
+   Acquired: D'Andre Swift
+   Gave Up: Chris Olave
+   Trading Partner: stephenmcdowell
+
+5. EliHY (Week 6)
+   Combined Impact: -0.3
+   Power Impact: +0.5
+   Grade Impact: -0.6
+   Acquired: Kimani Vidal
+   Gave Up: Harold Fannin, Travis Hunter
+   Trading Partner: jramage7
+
+6. Tcdun (Week 3)
+   Combined Impact: -0.4
+   Power Impact: +0.1
    Grade Impact: -0.5
-   Acquired: RJ Harvey
-   Gave Up: Ricky Pearsall, Colston Loveland
+   Acquired: Tyreek Hill, Daniel Jones, Quentin Johnston
+   Gave Up: Hunter Henry, Baker Mayfield, DK Metcalf
+   Trading Partner: EliHY
+
+7. Tcdun (Week 9)
+   Combined Impact: -0.2
+   Power Impact: -0.3
+   Grade Impact: -0.1
+   Acquired: Harold Fannin, Ashton Jeanty, Jaylen Waddle
+   Gave Up: Ladd McConkey, Trey McBride
+   Trading Partner: jramage7
+
+8. stephenmcdowell (Week 8)
+   Combined Impact: +2.7
+   Power Impact: +8.8
+   Grade Impact: -0.3
+   Acquired: Chris Olave
+   Gave Up: D'Andre Swift
    Trading Partner: joeyscott31
 
-4. joeyscott31 (Week 10)
-   Combined Impact: -1.8
-   Power Impact: -4.1
-   Grade Impact: -0.5
-   Acquired: None
-   Gave Up: Isiah Pacheco
-   Trading Partner: coletheman88
+9. Danielkat2 (Week 4)
+   Combined Impact: +1.7
+   Power Impact: +5.2
+   Grade Impact: +0.0
+   Acquired: Keenan Allen
+   Gave Up: Brian Thomas
+   Trading Partner: Tommythoma
 
-5. joeyscott31 (Week 10)
-   Combined Impact: -1.8
-   Power Impact: -4.1
-   Grade Impact: -0.5
-   Acquired: Joe Burrow
-   Gave Up: TreVeyon Henderson
-   Trading Partner: Shockley5
-
-6. joeyscott31 (Week 10)
-   Combined Impact: -1.8
-   Power Impact: -4.1
-   Grade Impact: -0.5
-   Acquired: Travis Kelce, Derrick Henry
-   Gave Up: Brock Bowers, Kimani Vidal
-   Trading Partner: papabwall69
-
-7. joeyscott31 (Week 10)
-   Combined Impact: -1.8
-   Power Impact: -4.1
-   Grade Impact: -0.5
-   Acquired: RJ Harvey, Jaylen Warren
-   Gave Up: DJ Moore, Deebo Samuel
-   Trading Partner: Tcdun
-
-8. CameronMulyk (Week 7)
-   Combined Impact: -2.4
-   Power Impact: -6.9
-   Grade Impact: -0.1
-   Acquired: Kyler Murray, Chase Brown
-   Gave Up: Drake Maye
-   Trading Partner: coletheman88
-
-9. CallMeBeanz (Week 10)
-   Combined Impact: -0.1
-   Power Impact: +1.1
-   Grade Impact: -0.6
-   Acquired: Troy Franklin, Matthew Stafford, Travis Etienne, Josh Downs
-   Gave Up: Baker Mayfield, Michael Pittman, Rachaad White
-   Trading Partner: Spillywilly69
-
-10. Shockley5 (Week 5)
-   Combined Impact: +1.2
-   Power Impact: +5.9
-   Grade Impact: -0.9
-   Acquired: Brian Thomas, Nick Chubb, Kenneth Gainwell
-   Gave Up: Nico Collins
-   Trading Partner: Spillywilly69
+10. jramage7 (Week 6)
+   Combined Impact: -0.7
+   Power Impact: -3.9
+   Grade Impact: +0.7
+   Acquired: Harold Fannin, Travis Hunter
+   Gave Up: Kimani Vidal
+   Trading Partner: EliHY

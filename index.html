@@ -158,13 +158,33 @@
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #ff6b6b, #ee5a52);
-            transition: width 0.3s ease;
+            transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             width: 0%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer-progress 2s linear infinite;
+        }
+
+        @keyframes shimmer-progress {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
         
         .progress-text {
             margin-top: 10px;
             font-size: 0.9rem;
+            transition: opacity 0.3s ease;
+            font-weight: 500;
         }
         
         .error {
@@ -235,6 +255,85 @@
 
         .result-card .btn {
             background: linear-gradient(135deg, #51cf66, #40c057);
+        }
+
+        .ai-overview-card {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.2)) !important;
+            border: 2px solid rgba(138, 43, 226, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-overview-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s ease;
+            opacity: 0;
+        }
+
+        .ai-overview-card:hover::before {
+            opacity: 1;
+            animation: shimmer 1.5s ease-in-out;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .ai-overview-card .ai-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .ai-overview-card h3 {
+            color: #c084fc !important;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+        }
+
+        .ai-overview-card p {
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .ai-btn {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+            color: white !important;
+            border: none !important;
+            padding: 12px 24px !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+        }
+
+        .ai-btn:hover {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4) !important;
+        }
+
+        .ai-btn:disabled {
+            opacity: 0.7 !important;
+            cursor: not-allowed !important;
+            transform: none !important;
         }
     </style>
 </head>
@@ -462,8 +561,8 @@
                         } else if (status.status === 'error') {
                             showError('analysisError', status.message);
                         } else if (status.status !== 'completed') {
-                            // Continue polling
-                            setTimeout(poll, 2000);
+                            // Continue polling more frequently for better responsiveness
+                            setTimeout(poll, 1000);
                         }
                     }
                 } catch (error) {
@@ -476,8 +575,24 @@
 
         // Update progress bar
         function updateProgress(progress, message) {
-            document.getElementById('progressFill').style.width = progress + '%';
-            document.getElementById('progressText').textContent = message;
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            // Smooth progress bar animation
+            progressFill.style.width = progress + '%';
+            
+            // Add a subtle pulse effect when progress changes
+            progressFill.style.boxShadow = '0 0 20px rgba(255, 107, 107, 0.6)';
+            setTimeout(() => {
+                progressFill.style.boxShadow = 'none';
+            }, 300);
+            
+            // Update text with fade effect
+            progressText.style.opacity = '0.5';
+            setTimeout(() => {
+                progressText.textContent = message + ` (${progress}%)`;
+                progressText.style.opacity = '1';
+            }, 150);
         }
 
         // Show analysis complete
@@ -494,6 +609,19 @@
 
                 const container = document.getElementById('resultsContainer');
                 container.innerHTML = '';
+
+                // Add AI Overview button first
+                const aiCard = document.createElement('div');
+                aiCard.className = 'result-card ai-overview-card';
+                aiCard.innerHTML = `
+                    <div class="ai-icon">🤖</div>
+                    <h3>AI Team Overview</h3>
+                    <p>Get AI-powered insights about each team's performance, key players, and standout weeks</p>
+                    <button class="btn ai-btn" onclick="openAIOverview()">
+                        Generate AI Overview
+                    </button>
+                `;
+                container.appendChild(aiCard);
 
                 // Create result cards for HTML reports
                 if (results.html_reports) {
@@ -601,6 +729,232 @@
                 document.getElementById('fetchLeaguesBtn').click();
             }
         });
+
+        // AI Overview function
+        async function openAIOverview() {
+            try {
+                // Show loading state
+                const aiBtn = document.querySelector('.ai-btn');
+                const originalText = aiBtn.textContent;
+                aiBtn.textContent = 'Generating AI Overview...';
+                aiBtn.disabled = true;
+
+                const response = await fetch('/api/ai-overview');
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Create new window with AI overview
+                    const newWindow = window.open('', '_blank');
+                    newWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>🤖 AI Team Overview</title>
+                            <style>
+                                body {
+                                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                                    color: white;
+                                    margin: 0;
+                                    padding: 20px;
+                                    min-height: 100vh;
+                                }
+                                .container {
+                                    max-width: 1200px;
+                                    margin: 0 auto;
+                                }
+                                .header {
+                                    text-align: center;
+                                    margin-bottom: 40px;
+                                    padding: 30px;
+                                    background: rgba(255, 255, 255, 0.1);
+                                    border-radius: 20px;
+                                    backdrop-filter: blur(10px);
+                                }
+                                .ai-overview {
+                                    display: grid;
+                                    gap: 30px;
+                                }
+                                .team-overview-card {
+                                    background: rgba(255, 255, 255, 0.15);
+                                    border-radius: 15px;
+                                    padding: 25px;
+                                    backdrop-filter: blur(10px);
+                                    border: 1px solid rgba(255, 255, 255, 0.2);
+                                    transition: transform 0.3s ease;
+                                }
+                                .detailed-card {
+                                    padding: 30px;
+                                    margin-bottom: 20px;
+                                }
+                                .team-header {
+                                    margin-bottom: 25px;
+                                    border-bottom: 2px solid rgba(255, 107, 107, 0.3);
+                                    padding-bottom: 15px;
+                                }
+                                .team-header h2 {
+                                    margin: 0 0 10px 0;
+                                    font-size: 1.8rem;
+                                    color: #ff6b6b;
+                                }
+                                .team-tier {
+                                    display: inline-block;
+                                    background: rgba(255, 107, 107, 0.2);
+                                    padding: 5px 15px;
+                                    border-radius: 15px;
+                                    font-size: 0.9rem;
+                                    font-weight: 600;
+                                    margin: 5px 0;
+                                }
+                                .team-record {
+                                    color: rgba(255, 255, 255, 0.8);
+                                    font-size: 1rem;
+                                    font-weight: 500;
+                                }
+                                .analysis-section {
+                                    margin-bottom: 25px;
+                                }
+                                .analysis-section h4 {
+                                    color: #ffc107;
+                                    margin: 20px 0 10px 0;
+                                    font-size: 1.1rem;
+                                    border-left: 3px solid #ffc107;
+                                    padding-left: 10px;
+                                }
+                                .analysis-section p {
+                                    line-height: 1.7;
+                                    margin-bottom: 15px;
+                                    text-align: justify;
+                                }
+                                .team-stats-grid {
+                                    display: grid;
+                                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                                    gap: 15px;
+                                    margin-top: 20px;
+                                    padding-top: 20px;
+                                    border-top: 1px solid rgba(255, 255, 255, 0.2);
+                                }
+                                .stat-item {
+                                    background: rgba(255, 255, 255, 0.1);
+                                    padding: 12px;
+                                    border-radius: 10px;
+                                    text-align: center;
+                                }
+                                .stat-label {
+                                    display: block;
+                                    font-size: 0.8rem;
+                                    color: rgba(255, 255, 255, 0.7);
+                                    margin-bottom: 5px;
+                                }
+                                .stat-value {
+                                    font-weight: 600;
+                                    font-size: 0.95rem;
+                                }
+                                .team-overview-card {
+                                    background: rgba(255, 255, 255, 0.15);
+                                    border-radius: 15px;
+                                    padding: 25px;
+                                    backdrop-filter: blur(10px);
+                                    border: 1px solid rgba(255, 255, 255, 0.2);
+                                    transition: transform 0.3s ease;
+                                }
+                                .team-overview-card:hover {
+                                    transform: translateY(-5px);
+                                }
+                                .team-overview-card h3 {
+                                    margin: 0 0 15px 0;
+                                    font-size: 1.4rem;
+                                    color: #ff6b6b;
+                                }
+                                .team-stats {
+                                    display: flex;
+                                    gap: 15px;
+                                    margin-bottom: 15px;
+                                    flex-wrap: wrap;
+                                }
+                                .power-rating {
+                                    background: rgba(255, 107, 107, 0.2);
+                                    padding: 5px 10px;
+                                    border-radius: 15px;
+                                    font-size: 0.9rem;
+                                }
+                                .trend {
+                                    padding: 5px 10px;
+                                    border-radius: 15px;
+                                    font-size: 0.9rem;
+                                }
+                                .trend-improving {
+                                    background: rgba(81, 207, 102, 0.2);
+                                    color: #51cf66;
+                                }
+                                .trend-declining {
+                                    background: rgba(255, 107, 107, 0.2);
+                                    color: #ff6b6b;
+                                }
+                                .trend-stable {
+                                    background: rgba(255, 193, 7, 0.2);
+                                    color: #ffc107;
+                                }
+                                .team-description {
+                                    margin-bottom: 15px;
+                                    line-height: 1.6;
+                                }
+                                .volatility {
+                                    margin-bottom: 15px;
+                                    font-style: italic;
+                                }
+                                .key-weeks {
+                                    display: flex;
+                                    gap: 15px;
+                                    flex-wrap: wrap;
+                                }
+                                .best-week {
+                                    background: rgba(81, 207, 102, 0.2);
+                                    color: #51cf66;
+                                    padding: 5px 10px;
+                                    border-radius: 10px;
+                                    font-size: 0.9rem;
+                                }
+                                .worst-week {
+                                    background: rgba(255, 107, 107, 0.2);
+                                    color: #ff6b6b;
+                                    padding: 5px 10px;
+                                    border-radius: 10px;
+                                    font-size: 0.9rem;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="container">
+                                <div class="header">
+                                    <h1>🤖 AI Team Overview</h1>
+                                    <p>AI-powered insights into team performance and personalities</p>
+                                </div>
+                                ${data.overview}
+                            </div>
+                        </body>
+                        </html>
+                    `);
+                } else {
+                    alert('Error generating AI overview: ' + data.error);
+                }
+
+                // Reset button state
+                aiBtn.textContent = originalText;
+                aiBtn.disabled = false;
+
+            } catch (error) {
+                console.error('Failed to generate AI overview:', error);
+                alert('Failed to generate AI overview. Please try again.');
+                
+                // Reset button state
+                const aiBtn = document.querySelector('.ai-btn');
+                aiBtn.textContent = 'Generate AI Overview';
+                aiBtn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>
