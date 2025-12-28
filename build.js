@@ -67,6 +67,12 @@ async function build() {
     await fs.copy('index.html', 'dist/index.html');
     console.log('✓ Copied index.html');
     
+    // Copy the results template as results.html
+    if (await fs.pathExists('results_template.html')) {
+      await fs.copy('results_template.html', 'dist/results.html');
+      console.log('✓ Copied results template');
+    }
+    
     console.log('✅ Build complete! Files ready for deployment.');
     
   } catch (error) {

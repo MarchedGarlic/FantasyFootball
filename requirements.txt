@@ -2,3 +2,6 @@ requests>=2.25.0
 bokeh>=2.4.0
 numpy>=1.19.0
 scikit-learn>=1.0.0
+flask>=2.3.0
+flask-cors>=4.0.0
+gunicorn>=20.1.0

@@ -44,7 +44,7 @@ def load_league_config():
     except FileNotFoundError:
         print("No league_config.json found, using interactive mode")
     except Exception as e:
-        print(f"⚠️  Error loading config: {e}")
+        print(f"[WARNING] Error loading config: {e}")
     
     # Try environment variables as fallback
     sleeper_username = os.getenv('SLEEPER_USERNAME')
@@ -64,9 +64,9 @@ def load_league_config():
 def get_user_input_interactive():
     """Get user input interactively when no config is available"""
     # Get user input
-    username = input("\n👤 Enter your Sleeper username: ").strip()
+    username = input("\n[*] Enter your Sleeper username: ").strip()
     if not username:
-        print("❌ Username cannot be empty")
+        print("[ERROR] Username cannot be empty")
         return None, None
     
     # Get season preference
@@ -77,7 +77,7 @@ def get_user_input_interactive():
     
     while True:
         try:
-            season_choice = input("\n🎯 Select season option (1-3): ").strip()
+            season_choice = input("\n[*] Select season option (1-3): ").strip()
             
             if season_choice == "1":
                 target_season = 2025
@@ -89,7 +89,7 @@ def get_user_input_interactive():
                 target_season = None  # Show all seasons
                 break
             else:
-                print("❌ Please enter 1, 2, or 3")
+                print("[ERROR] Please enter 1, 2, or 3")
                 
         except KeyboardInterrupt:
             print("\n👋 Goodbye!")
@@ -130,17 +130,17 @@ def create_output_directories():
 
 def get_user_leagues(sleeper_api, username, target_season=None):
     """Get all leagues for a user"""
-    print(f"\n🔍 Finding leagues for user: {username}")
+    print(f"\n[*] Finding leagues for user: {username}")
     
     # Get user ID from username
     user_data = sleeper_api.get_user_by_username(username)
     if not user_data:
-        print(f"   ❌ User '{username}' not found")
+        print(f"   [ERROR] User '{username}' not found")
         return None, []
     
     user_id = user_data.get('user_id')
     display_name = user_data.get('display_name', username)
-    print(f"   ✓ Found user: {display_name} (ID: {user_id})")
+    print(f"   [OK] Found user: {display_name} (ID: {user_id})")
     
     # Get user's leagues for specified seasons
     if target_season:
@@ -279,12 +279,12 @@ def main():
         # Get ESPN stat leaders for player grading
         print("   • Fetching ESPN stat leaders...")
         analyzer.initialize_rankings(str(SEASON))
-        print("   ✓ ESPN rankings initialized")
+        print("   [OK] ESPN rankings initialized")
         
         # Fetch player data for name lookups
         print("   • Fetching NFL player database...")
         all_players = sleeper_api.get_all_players()
-        print(f"   ✓ Loaded {len(all_players)} NFL players")
+        print(f"   [OK] Loaded {len(all_players)} NFL players")
         
         # Get Sleeper league data
         print("\nFetching Sleeper league data...")
@@ -325,7 +325,7 @@ def main():
             matchups = sleeper_api.get_league_matchups(LEAGUE_ID, week)
             if matchups:
                 all_weekly_matchups[week] = matchups
-                print(f"     Week {week}: ✓")
+                print(f"     Week {week}: [OK]")
             else:
                 print(f"     Week {week}: No data")
         
@@ -349,10 +349,10 @@ def main():
         # Create organized output directories
         print("\nCreating organized output directories...")
         output_dirs = create_output_directories()
-        print(f"   ✓ Cleared and created output directory: {output_dirs['base']}")
-        print(f"   ✓ HTML reports: {os.path.basename(output_dirs['html'])}")
-        print(f"   ✓ JSON data: {os.path.basename(output_dirs['json'])}")
-        print(f"   ✓ Text reports: {os.path.basename(output_dirs['text'])}")
+        print(f"   [OK] Cleared and created output directory: {output_dirs['base']}")
+        print(f"   [OK] HTML reports: {os.path.basename(output_dirs['html'])}")
+        print(f"   [OK] JSON data: {os.path.basename(output_dirs['json'])}")
+        print(f"   [OK] Text reports: {os.path.basename(output_dirs['text'])}")
         
         # Calculate Power Ratings
         print("\nCalculating Power Ratings...")
@@ -688,7 +688,7 @@ def main():
         with open(main_json_file, 'w', encoding='utf-8') as f:
             json.dump(output_data, f, indent=2, ensure_ascii=False)
         
-        print(f"   ✓ Main analysis saved: {os.path.relpath(main_json_file)}")
+        print(f"   [OK] Main analysis saved: {os.path.relpath(main_json_file)}")
         
         # Save detailed analysis data separately
         if trade_impacts or waiver_impacts:
@@ -706,7 +706,7 @@ def main():
             with open(analysis_json_file, 'w', encoding='utf-8') as f:
                 json.dump(detailed_data, f, indent=2, ensure_ascii=False)
             
-            print(f"   ✓ Comprehensive analysis saved: {os.path.relpath(analysis_json_file)}")
+            print(f"   [OK] Comprehensive analysis saved: {os.path.relpath(analysis_json_file)}")
         
         # Save league roster data
         roster_json_file = os.path.join(output_dirs['json'], "roster_data.json")
@@ -724,7 +724,7 @@ def main():
         with open(roster_json_file, 'w', encoding='utf-8') as f:
             json.dump(roster_data, f, indent=2, ensure_ascii=False)
         
-        print(f"   ✓ Roster data saved: {os.path.relpath(roster_json_file)}")
+        print(f"   [OK] Roster data saved: {os.path.relpath(roster_json_file)}")
 
         print(f"\nFiles Generated in Organized Structure:")
         print(f"   Base Directory: {output_dirs['base']}")
@@ -742,9 +742,9 @@ def main():
         print("\nAnalysis Complete! Check the generated HTML files for interactive visualizations.")
         
     except KeyboardInterrupt:
-        print("\n⚠️  Analysis interrupted by user")
+        print("\n[WARNING] Analysis interrupted by user")
     except Exception as e:
-        print(f"\n❌ Error during analysis: {e}")
+        print(f"\n[ERROR] Error during analysis: {e}")
         import traceback
         print("   Detailed error information:")
         traceback.print_exc()

@@ -45,84 +45,196 @@
             opacity: 0.9;
         }
         
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-        
-        .dashboard-card {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .dashboard-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-        
-        .card-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-        
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .card-description {
-            opacity: 0.9;
-            line-height: 1.5;
-            margin-bottom: 15px;
-        }
-        
-        .card-button {
-            background: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .card-button:hover {
-            background: #ee5a5a;
-        }
-        
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            opacity: 0.8;
-        }
-        
-        .last-updated {
+        .step-container {
             background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .step-title {
+            font-size: 1.5rem;
             margin-bottom: 20px;
             text-align: center;
         }
         
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .leagues-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .league-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .league-card:hover {
+            transform: translateY(-5px);
+            border-color: #ff6b6b;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+        }
+        
+        .league-card.selected {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.2);
+        }
+        
+        .league-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .league-details {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        .progress-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ee5a52);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .progress-text {
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .success {
+            color: #51cf66;
+            background: rgba(81, 207, 102, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        .loading.hidden {
+            display: none !important;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .results-container {
+            margin-top: 30px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .result-card h3 {
+            margin-bottom: 15px;
+            color: #ff6b6b;
+        }
+
+        .result-card .btn {
+            background: linear-gradient(135deg, #51cf66, #40c057);
         }
     </style>
 </head>
@@ -130,124 +242,364 @@
     <div class="container">
         <div class="header">
             <h1>🏈 Fantasy Football Analysis</h1>
-            <p>Interactive dashboards and comprehensive league insights</p>
+            <p>Enter your Sleeper username to analyze your leagues</p>
         </div>
-        
-        <div class="last-updated" id="lastUpdated">
-            📅 Loading analysis timestamp...
+
+        <!-- Step 1: Username Input -->
+        <div id="step1" class="step-container">
+            <h2 class="step-title">Step 1: Enter Your Sleeper Username</h2>
+            <div class="input-group">
+                <label for="username">Sleeper Username:</label>
+                <input type="text" id="username" placeholder="Enter your Sleeper username">
+            </div>
+            <button id="fetchLeaguesBtn" class="btn">
+                <span id="fetchBtnText">Find My Leagues</span>
+                <span id="fetchBtnLoading" class="loading hidden"></span>
+            </button>
+            <div id="usernameError" class="error hidden"></div>
         </div>
-        
-        <div class="dashboard-grid">
-            <div class="dashboard-card" onclick="window.open('power_rating_interactive_latest.html', '_blank')">
-                <div class="card-icon">⚡</div>
-                <div class="card-title">Power Rankings</div>
-                <div class="card-description">
-                    Track team performance over time with interactive power rating progression charts. 
-                    See how each team's strength has evolved throughout the season.
-                </div>
-                <a href="#" class="card-button">View Power Rankings</a>
-            </div>
-            
-            <div class="dashboard-card" onclick="window.open('roster_grades_interactive_latest.html', '_blank')">
-                <div class="card-icon">📊</div>
-                <div class="card-title">Roster Grades</div>
-                <div class="card-description">
-                    Analyze roster quality and talent distribution across all teams. 
-                    Compare player values and roster construction strategies.
-                </div>
-                <a href="#" class="card-button">View Roster Analysis</a>
-            </div>
-            
-            <div class="dashboard-card" onclick="window.open('luck_analysis_latest.html', '_blank')">
-                <div class="card-icon">🍀</div>
-                <div class="card-title">Luck Analysis</div>
-                <div class="card-description">
-                    Discover who's been lucky vs unlucky! Compare regular wins to median-based performance. 
-                    See the line of fairness and find out who earned their record.
-                </div>
-                <a href="#" class="card-button">View Luck Analysis</a>
-            </div>
-            
-            <div class="dashboard-card" onclick="window.open('trade_analysis_latest.html', '_blank')">
-                <div class="card-icon">🔄</div>
-                <div class="card-title">Trade Analysis</div>
-                <div class="card-description">
-                    Deep dive into all league trades with impact scoring and winner/loser analysis. 
-                    See who made the best and worst moves.
-                </div>
-                <a href="#" class="card-button">View Trade Impact</a>
-            </div>
-            
-            <div class="dashboard-card" onclick="window.open('waiver_analysis_latest.html', '_blank')">
-                <div class="card-icon">📈</div>
-                <div class="card-title">Waiver Wire Analysis</div>
-                <div class="card-description">
-                    Track waiver wire pickups and free agent acquisitions. 
-                    Identify the best and worst waiver claims of the season.
-                </div>
-                <a href="#" class="card-button">View Waiver Activity</a>
-            </div>
-            
-            <div class="dashboard-card" onclick="window.open('manager_grades_latest.html', '_blank')">
-                <div class="card-icon">🏆</div>
-                <div class="card-title">Manager Report Cards</div>
-                <div class="card-description">
-                    Comprehensive manager performance grades based on trades, waivers, and overall strategy. 
-                    See who's managing their team most effectively.
-                </div>
-                <a href="#" class="card-button">View Manager Grades</a>
-            </div>
-            
-            <div class="dashboard-card" onclick="window.open('worst_trades_report_latest.html', '_blank')">
-                <div class="card-icon">🚨</div>
-                <div class="card-title">Worst Trades Report</div>
-                <div class="card-description">
-                    Interactive report highlighting the worst trades in your league with detailed impact analysis. 
-                    Perfect for roasting your leaguemates with style!
-                </div>
-                <a href="#" class="card-button">View Worst Trades</a>
-            </div>
+
+        <!-- Step 2: League Selection -->
+        <div id="step2" class="step-container hidden">
+            <h2 class="step-title">Step 2: Select a League to Analyze</h2>
+            <div id="userInfo"></div>
+            <div id="leaguesContainer" class="leagues-grid"></div>
+            <button id="analyzeBtn" class="btn hidden">
+                <span id="analyzeBtnText">Analyze Selected League</span>
+                <span id="analyzeBtnLoading" class="loading hidden"></span>
+            </button>
+            <div id="leagueError" class="error hidden"></div>
         </div>
-        
-        <div class="footer">
-            <p>💡 All visualizations are interactive - hover, click, and explore!</p>
-            <p>📱 Mobile-friendly dashboards for on-the-go analysis</p>
+
+        <!-- Step 3: Analysis Progress -->
+        <div id="step3" class="step-container hidden">
+            <h2 class="step-title">Step 3: Analyzing Your League</h2>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressText" class="progress-text">Initializing...</div>
+            </div>
+            <div id="analysisError" class="error hidden"></div>
+            <div id="analysisSuccess" class="success hidden"></div>
+        </div>
+
+        <!-- Step 4: Results -->
+        <div id="step4" class="step-container hidden">
+            <h2 class="step-title">Analysis Complete! 🎉</h2>
+            <p>Your fantasy football analysis is ready. Choose a report to view:</p>
+            <div id="resultsContainer" class="results-grid">
+                <!-- Results will be populated dynamically -->
+            </div>
+            <button id="newAnalysisBtn" class="btn" style="margin-top: 20px;">Start New Analysis</button>
         </div>
     </div>
-    
+
     <script>
-        // Load the latest analysis timestamp
-        fetch('data/fantasy_analysis_latest.json')
-            .then(response => response.json())
-            .then(data => {
-                const timestamp = data.analysis_info?.timestamp;
-                
-                if (timestamp) {
-                    const date = new Date(timestamp);
-                    document.getElementById('lastUpdated').innerHTML = 
-                        `📅 Last Updated: ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
-                }
-            })
-            .catch(error => {
-                console.log('Error loading data:', error);
-                document.getElementById('lastUpdated').innerHTML = '📅 Analysis data loading...';
-            });
-        
-        // Update links to point to the actual latest files
+        let selectedLeague = null;
+        let currentAnalysisId = null;
+
+        // Initialize page when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            // Find all HTML files and update links
-            const cards = document.querySelectorAll('.dashboard-card');
-            cards.forEach(card => {
-                const button = card.querySelector('.card-button');
-                if (button) {
-                    card.addEventListener('click', function() {
-                        const onclick = this.getAttribute('onclick');
-                        if (onclick) {
-                            eval(onclick);
+            console.log('DOM loaded, initializing...');
+            
+            // Force reset all loading states
+            const loadingSpinners = document.querySelectorAll('.loading');
+            loadingSpinners.forEach(spinner => {
+                spinner.style.display = 'none';
+                spinner.classList.add('hidden');
+            });
+            
+            const buttonTexts = document.querySelectorAll('[id$="BtnText"]');
+            buttonTexts.forEach(text => {
+                text.style.display = 'inline';
+                text.classList.remove('hidden');
+            });
+            
+            // Reset button states
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(btn => {
+                btn.disabled = false;
+            });
+            
+            console.log('Initial state reset complete');
+        });
+
+        // Step 1: Fetch leagues for username
+        document.getElementById('fetchLeaguesBtn').addEventListener('click', async () => {
+            console.log('Fetch leagues button clicked');
+            const username = document.getElementById('username').value.trim();
+            if (!username) {
+                showError('usernameError', 'Please enter a username');
+                return;
+            }
+
+            console.log('Setting loading state...');
+            setButtonLoading('fetchLeaguesBtn', true);
+            hideError('usernameError');
+
+            try {
+                console.log('Making API request for username:', username);
+                const response = await fetch(`/api/user/${username}`);
+                console.log('Response received:', response.status);
+                
+                const data = await response.json();
+                console.log('Data received:', data);
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to fetch leagues');
+                }
+
+                // Show user info and leagues
+                showUserLeagues(data.user, data.leagues);
+                document.getElementById('step2').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error fetching leagues:', error);
+                showError('usernameError', error.message);
+            } finally {
+                console.log('Clearing loading state...');
+                setButtonLoading('fetchLeaguesBtn', false);
+            }
+        });
+
+        // Show user leagues
+        function showUserLeagues(user, leagues) {
+            const userInfo = document.getElementById('userInfo');
+            userInfo.innerHTML = `
+                <p><strong>User:</strong> ${user.display_name || user.username}</p>
+                <p><strong>Found ${leagues.length} leagues for 2025 season</strong></p>
+            `;
+
+            const container = document.getElementById('leaguesContainer');
+            container.innerHTML = '';
+
+            leagues.forEach(league => {
+                const card = document.createElement('div');
+                card.className = 'league-card';
+                card.innerHTML = `
+                    <div class="league-name">${league.name}</div>
+                    <div class="league-details">
+                        <div>Teams: ${league.total_rosters}</div>
+                        <div>Status: ${league.status}</div>
+                        <div>League ID: ${league.league_id}</div>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => {
+                    // Remove previous selection
+                    document.querySelectorAll('.league-card').forEach(c => c.classList.remove('selected'));
+                    
+                    // Select this card
+                    card.classList.add('selected');
+                    selectedLeague = {
+                        league_id: league.league_id,
+                        league_name: league.name,
+                        username: user.username
+                    };
+
+                    // Show analyze button
+                    document.getElementById('analyzeBtn').classList.remove('hidden');
+                });
+
+                container.appendChild(card);
+            });
+        }
+
+        // Step 2: Start analysis
+        document.getElementById('analyzeBtn').addEventListener('click', async () => {
+            if (!selectedLeague) {
+                showError('leagueError', 'Please select a league');
+                return;
+            }
+
+            setButtonLoading('analyzeBtn', true);
+            hideError('leagueError');
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(selectedLeague)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to start analysis');
+                }
+
+                currentAnalysisId = data.analysis_id;
+                document.getElementById('step3').classList.remove('hidden');
+                
+                // Start polling for status
+                pollAnalysisStatus();
+
+            } catch (error) {
+                showError('leagueError', error.message);
+            } finally {
+                setButtonLoading('analyzeBtn', false);
+            }
+        });
+
+        // Poll analysis status
+        function pollAnalysisStatus() {
+            if (!currentAnalysisId) return;
+
+            const poll = async () => {
+                try {
+                    const response = await fetch(`/api/status/${currentAnalysisId}`);
+                    const status = await response.json();
+
+                    if (response.ok) {
+                        updateProgress(status.progress, status.message);
+
+                        if (status.status === 'completed') {
+                            showAnalysisComplete();
+                            loadResults();
+                        } else if (status.status === 'error') {
+                            showError('analysisError', status.message);
+                        } else if (status.status !== 'completed') {
+                            // Continue polling
+                            setTimeout(poll, 2000);
                         }
+                    }
+                } catch (error) {
+                    showError('analysisError', 'Failed to get analysis status');
+                }
+            };
+
+            poll();
+        }
+
+        // Update progress bar
+        function updateProgress(progress, message) {
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = message;
+        }
+
+        // Show analysis complete
+        function showAnalysisComplete() {
+            document.getElementById('analysisSuccess').textContent = 'Analysis completed successfully!';
+            document.getElementById('analysisSuccess').classList.remove('hidden');
+        }
+
+        // Load and display results
+        async function loadResults() {
+            try {
+                const response = await fetch('/api/results');
+                const results = await response.json();
+
+                const container = document.getElementById('resultsContainer');
+                container.innerHTML = '';
+
+                // Create result cards for HTML reports
+                if (results.html_reports) {
+                    results.html_reports.forEach(file => {
+                        const card = createResultCard(file, 'html_reports');
+                        container.appendChild(card);
                     });
                 }
-            });
+
+                document.getElementById('step4').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Failed to load results:', error);
+            }
+        }
+
+        // Create result card
+        function createResultCard(filename, type) {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+
+            // Format filename for display
+            const displayName = filename
+                .replace('.html', '')
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, l => l.toUpperCase());
+
+            card.innerHTML = `
+                <h3>${displayName}</h3>
+                <button class="btn" onclick="openResult('${filename}', '${type}')">
+                    View Report
+                </button>
+            `;
+
+            return card;
+        }
+
+        // Open result in new tab
+        function openResult(filename, type) {
+            window.open(`/results/${filename}`, '_blank');
+        }
+
+        // Start new analysis
+        document.getElementById('newAnalysisBtn').addEventListener('click', () => {
+            // Reset all steps
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step4').classList.add('hidden');
+            
+            // Reset form
+            document.getElementById('username').value = '';
+            selectedLeague = null;
+            currentAnalysisId = null;
+            
+            // Hide buttons
+            document.getElementById('analyzeBtn').classList.add('hidden');
+            
+            // Clear errors
+            hideError('usernameError');
+            hideError('leagueError');
+            hideError('analysisError');
+        });
+
+        // Utility functions
+        function setButtonLoading(buttonId, loading) {
+            console.log('setButtonLoading called:', buttonId, loading);
+            const btn = document.getElementById(buttonId);
+            const text = document.getElementById(buttonId.replace('Btn', 'BtnText'));
+            const loader = document.getElementById(buttonId.replace('Btn', 'BtnLoading'));
+
+            console.log('Elements found:', btn, text, loader);
+
+            if (!btn || !text || !loader) {
+                console.error('Could not find button elements for:', buttonId);
+                return;
+            }
+
+            btn.disabled = loading;
+            if (loading) {
+                text.style.display = 'none';
+                text.classList.add('hidden');
+                loader.style.display = 'inline-block';
+                loader.classList.remove('hidden');
+            } else {
+                text.style.display = 'inline';
+                text.classList.remove('hidden');
+                loader.style.display = 'none';
+                loader.classList.add('hidden');
+            }
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.classList.remove('hidden');
+        }
+
+        function hideError(elementId) {
+            document.getElementById(elementId).classList.add('hidden');
+        }
+
+        // Enter key support for username input
+        document.getElementById('username').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('fetchLeaguesBtn').click();
+            }
         });
     </script>
 </body>

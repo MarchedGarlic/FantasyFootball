@@ -1,6 +1,6 @@
 {
   "analysis_info": {
-    "timestamp": "2025-12-17T23:03:46.895140",
+    "timestamp": "2025-12-27T20:41:28.680221",
     "league_name": "DeShaun & Justin’s Massage Parlor",
     "season": 2025,
     "league_id": "1260371721257496576",
@@ -76,7 +76,6 @@
       "keepers": null,
       "league_id": "1260371721257496576",
       "metadata": {
-        "p_nick_11563": "",
         "p_nick_12529": "Ass",
         "p_nick_4017": "Notorious Women Respecter",
         "p_nick_6790": "The diddler",
@@ -89,18 +88,18 @@
       "players": [
         "11563",
         "11638",
-        "1466",
+        "167",
         "3198",
         "4017",
-        "5189",
         "6770",
         "7021",
         "7564",
         "7569",
+        "7839",
         "8112",
         "8138",
         "8228",
-        "HOU",
+        "9480",
         "NE"
       ],
       "reserve": [
@@ -117,7 +116,7 @@
         "ppts_decimal": 30,
         "ties": 0,
         "total_moves": 0,
-        "waiver_budget_used": 78,
+        "waiver_budget_used": 100,
         "waiver_position": 11,
         "wins": 8
       },
@@ -127,10 +126,10 @@
         "3198",
         "7564",
         "7569",
-        "1466",
+        "9480",
         "8112",
-        "5189",
-        "HOU"
+        "7839",
+        "NE"
       ],
       "taxi": null
     },
@@ -222,13 +221,14 @@
         "fpts_against": 1640,
         "fpts_against_decimal": 76,
         "fpts_decimal": 48,
+        "locked": 1,
         "losses": 8,
         "ppts": 1665,
         "ppts_decimal": 12,
         "ties": 0,
         "total_moves": 0,
         "waiver_budget_used": 50,
-        "waiver_position": 9,
+        "waiver_position": 8,
         "wins": 6
       },
       "starters": [
@@ -258,7 +258,7 @@
         "10229",
         "11435",
         "11560",
-        "12481",
+        "11646",
         "12519",
         "2020",
         "2449",
@@ -272,7 +272,7 @@
         "SEA"
       ],
       "reserve": [
-        "12481"
+        "10229"
       ],
       "roster_id": 4,
       "settings": {
@@ -286,7 +286,7 @@
         "ties": 0,
         "total_moves": 0,
         "waiver_budget_used": 100,
-        "waiver_position": 10,
+        "waiver_position": 9,
         "wins": 3
       },
       "starters": [
@@ -294,7 +294,7 @@
         "5850",
         "9508",
         "9493",
-        "10229",
+        "12519",
         "5022",
         "2449",
         "2020",
@@ -307,7 +307,6 @@
       "keepers": null,
       "league_id": "1260371721257496576",
       "metadata": {
-        "p_nick_6804": "King of the North",
         "p_nick_8167": "Gardner-Johnson’s Dad",
         "record": "WLLLLWWLLWWWLW",
         "streak": "1W"
@@ -316,24 +315,21 @@
       "player_map": null,
       "players": [
         "10222",
-        "11566",
-        "11834",
+        "12547",
         "2216",
         "2747",
         "4034",
         "4037",
-        "6130",
-        "6804",
+        "4381",
         "8130",
         "8167",
         "8183",
         "9221",
         "9756",
-        "NO"
+        "LAR",
+        "TB"
       ],
-      "reserve": [
-        "11566"
-      ],
+      "reserve": null,
       "roster_id": 5,
       "settings": {
         "fpts": 1647,
@@ -345,8 +341,8 @@
         "ppts_decimal": 94,
         "ties": 0,
         "total_moves": 0,
-        "waiver_budget_used": 98,
-        "waiver_position": 7,
+        "waiver_budget_used": 100,
+        "waiver_position": 12,
         "wins": 7
       },
       "starters": [
@@ -356,9 +352,9 @@
         "2216",
         "4037",
         "8130",
-        "10222",
+        "12547",
         "2747",
-        "NO"
+        "TB"
       ],
       "taxi": null
     },
@@ -413,7 +409,7 @@
         "11584",
         "7588",
         "6786",
-        "10232",
+        "8144",
         "7002",
         "7543",
         "8259",
@@ -521,7 +517,7 @@
         "ties": 0,
         "total_moves": 0,
         "waiver_budget_used": 45,
-        "waiver_position": 8,
+        "waiver_position": 7,
         "wins": 6
       },
       "starters": [
@@ -529,11 +525,11 @@
         "12527",
         "12534",
         "8137",
-        "12484",
-        "5012",
+        "9487",
+        "3214",
         "8676",
         "11533",
-        "DEN"
+        "JAX"
       ],
       "taxi": null
     },
@@ -550,24 +546,22 @@
       "players": [
         "10859",
         "10937",
+        "12469",
         "12474",
-        "12512",
         "12514",
         "12517",
         "3163",
         "4199",
         "4881",
         "5859",
-        "5892",
         "7607",
         "8126",
         "8148",
         "9754",
-        "PHI"
+        "DAL"
       ],
       "reserve": [
-        "10859",
-        "9754"
+        "10859"
       ],
       "roster_id": 9,
       "settings": {
@@ -581,19 +575,19 @@
         "ties": 0,
         "total_moves": 0,
         "waiver_budget_used": 100,
-        "waiver_position": 12,
+        "waiver_position": 10,
         "wins": 5
       },
       "starters": [
         "3163",
-        "12512",
-        "12474",
+        "12469",
+        "7607",
         "5859",
         "8148",
         "12517",
-        "4199",
-        "0",
-        "PHI"
+        "8126",
+        "10937",
+        "DAL"
       ],
       "taxi": null
     },
@@ -722,7 +716,7 @@
       "owner_id": "1260854493860331520",
       "player_map": null,
       "players": [
-        "11539",
+        "12713",
         "1479",
         "2133",
         "3257",
@@ -735,7 +729,7 @@
         "8150",
         "9488",
         "9509",
-        "MIN"
+        "LAC"
       ],
       "reserve": null,
       "roster_id": 12,
@@ -760,10 +754,10 @@
         "8150",
         "9488",
         "5947",
-        "4217",
+        "7553",
         "7526",
-        "11539",
-        "MIN"
+        "12713",
+        "LAC"
       ],
       "taxi": null
     }

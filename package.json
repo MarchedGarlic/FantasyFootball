@@ -9,7 +9,9 @@
     "analysis": "python main.py",
     "deploy": "npm run analysis && npm run build",
     "serve": "npx http-server dist -p 3000 -o",
-    "start": "npm run build && npm run serve"
+    "start": "npm run build && npm run serve",
+    "server": "python server.py",
+    "web": "python server.py"
   },
   "author": "Fantasy League Manager",
   "license": "MIT",
