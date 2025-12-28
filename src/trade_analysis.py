@@ -424,11 +424,8 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
             power_data = power_weekly.get(week, power_weekly.get(str(week), None))
             grade_data = grade_weekly.get(week, grade_weekly.get(str(week), None))
             
-            # Skip weeks where we have no meaningful data
-            if power_data is None and grade_data is None:
-                continue
-            
-            # Use defaults for missing data, but don't skip if we have at least one value
+            # Use defaults for missing data - we want to calculate grades even with partial data
+            # This ensures all weeks through 15 are included in the analysis
             power_data = power_data if power_data is not None else 100
             grade_data = grade_data if grade_data is not None else 25
             
