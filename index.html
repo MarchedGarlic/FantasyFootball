@@ -244,6 +244,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
+            width: 100%;
         }
 
         .result-card {
@@ -252,6 +253,8 @@
             padding: 20px;
             text-align: center;
             transition: all 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .result-card:hover {
@@ -401,16 +404,25 @@
             }
             
             .results-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
                 gap: 15px;
+                margin-top: 20px;
             }
             
             .result-card {
                 padding: 15px;
+                margin-bottom: 10px;
+                display: block !important;
             }
             
             .result-card h3 {
                 font-size: 1.1rem;
+            }
+            
+            /* Ensure step4 is visible when not hidden */
+            #step4:not(.hidden) {
+                display: block !important;
+                visibility: visible !important;
             }
             
             /* Make click targets larger for mobile */
@@ -721,11 +733,14 @@
 
         // Load and display results
         async function loadResults() {
+            console.log('Loading results...');
             try {
                 const response = await fetch('/api/results');
                 const results = await response.json();
+                console.log('Results received:', results);
 
                 const container = document.getElementById('resultsContainer');
+                console.log('Results container found:', container);
                 container.innerHTML = '';
 
                 // Add AI Overview button first
@@ -740,6 +755,7 @@
                     </button>
                 `;
                 container.appendChild(aiCard);
+                console.log('AI card added');
 
                 // Create result cards for HTML reports
                 if (results.html_reports) {
@@ -747,9 +763,13 @@
                         const card = createResultCard(file, 'html_reports');
                         container.appendChild(card);
                     });
+                    console.log('Result cards added:', results.html_reports.length);
                 }
 
-                document.getElementById('step4').classList.remove('hidden');
+                const step4 = document.getElementById('step4');
+                console.log('Step4 element before showing:', step4, step4.classList.contains('hidden'));
+                step4.classList.remove('hidden');
+                console.log('Step4 element after showing:', step4.classList.contains('hidden'));
 
             } catch (error) {
                 console.error('Failed to load results:', error);
