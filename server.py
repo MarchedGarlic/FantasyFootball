@@ -1,119 +1,106 @@
 #!/usr/bin/env python3
 """
 Fantasy Football Analysis Server
-Web server to handle league selection and analysis generation
+Web server to handle league/season selection and analysis generation.
+
+Every analysis is keyed by (league_id, season) end to end - see CLAUDE.md sections 1 and 3.
+This file intentionally no longer imports `openai`: the AI Overview is fully deterministic
+(built inside main.run_analysis(), see src/ai_overview.py) and never called an LLM in the first
+place despite the dependency being present - see CLAUDE.md section 1, finding 4.
 """
 
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
-import json
-import subprocess
+import re
 import threading
 from datetime import datetime
-import requests
-import openai
-import re
+
+from src.api_clients import SleeperAPI
+from src.storage import AnalysisStorage, get_analysis_lock
+import main as analysis_main
 
 app = Flask(__name__)
 CORS(app)
 
-# Store analysis status
-analysis_status = {}
-
-class SleeperAPI:
-    """Sleeper API wrapper to fetch user leagues"""
-    
-    def __init__(self):
-        self.base_url = "https://api.sleeper.app/v1"
-        
-    def get_user_by_username(self, username):
-        """Get user info by username"""
-        try:
-            response = requests.get(f"{self.base_url}/user/{username}")
-            if response.status_code == 200:
-                try:
-                    return response.json()
-                except ValueError:
-                    # Response is not valid JSON
-                    print(f"Invalid JSON response for user {username}")
-                    return None
-            elif response.status_code == 404:
-                print(f"User {username} not found")
-                return None
-            else:
-                print(f"API error {response.status_code} for user {username}")
-                return None
-        except requests.exceptions.RequestException as e:
-            print(f"Network error fetching user {username}: {e}")
-            return None
-        except Exception as e:
-            print(f"Unexpected error fetching user {username}: {e}")
-            return None
-    
-    def get_user_leagues(self, user_id, season):
-        """Get all leagues for a user in a given season"""
-        try:
-            response = requests.get(f"{self.base_url}/user/{user_id}/leagues/nfl/{season}")
-            if response.status_code == 200:
-                try:
-                    return response.json()
-                except ValueError:
-                    # Response is not valid JSON
-                    print(f"Invalid JSON response for leagues {user_id}")
-                    return []
-            elif response.status_code == 404:
-                print(f"No leagues found for user {user_id} in season {season}")
-                return []
-            else:
-                print(f"API error {response.status_code} for user {user_id} leagues")
-                return []
-        except requests.exceptions.RequestException as e:
-            print(f"Network error fetching leagues for {user_id}: {e}")
-            return []
-        except Exception as e:
-            print(f"Unexpected error fetching leagues for {user_id}: {e}")
-            return []
-
 sleeper_api = SleeperAPI()
+storage = AnalysisStorage()
+
+# analysis_id -> {status, progress, message, timestamp, league_id, season}
+analysis_status = {}
+# (league_id, season) -> analysis_id currently running for that league+season, so a second
+# request for the SAME league+season attaches to the in-progress run instead of racing it.
+active_analyses = {}
+_active_analyses_guard = threading.Lock()
+
+PROGRESS_STAGES = [
+    (5, "Initializing API connections"),
+    (10, "Resolving league"),
+    (20, "Fetching ESPN stat leaders"),
+    (28, "Fetching NFL player database"),
+    (35, "Getting league information"),
+    (42, "Getting rosters and user data"),
+    (50, "Fetching weekly matchups"),
+    (58, "Fetching league transactions"),
+    (63, "Reconstructing FAAB ledger"),
+    (67, "Output directory ready"),
+    (72, "Calculating Power Ratings"),
+    (76, "Calculating Median-Based Combined Records"),
+    (82, "Calculating weekly roster grades"),
+    (87, "Starting Comprehensive Analysis"),
+    (92, "Creating interactive visualizations"),
+    (95, "Collecting weekly player/matchup data"),
+    (97, "Generating JSON output files"),
+    (99, "Building AI overview"),
+    (100, "Analysis complete"),
+]
+
 
 @app.route('/')
 def serve_index():
     """Serve the main index page"""
     return send_from_directory('.', 'index.html')
 
+
+@app.route('/api/current-season')
+def get_current_season():
+    """Current NFL season, used to default the frontend's season picker instead of a
+    hardcoded year that goes stale every offseason."""
+    season = analysis_main.get_current_season(sleeper_api)
+    return jsonify({"season": season})
+
+
 @app.route('/api/user/<username>')
 def get_user_leagues(username):
-    """Get all leagues for a given Sleeper username"""
+    """Get all leagues for a given Sleeper username in a given season (defaults to current)."""
     try:
-        # Validate username
         if not username or not username.strip():
             return jsonify({"error": "Username is required"}), 400
-        
+
         username = username.strip()
-        
-        # Server-side input validation
+
         if len(username) > 30:
             return jsonify({"error": "Username must be 30 characters or less"}), 400
-        
-        # Check for alphanumeric characters only (English letters and numbers)
+
         if not re.match(r'^[a-zA-Z0-9]+$', username):
             return jsonify({"error": "Username can only contain English letters (a-z, A-Z) and numbers (0-9)"}), 400
-        
-        # Get user info first
+
+        season_param = request.args.get('season')
+        try:
+            season = int(season_param) if season_param else analysis_main.get_current_season(sleeper_api)
+        except ValueError:
+            return jsonify({"error": "season must be a year, e.g. 2025"}), 400
+
         user = sleeper_api.get_user_by_username(username)
         if not user:
             return jsonify({"error": f"Sleeper user '{username}' not found. Please check the username and try again."}), 404
-        
+
         user_id = user.get('user_id')
         if not user_id:
             return jsonify({"error": "Invalid user data received from Sleeper"}), 400
-        
-        # Get leagues for current season (2025)
-        current_season = 2025
-        leagues = sleeper_api.get_user_leagues(user_id, current_season)
-        
-        # Check if user has any leagues
+
+        leagues = sleeper_api.get_user_leagues(user_id, season)
+
         if not leagues:
             return jsonify({
                 "user": {
@@ -121,11 +108,11 @@ def get_user_leagues(username):
                     "display_name": user.get('display_name'),
                     "user_id": user_id
                 },
+                "season": season,
                 "leagues": [],
-                "message": f"No leagues found for {username} in the {current_season} season."
+                "message": f"No leagues found for {username} in the {season} season."
             })
-        
-        # Format league data for frontend
+
         formatted_leagues = []
         for league in leagues:
             formatted_leagues.append({
@@ -133,788 +120,225 @@ def get_user_leagues(username):
                 'name': league.get('name'),
                 'total_rosters': league.get('total_rosters'),
                 'status': league.get('status'),
-                'season': league.get('season'),
+                'season': league.get('season', season),
                 'settings': {
                     'playoff_teams': league.get('settings', {}).get('playoff_teams'),
-                    'league_average_match': league.get('settings', {}).get('league_average_match')
+                    'league_average_match': league.get('settings', {}).get('league_average_match'),
+                    'waiver_type': league.get('settings', {}).get('waiver_type'),
                 }
             })
-        
+
         return jsonify({
             "user": {
                 "username": user.get('username'),
                 "display_name": user.get('display_name'),
                 "user_id": user_id
             },
+            "season": season,
             "leagues": formatted_leagues
         })
-        
+
     except Exception as e:
         print(f"Unexpected error in get_user_leagues: {e}")
         return jsonify({"error": "An unexpected error occurred. Please try again."}), 500
 
+
+@app.route('/api/seasons/<league_id>')
+def get_analyzed_seasons(league_id):
+    """Seasons of this league that have already been analyzed and are available to view
+    without re-running analysis."""
+    return jsonify({"league_id": league_id, "seasons": storage.list_analyzed_seasons(league_id)})
+
+
+def _make_progress_callback(analysis_id):
+    stage_index = {"value": 0}
+
+    def callback(message):
+        while stage_index["value"] < len(PROGRESS_STAGES):
+            progress, keyword = PROGRESS_STAGES[stage_index["value"]]
+            if keyword in message:
+                analysis_status[analysis_id].update({
+                    "status": "running",
+                    "progress": progress,
+                    "message": message,
+                })
+                stage_index["value"] += 1
+                return
+            break
+
+    return callback
+
+
+RECENT_ANALYSIS_MAX_AGE_SECONDS = 15 * 60
+
+
 @app.route('/api/analyze', methods=['POST'])
 def start_analysis():
-    """Start analysis for a selected league"""
+    """Start analysis for a selected league+season.
+
+    If a completed analysis for this exact (league_id, season) finished within the last 15
+    minutes and the caller didn't pass force_refresh, skip re-running the whole pipeline and
+    hand back a synthetic 'completed' status pointing at the existing results - CLAUDE.md
+    section 6. Re-running the full Sleeper/ESPN fetch for a league someone just analyzed
+    seconds ago is exactly the kind of wasted work the performance pass targeted.
+    """
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         username = data.get('username')
         league_id = data.get('league_id')
         league_name = data.get('league_name')
-        
-        if not all([username, league_id, league_name]):
-            return jsonify({"error": "Missing required parameters"}), 400
-        
-        # Create a unique analysis ID
-        analysis_id = f"{username}_{league_id}_{int(datetime.now().timestamp())}"
-        
-        # Update config file with selected league
-        config = {
-            "sleeper_username": username,
-            "target_season": 2025,
-            "league_name": league_name,
-            "league_id": league_id,
-            "auto_select": True
-        }
-        
-        with open('league_config.json', 'w') as f:
-            json.dump(config, f, indent=2)
-        
-        # Set initial status
+        season = data.get('season')
+        force_refresh = bool(data.get('force_refresh'))
+
+        if not all([username, league_id, league_name, season]):
+            return jsonify({"error": "Missing required parameters (username, league_id, league_name, season)"}), 400
+
+        try:
+            season = int(season)
+        except (TypeError, ValueError):
+            return jsonify({"error": "season must be a year, e.g. 2025"}), 400
+
+        if not force_refresh:
+            meta = storage.read_meta(league_id, season)
+            if meta and meta.get('generated_at'):
+                age = (datetime.now() - datetime.fromisoformat(meta['generated_at'])).total_seconds()
+                if age < RECENT_ANALYSIS_MAX_AGE_SECONDS:
+                    cached_id = f"cached_{league_id}_{season}"
+                    analysis_status[cached_id] = {
+                        "status": "completed",
+                        "progress": 100,
+                        "message": f"Using results from {round(age)}s ago - pass force_refresh to re-run",
+                        "timestamp": datetime.now().isoformat(),
+                        "league_id": league_id,
+                        "season": season,
+                    }
+                    return jsonify({
+                        "analysis_id": cached_id,
+                        "status": "started",
+                        "message": "Using recently cached analysis"
+                    })
+
+        key = (str(league_id), str(season))
+
+        with _active_analyses_guard:
+            existing_id = active_analyses.get(key)
+            if existing_id and analysis_status.get(existing_id, {}).get("status") in ("starting", "running"):
+                return jsonify({
+                    "analysis_id": existing_id,
+                    "status": "already_running",
+                    "message": f"Analysis for this league+season is already running (started as {existing_id})"
+                })
+
+            analysis_id = f"{username}_{league_id}_{season}_{int(datetime.now().timestamp())}"
+            active_analyses[key] = analysis_id
+
         analysis_status[analysis_id] = {
             "status": "starting",
             "progress": 0,
             "message": "Initializing analysis...",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "league_id": league_id,
+            "season": season,
         }
-        
-        # Start analysis in background thread
-        def run_analysis():
-            # Define progress stages with more specific descriptions
-            progress_stages = [
-                (5, "Initializing analysis..."),
-                (10, "Loading league configuration..."),
-                (15, "Connecting to ESPN API..."),
-                (20, "Fetching Sleeper league data..."),
-                (25, "Pulling ESPN stat leaders..."),
-                (30, "Loading NFL player database..."),
-                (35, "Getting league rosters and users..."),
-                (40, "Fetching weekly matchups..."),
-                (45, "Analyzing trade transactions..."),
-                (50, "Calculating power rankings..."),
-                (60, "Computing median records..."),
-                (70, "Grading team rosters..."),
-                (75, "Analyzing trade impacts..."),
-                (80, "Processing waiver pickups..."),
-                (85, "Creating interactive visualizations..."),
-                (90, "Generating HTML reports..."),
-                (95, "Saving JSON data files..."),
-                (100, "Analysis completed successfully!")
-            ]
-            
-            try:
-                current_stage = 0
-                
-                def update_progress(stage_index):
-                    if stage_index < len(progress_stages):
-                        progress, message = progress_stages[stage_index]
-                        analysis_status[analysis_id].update({
-                            "status": "running",
-                            "progress": progress,
-                            "message": message
-                        })
-                        return True
-                    return False
-                
-                # Start with first stage
-                update_progress(current_stage)
-                current_stage += 1
-                
-                # Import and run the main analysis directly instead of subprocess
-                import sys
-                import os
-                import time
-                
-                update_progress(current_stage)
-                current_stage += 1
-                
-                # Save current argv to restore later
-                original_argv = sys.argv[:]
-                
-                # Set up argv for main.py
-                sys.argv = ['main.py']
-                
-                # Change to the correct directory
-                original_cwd = os.getcwd()
-                script_dir = os.path.dirname(os.path.abspath(__file__))
-                os.chdir(script_dir)
-                
+
+        def run():
+            lock = get_analysis_lock(league_id, season)
+            with lock:
                 try:
-                    # Import and run main.py directly with progress tracking
-                    import main
-                    
-                    # Hook into the main analysis flow with progress updates
-                    original_print = print
-                    
-                    def progress_aware_print(*args, **kwargs):
-                        nonlocal current_stage
-                        message = ' '.join(str(arg) for arg in args)
-                        
-                        # Track progress based on key messages from main.py
-                        if "Initializing API connections" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "Fetching Sleeper league data" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "Fetching ESPN stat leaders" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "Fetching NFL player database" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "Getting rosters and user data" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "Fetching all weekly matchups" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "Fetching league transactions" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "Calculating Power Ratings" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "Calculating Median-Based Combined Records" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "Calculating Weekly Roster Grades" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "Starting Comprehensive Analysis" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "analyze_waiver_pickups" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "Creating Interactive Visualizations" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        elif "Generating JSON output files" in message and current_stage < len(progress_stages):
-                            update_progress(current_stage)
-                            current_stage += 1
-                        
-                        return original_print(*args, **kwargs)
-                    
-                    # Temporarily replace print function
-                    import builtins
-                    builtins.print = progress_aware_print
-                    
-                    # If main.py has a main function, call it
-                    if hasattr(main, 'main'):
-                        main.main()
-                    
-                    # Restore original print
-                    builtins.print = original_print
-                    
-                    # Generate AI overview HTML file after successful analysis
-                    try:
-                        print("[DEBUG] Generating AI overview HTML file...")
-                        generate_ai_overview_file()
-                    except Exception as e:
-                        print(f"[WARNING] Failed to generate AI overview file: {e}")
-                    
-                    # Final completion update
+                    analysis_main.run_analysis(
+                        username, season, league_id,
+                        storage=storage,
+                        progress_cb=_make_progress_callback(analysis_id),
+                    )
                     analysis_status[analysis_id].update({
                         "status": "completed",
                         "progress": 100,
-                        "message": "Analysis completed successfully!"
+                        "message": "Analysis completed successfully!",
                     })
-                    
                 except Exception as e:
                     print(f"Error running analysis: {e}")
+                    import traceback
+                    traceback.print_exc()
                     analysis_status[analysis_id].update({
                         "status": "error",
                         "progress": 100,
-                        "message": f"Analysis failed: {str(e)}"
+                        "message": f"Analysis failed: {str(e)}",
                     })
                 finally:
-                    # Restore original state
-                    sys.argv = original_argv
-                    os.chdir(original_cwd)
-                    # Ensure print is restored
-                    import builtins
-                    builtins.print = original_print
-                    
-            except Exception as e:
-                analysis_status[analysis_id].update({
-                    "status": "error",
-                    "progress": 100,
-                    "message": f"Unexpected error: {str(e)}"
-                })
-        
-        # Start analysis thread
-        thread = threading.Thread(target=run_analysis)
-        thread.daemon = True
+                    with _active_analyses_guard:
+                        if active_analyses.get(key) == analysis_id:
+                            del active_analyses[key]
+
+        thread = threading.Thread(target=run, daemon=True)
         thread.start()
-        
+
         return jsonify({
             "analysis_id": analysis_id,
             "status": "started",
             "message": "Analysis started successfully"
         })
-        
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/status/<analysis_id>')
 def get_analysis_status(analysis_id):
     """Get the status of a running analysis"""
     if analysis_id not in analysis_status:
         return jsonify({"error": "Analysis not found"}), 404
-    
+
     return jsonify(analysis_status[analysis_id])
+
+
+def _require_league_season_params():
+    league_id = request.args.get('league_id')
+    season = request.args.get('season')
+    if not league_id or not season:
+        return None, None, (jsonify({"error": "league_id and season query parameters are required"}), 400)
+    return league_id, season, None
+
 
 @app.route('/api/results')
 def get_analysis_results():
-    """Get available analysis results"""
+    """List available analysis results for a specific league+season."""
+    league_id, season, error = _require_league_season_params()
+    if error:
+        return error
+
     try:
-        results = {}
-        
-        # Check for HTML reports
-        html_dir = 'fantasy_analysis_output/html_reports'
-        if os.path.exists(html_dir):
-            html_files = [f for f in os.listdir(html_dir) if f.endswith('.html')]
-            results['html_reports'] = html_files
-        
-        # Check for JSON data
-        json_dir = 'fantasy_analysis_output/json_data'
-        if os.path.exists(json_dir):
-            json_files = [f for f in os.listdir(json_dir) if f.endswith('.json')]
-            results['json_data'] = json_files
-        
-        return jsonify(results)
-        
+        return jsonify({
+            "html_reports": storage.list_html_reports(league_id, season),
+            "json_data": storage.list_json_data(league_id, season),
+            "meta": storage.read_meta(league_id, season),
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/ai-overview')
-def generate_ai_overview():
-    """Generate AI-powered team overview"""
-    try:
-        print("[DEBUG] AI Overview endpoint called")
-        
-        # Check if analysis files exist
-        fantasy_json_path = 'fantasy_analysis_output/json_data/fantasy_analysis.json'
-        roster_json_path = 'fantasy_analysis_output/json_data/roster_data.json'
-        
-        print(f"[DEBUG] Checking files: {fantasy_json_path}, {roster_json_path}")
-        
-        if not os.path.exists(fantasy_json_path) or not os.path.exists(roster_json_path):
-            print(f"[DEBUG] Files missing: fantasy={os.path.exists(fantasy_json_path)}, roster={os.path.exists(roster_json_path)}")
-            return jsonify({"error": "Analysis data not found. Please run an analysis first."}), 404
-        
-        print("[DEBUG] Reading analysis data...")
-        # Read analysis data
-        with open(fantasy_json_path, 'r') as f:
-            fantasy_data = json.load(f)
-        
-        with open(roster_json_path, 'r') as f:
-            roster_data = json.load(f)
-            
-        # Try to read detailed analysis if it exists
-        detailed_json_path = 'fantasy_analysis_output/json_data/detailed_analysis.json'
-        detailed_data = {}
-        if os.path.exists(detailed_json_path):
-            with open(detailed_json_path, 'r') as f:
-                detailed_data = json.load(f)
-        
-        print("[DEBUG] Generating AI overview...")
-        # Generate AI overview
-        ai_overview = create_ai_team_overview(fantasy_data, roster_data, detailed_data)
-        
-        print(f"[DEBUG] AI overview generated, length: {len(ai_overview)}")
-        return jsonify({"overview": ai_overview})
-        
-    except Exception as e:
-        print(f"[ERROR] AI Overview error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-
-def create_ai_team_overview(fantasy_data, roster_data, detailed_data):
-    """Create AI-powered team overview using OpenAI"""
-    try:
-        print("[DEBUG] Starting AI overview creation")
-        
-        # Set up OpenAI client (you'll need to set OPENAI_API_KEY environment variable)
-        api_key = os.environ.get('OPENAI_API_KEY', 'dummy-key')
-        print(f"[DEBUG] OpenAI API key present: {api_key != 'dummy-key'}")
-        
-        # Prepare comprehensive data summary for AI
-        league_info = fantasy_data.get('analysis_info', {})
-        power_ratings = fantasy_data.get('power_ratings', {})
-        managers = roster_data.get('managers', {})
-        trade_analysis = fantasy_data.get('trade_analysis', {})
-        rosters = roster_data.get('rosters', [])
-        
-        print(f"[DEBUG] Data loaded - power_ratings: {len(power_ratings)}, managers: {len(managers)}")
-        
-        # Always use mock content for now to avoid OpenAI issues
-        print("[DEBUG] Using detailed mock overview")
-        ai_content = create_detailed_mock_overview(power_ratings, managers, trade_analysis, rosters)
-        
-        print(f"[DEBUG] Mock overview created, length: {len(ai_content)}")
-        return ai_content
-        
-    except Exception as e:
-        print(f"[ERROR] Error in create_ai_team_overview: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return f"<p>Error generating AI overview: {str(e)}</p>"
-
-def create_detailed_mock_overview(power_ratings, managers, trade_analysis, rosters):
-    """Create detailed mock AI overview when OpenAI is not available"""
-    html_content = "<div class='ai-overview'>"
-    
-    # Sort teams by current power rating
-    sorted_teams = sorted(
-        power_ratings.items(), 
-        key=lambda x: x[1].get('current_rating', 0), 
-        reverse=True
-    )
-    
-    # Get trade data organized by manager
-    manager_trades = {}
-    if trade_analysis and 'trade_impacts' in trade_analysis:
-        for trade in trade_analysis['trade_impacts']:
-            manager_id = trade.get('manager_id')
-            if manager_id not in manager_trades:
-                manager_trades[manager_id] = []
-            manager_trades[manager_id].append(trade)
-    
-    # Get roster records
-    roster_records = {}
-    for roster in rosters:
-        owner_id = roster.get('owner_id')
-        if roster.get('metadata', {}).get('record'):
-            record_str = roster['metadata']['record']
-            wins = record_str.count('W')
-            losses = record_str.count('L')
-            roster_records[owner_id] = f"{wins}-{losses}"
-    
-    for i, (user_id, data) in enumerate(sorted_teams):
-        manager_name = data.get('manager_name', 'Unknown')
-        current_rating = data.get('current_rating', 0)
-        average_rating = data.get('average_rating', 0)
-        trend = data.get('rating_trend', 'stable')
-        highest = data.get('highest_rating', 0)
-        lowest = data.get('lowest_rating', 0)
-        weekly_ratings = data.get('weekly_ratings', {})
-        record = roster_records.get(user_id, "Record Unknown")
-        
-        # Calculate detailed analytics
-        rating_variance = highest - lowest
-        recent_weeks = list(weekly_ratings.items())[-4:]  # Last 4 weeks
-        recent_average = sum(float(week[1]) for week in recent_weeks) / len(recent_weeks) if recent_weeks else current_rating
-        momentum = "gaining" if recent_average > average_rating else "losing" if recent_average < average_rating else "maintaining"
-        
-        # Find key weeks
-        best_week = max(weekly_ratings.items(), key=lambda x: x[1]) if weekly_ratings else ("N/A", 0)
-        worst_week = min(weekly_ratings.items(), key=lambda x: x[1]) if weekly_ratings else ("N/A", 0)
-        
-        # Analyze trades for this manager
-        manager_trade_summary = ""
-        if user_id in manager_trades:
-            trades = manager_trades[user_id]
-            total_impact = sum(trade.get('power_impact', 0) for trade in trades)
-            best_trade = max(trades, key=lambda x: x.get('power_impact', 0)) if trades else None
-            worst_trade = min(trades, key=lambda x: x.get('power_impact', 0)) if trades else None
-            
-            if best_trade:
-                best_acquired = ', '.join(best_trade.get('acquired_players', [])[:2])
-                best_gave = ', '.join(best_trade.get('gave_up_players', [])[:2])
-                manager_trade_summary = f"Made {len(trades)} trade(s) this season. Best move: acquiring {best_acquired} for {best_gave} in Week {best_trade.get('week')} (+{best_trade.get('power_impact', 0):.1f} power points)."
-            
-        # Create detailed team narrative
-        rank_emoji = "🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else f"#{i+1}"
-        
-        # Performance tier analysis
-        if current_rating >= 160:
-            tier = "Championship Contender"
-            tier_analysis = "This powerhouse team has established itself as a legitimate title threat with consistently dominant performances."
-        elif current_rating >= 140:
-            tier = "Playoff Hopeful"
-            tier_analysis = "A solid team with playoff aspirations, showing the ability to compete with anyone on any given week."
-        elif current_rating >= 120:
-            tier = "Middle Tier Competitor"
-            tier_analysis = "Right in the thick of things with potential for both breakthrough weeks and disappointing performances."
-        else:
-            tier = "Rebuilding Squad"
-            tier_analysis = "Facing challenges this season but still capable of playing spoiler and building for the future."
-        
-        # Volatility analysis
-        if rating_variance > 50:
-            volatility_desc = "This team epitomizes the 'any given Sunday' mentality with explosive ceiling games balanced by concerning floor weeks. Fantasy managers facing this squad never know which version will show up."
-        elif rating_variance > 30:
-            volatility_desc = "Shows solid consistency with occasional spike weeks that can steal victories from higher-ranked opponents."
-        else:
-            volatility_desc = "The definition of reliability - you know exactly what you're getting week after week, making them a predictable but formidable opponent."
-        
-        # Momentum analysis
-        momentum_desc = f"Currently {momentum} momentum with their recent stretch {'exceeding' if momentum == 'gaining' else 'falling short of' if momentum == 'losing' else 'matching'} their season average."
-        
-        html_content += f"""
-        <div class='team-overview-card detailed-card'>
-            <div class='team-header'>
-                <h2>{rank_emoji} {manager_name}</h2>
-                <div class='team-tier'>{tier}</div>
-                <div class='team-record'>Record: {record} | Power Rating: {current_rating:.1f}</div>
-            </div>
-            
-            <div class='analysis-section'>
-                <h4>🎯 Season Overview</h4>
-                <p>{tier_analysis} {momentum_desc} With a season-high of {highest:.1f} in Week {best_week[0]} and their lowest point of {lowest:.1f} in Week {worst_week[0]}, this team has shown a range of {rating_variance:.1f} points throughout the campaign.</p>
-                
-                <h4>📊 Performance Analysis</h4>
-                <p>{volatility_desc} Their current trend is {trend}, which {'suggests they\'re peaking at the right time' if trend == 'improving' else 'indicates they may be struggling with recent roster decisions' if trend == 'declining' else 'shows remarkable consistency throughout the season'}. The team averages {average_rating:.1f} points but has proven they can reach {highest:.1f} when everything clicks.</p>
-                
-                <h4>💼 Strategic Decisions</h4>
-                <p>{manager_trade_summary if manager_trade_summary else 'This manager has taken a patient approach, avoiding major trades and sticking with their drafted core.'} {'Their willingness to make moves has' if manager_trade_summary else 'Their conservative strategy has'} {'paid dividends' if current_rating > average_rating else 'been a mixed bag' if current_rating == average_rating else 'struggled to deliver results'} so far this season.</p>
-                
-                <h4>🔥 Key Moments & Outlook</h4>
-                <p>Week {best_week[0]} stands out as their season-defining performance with a massive {best_week[1]:.1f} points, while Week {worst_week[0]} ({worst_week[1]:.1f} points) represents the type of showing they'll want to avoid in crunch time. {'As we head toward playoffs, this team has the momentum and talent to make noise' if trend == 'improving' and current_rating > 130 else 'They\'ll need to find their early-season form to make a playoff push' if trend == 'declining' else 'Consistency will be key as they look to maintain their position'}.</p>
-            </div>
-            
-            <div class='team-stats-grid'>
-                <div class='stat-item'>
-                    <span class='stat-label'>Trend</span>
-                    <span class='stat-value trend-{trend}'>{trend.title()}</span>
-                </div>
-                <div class='stat-item'>
-                    <span class='stat-label'>Best Week</span>
-                    <span class='stat-value best-week'>Week {best_week[0]}: {best_week[1]:.1f}</span>
-                </div>
-                <div class='stat-item'>
-                    <span class='stat-label'>Worst Week</span>
-                    <span class='stat-value worst-week'>Week {worst_week[0]}: {worst_week[1]:.1f}</span>
-                </div>
-                <div class='stat-item'>
-                    <span class='stat-label'>Volatility</span>
-                    <span class='stat-value'>{rating_variance:.1f} pts</span>
-                </div>
-            </div>
-        </div>
-        """
-    
-    html_content += "</div>"
-    return html_content
-
-def create_mock_ai_overview(power_ratings, managers):
-    """Create mock AI overview when OpenAI is not available"""
-    html_content = "<div class='ai-overview'>"
-    
-    # Sort teams by current power rating
-    sorted_teams = sorted(
-        power_ratings.items(), 
-        key=lambda x: x[1].get('current_rating', 0), 
-        reverse=True
-    )
-    
-    for i, (user_id, data) in enumerate(sorted_teams):
-        manager_name = data.get('manager_name', 'Unknown')
-        current_rating = data.get('current_rating', 0)
-        average_rating = data.get('average_rating', 0)
-        trend = data.get('rating_trend', 'stable')
-        highest = data.get('highest_rating', 0)
-        lowest = data.get('lowest_rating', 0)
-        
-        # Create team personality based on stats
-        if trend == 'improving':
-            personality = "📈 The Rising Phoenix"
-            description = f"{manager_name} is on fire! This team has been climbing the power rankings with impressive consistency."
-        elif trend == 'declining':
-            personality = "📉 The Fallen Giant" 
-            description = f"{manager_name} started strong but has hit some rough patches. Time for a comeback story!"
-        else:
-            personality = "⚖️ The Steady Hand"
-            description = f"{manager_name} brings consistent performance week after week. A reliable force in the league."
-        
-        # Analyze boom/bust potential
-        rating_variance = highest - lowest
-        if rating_variance > 40:
-            volatility = "High-risk, high-reward player with explosive potential! 💥"
-        elif rating_variance > 20:
-            volatility = "Balanced team with some exciting upside weeks. ⚡"
-        else:
-            volatility = "Rock-solid consistency - you know what you're getting. 🗿"
-        
-        rank_emoji = "🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else f"#{i+1}"
-        
-        html_content += f"""
-        <div class='team-overview-card'>
-            <h3>{rank_emoji} {manager_name} - {personality}</h3>
-            <div class='team-stats'>
-                <span class='power-rating'>Power Rating: {current_rating:.1f}</span>
-                <span class='trend trend-{trend}'>Trend: {trend.title()}</span>
-            </div>
-            <p class='team-description'>{description}</p>
-            <p class='volatility'><strong>Playing Style:</strong> {volatility}</p>
-            <div class='key-weeks'>
-                <span class='best-week'>🔥 Best Week: {highest:.1f}</span>
-                <span class='worst-week'>💀 Worst Week: {lowest:.1f}</span>
-            </div>
-        </div>
-        """
-    
-    html_content += "</div>"
-    return html_content
-
-def generate_ai_overview_file():
-    """Generate AI overview as a static HTML file"""
-    try:
-        # Check if analysis files exist
-        fantasy_json_path = 'fantasy_analysis_output/json_data/fantasy_analysis.json'
-        roster_json_path = 'fantasy_analysis_output/json_data/roster_data.json'
-        
-        if not os.path.exists(fantasy_json_path) or not os.path.exists(roster_json_path):
-            print(f"[DEBUG] Cannot generate AI overview - missing data files")
-            return
-        
-        # Read analysis data
-        with open(fantasy_json_path, 'r') as f:
-            fantasy_data = json.load(f)
-        
-        with open(roster_json_path, 'r') as f:
-            roster_data = json.load(f)
-            
-        # Try to read detailed analysis if it exists
-        detailed_json_path = 'fantasy_analysis_output/json_data/detailed_analysis.json'
-        detailed_data = {}
-        if os.path.exists(detailed_json_path):
-            with open(detailed_json_path, 'r') as f:
-                detailed_data = json.load(f)
-        
-        # Generate AI overview content
-        ai_overview_content = create_ai_team_overview(fantasy_data, roster_data, detailed_data)
-        
-        # Create complete HTML page
-        html_content = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤖 AI Team Overview</title>
-    <style>
-        body {{
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-        }}
-        .container {{
-            max-width: 1200px;
-            margin: 0 auto;
-        }}
-        .header {{
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-        }}
-        .ai-overview {{
-            display: grid;
-            gap: 30px;
-        }}
-        .team-overview-card {{
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease;
-        }}
-        .detailed-card {{
-            padding: 30px;
-            margin-bottom: 20px;
-        }}
-        .team-header {{
-            margin-bottom: 25px;
-            border-bottom: 2px solid rgba(255, 107, 107, 0.3);
-            padding-bottom: 15px;
-        }}
-        .team-header h2 {{
-            margin: 0 0 10px 0;
-            font-size: 1.8rem;
-            color: #ff6b6b;
-        }}
-        .team-tier {{
-            display: inline-block;
-            background: rgba(255, 107, 107, 0.2);
-            padding: 5px 15px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin: 5px 0;
-        }}
-        .team-record {{
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1rem;
-            font-weight: 500;
-        }}
-        .analysis-section {{
-            margin-bottom: 25px;
-        }}
-        .analysis-section h4 {{
-            color: #ffc107;
-            margin: 20px 0 10px 0;
-            font-size: 1.1rem;
-            border-left: 3px solid #ffc107;
-            padding-left: 10px;
-        }}
-        .analysis-section p {{
-            line-height: 1.7;
-            margin-bottom: 15px;
-            text-align: justify;
-        }}
-        .team-stats-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-        }}
-        .stat-item {{
-            background: rgba(255, 255, 255, 0.1);
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-        }}
-        .stat-label {{
-            display: block;
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 5px;
-        }}
-        .stat-value {{
-            font-weight: 600;
-            font-size: 0.95rem;
-        }}
-        .team-overview-card:hover {{
-            transform: translateY(-5px);
-        }}
-        .team-overview-card h3 {{
-            margin: 0 0 15px 0;
-            font-size: 1.4rem;
-            color: #ff6b6b;
-        }}
-        .team-stats {{
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }}
-        .power-rating {{
-            background: rgba(255, 107, 107, 0.2);
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-        }}
-        .trend {{
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-        }}
-        .trend-improving {{
-            background: rgba(81, 207, 102, 0.2);
-            color: #51cf66;
-        }}
-        .trend-declining {{
-            background: rgba(255, 107, 107, 0.2);
-            color: #ff6b6b;
-        }}
-        .trend-stable {{
-            background: rgba(255, 193, 7, 0.2);
-            color: #ffc107;
-        }}
-        .team-description {{
-            margin-bottom: 15px;
-            line-height: 1.6;
-        }}
-        .volatility {{
-            margin-bottom: 15px;
-            font-style: italic;
-        }}
-        .key-weeks {{
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }}
-        .best-week {{
-            background: rgba(81, 207, 102, 0.2);
-            color: #51cf66;
-            padding: 5px 10px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-        }}
-        .worst-week {{
-            background: rgba(255, 107, 107, 0.2);
-            color: #ff6b6b;
-            padding: 5px 10px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🤖 AI Team Overview</h1>
-            <p>AI-powered insights into team performance and personalities</p>
-        </div>
-        {ai_overview_content}
-    </div>
-</body>
-</html>"""
-        
-        # Ensure the html_reports directory exists
-        html_dir = 'fantasy_analysis_output/html_reports'
-        os.makedirs(html_dir, exist_ok=True)
-        
-        # Write the HTML file
-        output_path = os.path.join(html_dir, 'ai_overview.html')
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(html_content)
-        
-        print(f"[DEBUG] AI overview HTML file generated: {output_path}")
-        
-    except Exception as e:
-        print(f"[ERROR] Failed to generate AI overview file: {e}")
-        import traceback
-        traceback.print_exc()
 
 @app.route('/results/<path:filename>')
 def serve_results(filename):
-    """Serve analysis result files"""
-    # Check if it's an HTML report
-    html_path = f'fantasy_analysis_output/html_reports/{filename}'
-    if os.path.exists(html_path):
-        return send_from_directory('fantasy_analysis_output/html_reports', filename)
-    
-    # Check if it's JSON data
-    json_path = f'fantasy_analysis_output/json_data/{filename}'
-    if os.path.exists(json_path):
-        return send_from_directory('fantasy_analysis_output/json_data', filename)
-    
+    """Serve one analysis result file, scoped to a specific league+season."""
+    league_id, season, error = _require_league_season_params()
+    if error:
+        return error
+
+    html_path = storage.html_report_path(league_id, season, filename)
+    if html_path:
+        return send_from_directory(os.path.dirname(html_path), filename)
+
+    json_path = storage.json_data_path(league_id, season, filename)
+    if json_path:
+        return send_from_directory(os.path.dirname(json_path), filename)
+
     return jsonify({"error": "File not found"}), 404
 
+
 if __name__ == '__main__':
-    print("🚀 Starting Fantasy Football Analysis Server...")
+    print("Starting Fantasy Football Analysis Server...")
     port = int(os.environ.get('PORT', 5000))
     debug_mode = os.environ.get('FLASK_ENV') != 'production'
-    app.run(debug=debug_mode, host='0.0.0.0', port=port)
+    # Single-process, multi-threaded: analysis_status/active_analyses are in-memory and must
+    # stay on one process. See Procfile/render.yaml (gunicorn --workers 1 --threads 8) and
+    # AZURE_MIGRATION.md for why this constraint matters when choosing a host.
+    app.run(debug=debug_mode, host='0.0.0.0', port=port, threaded=True)

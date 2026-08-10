@@ -15,7 +15,7 @@ def get_player_name_from_id(player_id, all_players=None):
     """Convert player ID to actual name using Sleeper player database"""
     if not player_id:
         return "Unknown Player"
-    
+
     if all_players and str(player_id) in all_players:
         player_data = all_players[str(player_id)]
         first_name = player_data.get('first_name', '')
@@ -23,181 +23,267 @@ def get_player_name_from_id(player_id, all_players=None):
         full_name = f"{first_name} {last_name}".strip()
         if full_name:
             return full_name
-    
+
     # Fallback to ID if name not found
     return f"Player_{player_id}"
 
 
-def analyze_real_trades_only(transactions_data, team_power_data, roster_grade_data, user_lookup, roster_to_manager, all_players=None, output_dirs=None):
-    """Analyze only actual trades (not waivers) with detailed player movement tracking"""
+def get_player_info_from_id(player_id, all_players=None):
+    """Name + fantasy position for a player ID, used to value individual traded players
+    (get_player_name_from_id alone isn't enough since grading needs the position too)."""
+    name = get_player_name_from_id(player_id, all_players)
+    position = 'Unknown'
+    if all_players and str(player_id) in all_players:
+        position = all_players[str(player_id)].get('position', 'Unknown')
+    return {'name': name, 'position': position}
+
+
+def calculate_player_value_trade_impact(acquired_player_infos, gave_up_player_infos, analyzer):
+    """Value a trade by the actual players that moved, using the existing ESPN-tier
+    grade_player() (~1-10 scale). This is the primary trade score - see CLAUDE.md section 4.1
+    for why the old team-wide power/grade delta was replaced: it never looked at which players
+    were actually traded.
+    """
+    value_acquired = sum(
+        analyzer.grade_player(p['name'], p['position'])['grade'] for p in acquired_player_infos
+    )
+    value_given_up = sum(
+        analyzer.grade_player(p['name'], p['position'])['grade'] for p in gave_up_player_infos
+    )
+    return {
+        'value_acquired': round(value_acquired, 2),
+        'value_given_up': round(value_given_up, 2),
+        'net_player_value': round(value_acquired - value_given_up, 2),
+    }
+
+
+def _parse_week_num(week_key):
+    """Accepts either 'Week N' string keys or bare week-number keys."""
+    if isinstance(week_key, str) and 'Week' in week_key:
+        return int(week_key.split()[1])
+    elif isinstance(week_key, (int, float)):
+        return int(week_key)
+    return None
+
+
+def _find_faab_event(faab_ledger, transaction_id, roster_id):
+    """Look up the pre-scored FAAB event (see src/faab_analysis.py) for one roster's leg of a
+    specific transaction. Returns None if the league isn't on FAAB or this transaction/roster
+    didn't spend or receive FAAB."""
+    if not faab_ledger or not faab_ledger.get('enabled') or not transaction_id:
+        return None
+    for event in faab_ledger.get('events', []):
+        if event.get('transaction_id') == transaction_id and event.get('roster_id') == roster_id:
+            return event
+    return None
+
+
+def _faab_fields(faab_event):
+    if not faab_event:
+        return {
+            'faab_spent': None, 'faab_direction': None, 'faab_aggressiveness_score': None,
+            'faab_commitment_ratio': None, 'faab_relative_scarcity': None,
+        }
+    return {
+        'faab_spent': faab_event['amount'],
+        'faab_direction': faab_event['direction'],
+        'faab_aggressiveness_score': faab_event.get('aggressiveness_score'),
+        'faab_commitment_ratio': faab_event.get('commitment_ratio'),
+        'faab_relative_scarcity': faab_event.get('relative_scarcity'),
+    }
+
+
+def analyze_real_trades_only(transactions_data, team_power_data, roster_grade_data, user_lookup,
+                              roster_to_manager, all_players=None, output_dirs=None,
+                              faab_ledger=None, analyzer=None):
+    """Analyze actual trades with player-value-based impact scoring (CLAUDE.md section 4.1).
+
+    Trading partners are identified by roster_id/manager_id, not display-name equality (the old
+    lookup crashed via StopIteration whenever two managers shared a display name). 3+ team
+    trades are analyzed per-manager instead of being silently dropped - each manager's own
+    acquired/given-up players are still correctly attributed from Sleeper's flat adds/drops maps.
+    """
     print("Analyzing Real Trade Impacts Only...")
-    
+
     trade_impacts = []
-    
+
     for week_key, week_transactions in transactions_data.items():
-        # Check if week_transactions is None or empty
-        if not week_transactions or week_transactions is None:
+        if not week_transactions:
             continue
-            
-        week_num = int(week_key.split()[1])
-        
+
+        week_num = _parse_week_num(week_key)
+        if week_num is None:
+            continue
+
         for transaction in week_transactions:
-            # Skip if transaction is None or invalid
             if not transaction or not isinstance(transaction, dict):
                 continue
-                
-            # Only analyze actual trades, skip waivers/free agents
+
             if transaction.get('type') != 'trade':
                 continue
-                
-            print(f"\n   Analyzing Trade in Week {week_num}:")
-            
+            if transaction.get('status') not in (None, 'complete'):
+                continue
+
             adds = transaction.get('adds', {}) or {}
             drops = transaction.get('drops', {}) or {}
             roster_ids = transaction.get('roster_ids', []) or []
-            
-            if len(roster_ids) != 2:
-                print(f"     ⚠️  Skipping complex trade with {len(roster_ids)} teams")
+
+            if len(roster_ids) < 2:
                 continue
-                
-            # Get the two managers involved
+
+            print(f"\n   Analyzing Trade in Week {week_num}:")
+            is_multi_team = len(roster_ids) > 2
+            if is_multi_team:
+                print(f"     ({len(roster_ids)}-team trade)")
+
             manager_data = {}
             for roster_id in roster_ids:
-                if roster_id in roster_to_manager:
-                    manager_id = roster_to_manager[roster_id]
-                    if manager_id in user_lookup:
-                        manager_name = user_lookup[manager_id].get('display_name', f'Manager {manager_id}')
-                        
-                        # Find what this manager got and gave up
-                        acquired = []
-                        gave_up = []
-                        
-                        for player_id, receiving_roster in adds.items():
-                            if receiving_roster == roster_id:
-                                acquired.append(get_player_name_from_id(player_id, all_players))
-                        
-                        for player_id, giving_roster in drops.items():
-                            if giving_roster == roster_id:
-                                gave_up.append(get_player_name_from_id(player_id, all_players))
-                        
-                        manager_data[manager_id] = {
-                            'name': manager_name,
-                            'roster_id': roster_id,
-                            'acquired': acquired,
-                            'gave_up': gave_up
-                        }
-            
-            if len(manager_data) != 2:
-                print(f"     ⚠️  Could not identify both trading partners")
+                if roster_id not in roster_to_manager:
+                    continue
+                manager_id = roster_to_manager[roster_id]
+                if manager_id not in user_lookup:
+                    continue
+
+                manager_name = user_lookup[manager_id].get('display_name', f'Manager {manager_id}')
+                acquired_ids = [pid for pid, rid in adds.items() if rid == roster_id]
+                gave_up_ids = [pid for pid, rid in drops.items() if rid == roster_id]
+
+                manager_data[roster_id] = {
+                    'manager_id': manager_id,
+                    'name': manager_name,
+                    'roster_id': roster_id,
+                    'acquired': [get_player_name_from_id(pid, all_players) for pid in acquired_ids],
+                    'gave_up': [get_player_name_from_id(pid, all_players) for pid in gave_up_ids],
+                    'acquired_infos': [get_player_info_from_id(pid, all_players) for pid in acquired_ids],
+                    'gave_up_infos': [get_player_info_from_id(pid, all_players) for pid in gave_up_ids],
+                }
+
+            if len(manager_data) < 2:
+                print("     [WARNING] Could not identify at least 2 trading partners")
                 continue
-                
-            # Calculate impact for each manager using improved methodology
-            for manager_id, trade_info in manager_data.items():
-                # Use improved calculation method
-                impact_results = calculate_improved_trade_impact(
+
+            for roster_id, trade_info in manager_data.items():
+                manager_id = trade_info['manager_id']
+                other_managers = [m for rid, m in manager_data.items() if rid != roster_id]
+                other_manager_names = ', '.join(m['name'] for m in other_managers)
+                other_acquired = [p for m in other_managers for p in m['acquired']]
+                other_gave_up = [p for m in other_managers for p in m['gave_up']]
+
+                if analyzer is not None:
+                    player_value = calculate_player_value_trade_impact(
+                        trade_info['acquired_infos'], trade_info['gave_up_infos'], analyzer
+                    )
+                else:
+                    player_value = {'value_acquired': 0.0, 'value_given_up': 0.0, 'net_player_value': 0.0}
+
+                # Team power/roster-grade trend around the trade date - supplementary context
+                # only (correlation, not the trade's causal value), computed against the
+                # manager's real historical roster now that main.py reconstructs it.
+                team_trend = calculate_improved_trade_impact(
                     manager_id, week_num, team_power_data, roster_grade_data
                 )
-                
-                other_manager = next(m for m in manager_data.values() if m['name'] != trade_info['name'])
-                
+
+                faab_event = _find_faab_event(faab_ledger, transaction.get('transaction_id'), roster_id)
+
                 trade_impacts.append({
                     'week': week_num,
                     'manager_id': manager_id,
                     'manager_name': trade_info['name'],
-                    'other_manager': other_manager['name'],
+                    'other_manager': other_manager_names,
                     'acquired_players': trade_info['acquired'],
                     'gave_up_players': trade_info['gave_up'],
-                    'other_acquired': other_manager['acquired'],
-                    'other_gave_up': other_manager['gave_up'],
-                    'power_impact': impact_results['power_impact'],
-                    'grade_impact': impact_results['grade_impact'],
-                    'record_impact': impact_results['record_impact'],
-                    'combined_impact': impact_results['combined_impact'],
-                    'normalized_power': impact_results['normalized_power'],
-                    'normalized_grade': impact_results['normalized_grade'],
-                    'normalized_record': impact_results['normalized_record']
+                    'other_acquired': other_acquired,
+                    'other_gave_up': other_gave_up,
+                    'is_multi_team_trade': is_multi_team,
+                    'value_acquired': player_value['value_acquired'],
+                    'value_given_up': player_value['value_given_up'],
+                    'combined_impact': player_value['net_player_value'],
+                    'team_trend_power_impact': team_trend['power_impact'],
+                    'team_trend_grade_impact': team_trend['grade_impact'],
+                    **_faab_fields(faab_event),
                 })
-                
-                print(f"     {trade_info['name']}: Power {impact_results['power_impact']:+.1f}, Grade {impact_results['grade_impact']:+.1f}, Record {impact_results['record_impact']:+.1f}, Combined {impact_results['combined_impact']:+.1f}")
-    
+
+                print(f"     {trade_info['name']}: Player Value {player_value['net_player_value']:+.1f} "
+                      f"(Acquired {player_value['value_acquired']:.1f}, Gave up {player_value['value_given_up']:.1f}) | "
+                      f"Team Trend: Power {team_trend['power_impact']:+.1f}, Grade {team_trend['grade_impact']:+.1f}")
+
     return trade_impacts
 
 
-def analyze_waiver_pickups(transactions_data, team_power_data, roster_grade_data, user_lookup, roster_to_manager, all_players=None, output_dirs=None):
-    """Analyze waiver wire and free agent pickups with impact scoring"""
+def analyze_waiver_pickups(transactions_data, team_power_data, roster_grade_data, user_lookup,
+                            roster_to_manager, all_players=None, output_dirs=None, faab_ledger=None):
+    """Analyze waiver wire and free agent pickups with impact scoring.
+
+    One entry per (transaction, roster) - not per added player. The old version created a
+    separate entry per player added within a single transaction, each carrying the *same*
+    team-level power/grade impact, which double- (or triple-) counted that manager's weekly
+    impact and 'total moves' whenever they batched multiple simultaneous adds into one waiver
+    run (see CLAUDE.md section 4.4).
+    """
     print("\nAnalyzing Waiver Wire & Free Agent Impacts...")
-    
+
     waiver_impacts = []
-    
+
     for week_key, week_transactions in transactions_data.items():
-        # Check if week_transactions is None or empty
-        if not week_transactions or week_transactions is None:
-            print(f"   ⚠️  Skipping week {week_key}: No transactions")
+        if not week_transactions:
             continue
-        
-        # Handle different possible data structures
-        if isinstance(week_key, str) and 'Week' in week_key:
-            week_num = int(week_key.split()[1])
-        elif isinstance(week_key, (int, float)):
-            week_num = int(week_key)
-        else:
-            print(f"   ⚠️  Skipping invalid week key: {week_key}")
+
+        week_num = _parse_week_num(week_key)
+        if week_num is None:
+            print(f"   [WARNING] Skipping invalid week key: {week_key}")
             continue
-        
-        # Ensure week_transactions is iterable
-        if not hasattr(week_transactions, '__iter__'):
-            print(f"   ⚠️  Skipping week {week_num}: transactions not iterable")
-            continue
-            
+
         for transaction in week_transactions:
-            # Skip if transaction is None or invalid
             if not transaction or not isinstance(transaction, dict):
                 continue
-                
-            # Only analyze waivers and free agent moves (skip trades)
+
             transaction_type = transaction.get('type', 'unknown')
             if transaction_type == 'trade':
                 continue
-                
+            if transaction.get('status') not in (None, 'complete'):
+                continue
+
             adds = transaction.get('adds', {}) or {}
             drops = transaction.get('drops', {}) or {}
-            
-            # Skip if no adds
             if not adds:
                 continue
-            
-            for player_added, roster_id in adds.items():
-                if roster_id in roster_to_manager:
-                    manager_id = roster_to_manager[roster_id]
-                    if manager_id in user_lookup:
-                        manager_name = user_lookup[manager_id].get('display_name', f'Manager {manager_id}')
-                        
-                        # Find what player was dropped (if any)
-                        player_dropped = None
-                        for player_id, dropping_roster in drops.items():
-                            if dropping_roster == roster_id:
-                                player_dropped = get_player_name_from_id(player_id, all_players)
-                                break
-                        
-                        if not player_dropped:
-                            player_dropped = "None (roster space)"
-                        
-                        # Calculate impacts
-                        power_impact = calculate_manager_power_impact(manager_id, week_num, team_power_data)
-                        grade_impact = calculate_manager_grade_impact(manager_id, week_num, roster_grade_data)
-                        
-                        waiver_impacts.append({
-                            'week': week_num,
-                            'manager_id': manager_id,
-                            'manager_name': manager_name,
-                            'player_added': get_player_name_from_id(player_added, all_players),
-                            'player_dropped': player_dropped,
-                            'power_impact': power_impact,
-                            'grade_impact': grade_impact,
-                            'combined_impact': power_impact + grade_impact,
-                            'transaction_type': transaction_type
-                        })
-    
+
+            rosters_involved = set(adds.values()) | set(drops.values())
+
+            for roster_id in rosters_involved:
+                if roster_id not in roster_to_manager:
+                    continue
+                manager_id = roster_to_manager[roster_id]
+                if manager_id not in user_lookup:
+                    continue
+
+                manager_name = user_lookup[manager_id].get('display_name', f'Manager {manager_id}')
+                players_added = [get_player_name_from_id(pid, all_players) for pid, rid in adds.items() if rid == roster_id]
+                players_dropped = [get_player_name_from_id(pid, all_players) for pid, rid in drops.items() if rid == roster_id]
+
+                if not players_added:
+                    continue
+
+                power_impact = calculate_manager_power_impact(manager_id, week_num, team_power_data)
+                grade_impact = calculate_manager_grade_impact(manager_id, week_num, roster_grade_data)
+                faab_event = _find_faab_event(faab_ledger, transaction.get('transaction_id'), roster_id)
+
+                waiver_impacts.append({
+                    'week': week_num,
+                    'manager_id': manager_id,
+                    'manager_name': manager_name,
+                    'transaction_id': transaction.get('transaction_id'),
+                    'players_added': players_added,
+                    'players_dropped': players_dropped or ['None (roster space)'],
+                    'player_added': ', '.join(players_added),
+                    'player_dropped': ', '.join(players_dropped) if players_dropped else 'None (roster space)',
+                    'power_impact': power_impact,
+                    'grade_impact': grade_impact,
+                    'combined_impact': power_impact + grade_impact,
+                    'transaction_type': transaction_type,
+                    **_faab_fields(faab_event),
+                })
+
     print(f"     Analyzed {len(waiver_impacts)} waiver/FA transactions")
     return waiver_impacts
 
@@ -228,11 +314,14 @@ def calculate_manager_power_impact(manager_id, week_num, team_power_data, window
 
 def calculate_improved_trade_impact(manager_id, trade_week, team_power_data, roster_grade_data, matchup_data=None):
     """
-    Calculate trade impact using improved methodology:
-    - Power rating: Week before trade vs Week of trade
-    - Roster grade: Week before trade vs Week of trade  
-    - Record impact: Simulated based on performance
-    - All weighted equally (33.33% each)
+    Team-wide power rating / roster grade trend around a trade - SUPPLEMENTARY CONTEXT ONLY,
+    not the trade's score (see CLAUDE.md section 4.1). analyze_real_trades_only() uses only this
+    function's 'power_impact'/'grade_impact' fields to show "this manager was already trending
+    up/down going into the trade"; the trade's actual combined_impact score comes from
+    calculate_player_value_trade_impact() instead, which values the specific players traded.
+    roster_grade_data now reflects each manager's real historical roster per week (reconstructed
+    in main.py), so this trend is meaningful context rather than the random-noise signal it used
+    to be layered on top of.
     """
     power_impact = 0.0
     grade_impact = 0.0
@@ -543,17 +632,24 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     trade_id = 1
     
     for impact in trade_impacts:
-        # Create unique identifier for each trade transaction
+        # Create unique identifier for each trade transaction.
+        # 'power_impact'/'grade_impact' here are the team-wide TREND around the trade date -
+        # supplementary context, not the trade's score. 'combined_impact' is the actual trade
+        # score: net player value of who was acquired vs. given up (CLAUDE.md section 4.1).
         individual_trades.append({
             'trade_id': trade_id,
             'manager_name': impact['manager_name'],
             'week': impact['week'],
-            'power_impact': impact['power_impact'],
-            'grade_impact': impact['grade_impact'],
+            'power_impact': impact.get('team_trend_power_impact', 0.0),
+            'grade_impact': impact.get('team_trend_grade_impact', 0.0),
             'combined_impact': impact['combined_impact'],
+            'value_acquired': impact.get('value_acquired', 0.0),
+            'value_given_up': impact.get('value_given_up', 0.0),
             'acquired_players': impact['acquired_players'],
             'gave_up_players': impact['gave_up_players'],
-            'other_manager': impact['other_manager']
+            'other_manager': impact['other_manager'],
+            'faab_note': (f"${impact['faab_spent']:.0f} FAAB {impact['faab_direction']}"
+                          if impact.get('faab_spent') else 'No FAAB'),
         })
         trade_id += 1
     
@@ -574,69 +670,69 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
                 'acquired_players': [],
                 'gave_up_players': [],
                 'other_managers': [],
-                'trade_ids': []
+                'trade_ids': [],
+                'faab_notes': [],
             }
-        
+
         # Add small jitter to prevent exact overlap
         week_jitter = trade['week'] + np.random.uniform(-0.15, 0.15)
-        
+
         manager_data[manager]['weeks'].append(week_jitter)
         manager_data[manager]['power_impacts'].append(trade['power_impact'])
         manager_data[manager]['grade_impacts'].append(trade['grade_impact'])
         manager_data[manager]['combined_impacts'].append(trade['combined_impact'])
-        
+
         # Clean player name formatting
         acquired = ', '.join([p.strip() for p in trade['acquired_players']]) if trade['acquired_players'] else 'None'
         gave_up = ', '.join([p.strip() for p in trade['gave_up_players']]) if trade['gave_up_players'] else 'None'
-        
+
         manager_data[manager]['acquired_players'].append(acquired)
         manager_data[manager]['gave_up_players'].append(gave_up)
         manager_data[manager]['other_managers'].append(trade['other_manager'])
         manager_data[manager]['trade_ids'].append(trade['trade_id'])
+        manager_data[manager]['faab_notes'].append(trade.get('faab_note', 'No FAAB'))
     
     # Color mapping with legend
     unique_managers = sorted(all_managers)
     colors_palette = Category20[max(3, min(20, len(unique_managers)))]
     color_map = {manager: colors_palette[i % len(colors_palette)] for i, manager in enumerate(unique_managers)}
     
-    # Create leaderboard of worst trades with balanced weighting
+    # Create leaderboard of worst trades. There is exactly one impact formula in this codebase
+    # now (CLAUDE.md section 4.1): combined_impact = net player value acquired vs. given up.
+    # The old version ranked this leaderboard by a *different* ad hoc formula than the one
+    # shown on the chart/report, which never matched the methodology text either.
     worst_trades = []
     for trade in individual_trades:
-        # Normalize impacts to give more balanced weighting
-        # Power impacts typically range -15 to +25, so divide by 5
-        # Grade impacts typically range -1.5 to +2, so multiply by 3
-        normalized_power = trade['power_impact'] / 5.0
-        normalized_grade = trade['grade_impact'] * 3.0
-        balanced_combined = normalized_power + normalized_grade
-        
         worst_trades.append({
             'manager': trade['manager_name'],
             'week': trade['week'],
-            'combined_impact': trade['combined_impact'],  # Keep original for display
-            'balanced_combined': balanced_combined,       # New balanced score for ranking
+            'combined_impact': trade['combined_impact'],
+            'value_acquired': trade.get('value_acquired', 0.0),
+            'value_given_up': trade.get('value_given_up', 0.0),
             'acquired': ', '.join([p.strip() for p in trade['acquired_players']]) if trade['acquired_players'] else 'None',
             'gave_up': ', '.join([p.strip() for p in trade['gave_up_players']]) if trade['gave_up_players'] else 'None',
             'other_manager': trade['other_manager'],
             'power_impact': trade['power_impact'],
-            'grade_impact': trade['grade_impact']
+            'grade_impact': trade['grade_impact'],
+            'faab_note': trade.get('faab_note', 'No FAAB'),
         })
-    
-    # Sort by worst balanced impact and create both text and HTML reports
-    worst_trades.sort(key=lambda x: x['balanced_combined'])
-    
+
+    # Sort by worst (most negative) net player value and create both text and HTML reports
+    worst_trades.sort(key=lambda x: x['combined_impact'])
+
     # Print worst trades summary to terminal
     print("\n" + "="*65)
-    print("WORST TRADES ANALYSIS (Balanced Scoring)")
+    print("WORST TRADES ANALYSIS (Net Player Value)")
     print("="*65)
     print(f"Total Trades Analyzed: {len(worst_trades)}")
     if worst_trades:
-        print(f"Worst Balanced Score: {worst_trades[0]['balanced_combined']:+.1f} ({worst_trades[0]['manager']})")
-        print("\nTOP 5 WORST TRADES (Balanced Combined Score):")
-        print(f"{'Rank':<4} {'Manager':<15} {'Week':<4} {'Balanced':<9} {'Trade Summary':<30}")
+        print(f"Worst Net Player Value: {worst_trades[0]['combined_impact']:+.1f} ({worst_trades[0]['manager']})")
+        print("\nTOP 5 WORST TRADES (Net Player Value):")
+        print(f"{'Rank':<4} {'Manager':<15} {'Week':<4} {'Net Value':<9} {'Trade Summary':<30}")
         print("-" * 70)
         for i, trade in enumerate(worst_trades[:5]):
             trade_summary = f"Got {trade['acquired'][:15]}..." if len(trade['acquired']) > 15 else trade['acquired']
-            print(f"{i+1:<4} {trade['manager'][:14]:<15} {trade['week']:<4} {trade['balanced_combined']:+8.1f} {trade_summary:<30}")
+            print(f"{i+1:<4} {trade['manager'][:14]:<15} {trade['week']:<4} {trade['combined_impact']:+8.1f} {trade_summary:<30}")
         
         # Show worst power impact trades
         power_sorted = sorted(worst_trades, key=lambda x: x['power_impact'])
@@ -669,8 +765,11 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         
         f.write("METHODOLOGY:\n")
-        f.write("- Combined Impact = Power Rating Impact + Roster Grade Impact\n")
-        f.write("- Negative values indicate trades that weakened the team\n")
+        f.write("- Combined Impact = Net Player Value = Value Acquired - Value Given Up\n")
+        f.write("- Each traded player is graded on ESPN's season stat-leader tiers (~1-10 scale)\n")
+        f.write("- Power/Grade Impact below are supplementary context (team trend around the\n")
+        f.write("  trade date), not part of the Combined Impact score\n")
+        f.write("- Negative Combined Impact means this manager gave up more value than they received\n")
         f.write("- Rankings based on most negative combined impact\n\n")
         
         f.write("TOP 10 WORST TRADES:\n")
@@ -777,10 +876,9 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         <p style="margin: 3px 0;"><strong>Time Analysis:</strong> Before/after trade performance comparison with 2-week windows</p>
         
         <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">📈 Impact Calculation Formula</h4>
-        <p style="margin: 3px 0;"><strong>Power Rating Impact:</strong> Change in weekly power score (performance + wins)</p>
-        <p style="margin: 3px 0;"><strong>Roster Grade Impact:</strong> Change in roster talent evaluation based on ESPN rankings</p>
-        <p style="margin: 3px 0;"><strong>Combined Score:</strong> Power Impact + Roster Impact (equal 50/50 weighting)</p>
-        <p style="margin: 3px 0;"><strong>Baseline Comparison:</strong> 2 weeks before trade vs 2 weeks after trade execution</p>
+        <p style="margin: 3px 0;"><strong>Combined Impact (the plotted score):</strong> Net player value = value of players acquired minus value of players given up, each player graded on ESPN's season stat-leader tiers (~1-10 scale)</p>
+        <p style="margin: 3px 0;"><strong>Team Trend (context only, shown on hover):</strong> This manager's weekly power rating / roster grade change from the week before the trade to the week of the trade - correlation, not the trade's cause</p>
+        <p style="margin: 3px 0;"><strong>FAAB:</strong> Shown on hover when the trade also included a FAAB budget transfer</p>
         
         <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">🎯 Impact Scale & Interpretation</h4>
         <p style="margin: 3px 0;"><strong>Excellent Trade (+15+):</strong> Significantly improved team strength and performance</p>
@@ -841,13 +939,12 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     calc_explanation_html = """
     <h3 style="margin:10px 0 5px 0;">📋 How Trade Impact Is Calculated</h3>
     <div style="background-color: #e7f3ff; padding: 12px; border-radius: 5px; margin: 5px 0; border-left: 4px solid #2196F3;">
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 1:</strong> Identify the 2 weeks before and 2 weeks after each trade</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 2:</strong> Calculate average Power Rating for before/after periods</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 3:</strong> Calculate average Roster Grade for before/after periods</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 4:</strong> Power Impact = After Power - Before Power</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 5:</strong> Roster Impact = After Grade - Before Grade</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 6:</strong> Net Effect = Power Impact + Roster Impact</p>
-        <p style="margin: 8px 0 5px 0; font-size: 12px; color: #555;"><em>Positive values mean the trade improved your team, negative values mean it hurt your team</em></p>
+        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 1:</strong> Grade every player acquired and every player given up (ESPN season stat-leader tiers, ~1-10 scale)</p>
+        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 2:</strong> Value Acquired = sum of acquired players' grades</p>
+        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 3:</strong> Value Given Up = sum of given-up players' grades</p>
+        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 4:</strong> Combined Impact = Value Acquired - Value Given Up</p>
+        <p style="margin: 5px 0; font-size: 13px;"><strong>Context only:</strong> Team Trend (hover) compares this manager's power rating/roster grade the week before vs. the week of the trade - it is not part of the score</p>
+        <p style="margin: 8px 0 5px 0; font-size: 12px; color: #555;"><em>Positive values mean the manager received more value than they gave up; negative values mean the opposite</em></p>
     </div>
     """
     calc_explanation_div = Div(text=calc_explanation_html, width=1200, height=120)
@@ -873,7 +970,8 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
             'gave_up': data['gave_up_players'],
             'other_manager': data['other_managers'],
             'manager': [manager] * len(data['weeks']),
-            'trade_id': data['trade_ids']
+            'trade_id': data['trade_ids'],
+            'faab_note': data['faab_notes'],
         })
         
         # Add scatter plot
@@ -904,9 +1002,10 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         ("Trading Partner", "@other_manager"),
         ("Acquired Players", "@acquired"),
         ("Traded Away", "@gave_up"),
-        ("Power Impact", "@power_impact{+0.1f}"),
-        ("Roster Impact", "@grade_impact{+0.1f}"),
-        ("Net Effect", "@combined_impact{+0.1f}")
+        ("Combined Impact (Net Player Value)", "@combined_impact{+0.1f}"),
+        ("FAAB", "@faab_note"),
+        ("Team Trend: Power (context only)", "@power_impact{+0.1f}"),
+        ("Team Trend: Grade (context only)", "@grade_impact{+0.1f}")
     ])
     p.add_tools(hover)
     
@@ -1004,22 +1103,24 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             'manager_name': impact['manager_name'],
             'week': impact['week'],
             'power_impact': impact['power_impact'],
-            'grade_impact': impact['grade_impact'], 
+            'grade_impact': impact['grade_impact'],
             'combined_impact': impact['combined_impact'],
             'player_added': impact.get('player_added', 'Unknown'),
             'player_dropped': impact.get('player_dropped', 'None'),
-            'transaction_type': impact.get('transaction_type', 'Waiver')
+            'transaction_type': impact.get('transaction_type', 'Waiver'),
+            'faab_spent': impact.get('faab_spent'),
+            'faab_aggressiveness_score': impact.get('faab_aggressiveness_score'),
         })
         waiver_id += 1
-    
+
     # Prepare data by manager with jitter to separate overlapping transactions
     manager_data = {}
     all_managers = set()
-    
+
     for waiver in individual_waivers:
         manager = waiver['manager_name']
         all_managers.add(manager)
-        
+
         if manager not in manager_data:
             manager_data[manager] = {
                 'weeks': [],
@@ -1029,12 +1130,13 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
                 'players_added': [],
                 'players_dropped': [],
                 'transaction_types': [],
-                'waiver_ids': []
+                'waiver_ids': [],
+                'faab_labels': [],
             }
-        
+
         # Add small jitter to prevent exact overlap
         week_jitter = waiver['week'] + np.random.uniform(-0.15, 0.15)
-        
+
         manager_data[manager]['weeks'].append(week_jitter)
         manager_data[manager]['power_impacts'].append(waiver['power_impact'])
         manager_data[manager]['grade_impacts'].append(waiver['grade_impact'])
@@ -1043,6 +1145,10 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         manager_data[manager]['players_dropped'].append(waiver['player_dropped'])
         manager_data[manager]['transaction_types'].append(waiver['transaction_type'])
         manager_data[manager]['waiver_ids'].append(waiver['waiver_id'])
+        manager_data[manager]['faab_labels'].append(
+            f"${waiver['faab_spent']:.0f} (aggressiveness {waiver['faab_aggressiveness_score']:.0f}/100)"
+            if waiver.get('faab_spent') else 'No FAAB / not a FAAB league'
+        )
     
     # Color mapping with legend
     unique_managers = sorted(all_managers)
@@ -1061,29 +1167,34 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
                 'positive_waivers': 0,
                 'negative_waivers': 0,
                 'best_pickup': None,
-                'best_pickup_impact': float('-inf')
+                'best_pickup_impact': float('-inf'),
+                'total_faab_spent': 0.0,
             }
-        
+
         manager_stats[manager]['total_waivers'] += 1
         manager_stats[manager]['total_impact'] += waiver['combined_impact']
         manager_stats[manager]['impacts'].append(waiver['combined_impact'])
-        
+        manager_stats[manager]['total_faab_spent'] += waiver.get('faab_spent') or 0.0
+
         if waiver['combined_impact'] > 0:
             manager_stats[manager]['positive_waivers'] += 1
         elif waiver['combined_impact'] < 0:
             manager_stats[manager]['negative_waivers'] += 1
-        
+
         # Track best pickup
         if waiver['combined_impact'] > manager_stats[manager]['best_pickup_impact']:
             manager_stats[manager]['best_pickup_impact'] = waiver['combined_impact']
             manager_stats[manager]['best_pickup'] = waiver['player_added']
-    
-    # Create leaderboard data
+
+    # Create leaderboard data. $/impact efficiency and FAAB total are only meaningful in FAAB
+    # leagues - they'll be $0.00/0.0 for leagues on rolling/priority waivers, which is a
+    # correct (not broken) representation since no FAAB was ever spent there.
     leaderboard_data = []
     for manager, stats in manager_stats.items():
         avg_impact = stats['total_impact'] / stats['total_waivers'] if stats['total_waivers'] > 0 else 0
         success_rate = (stats['positive_waivers'] / stats['total_waivers'] * 100) if stats['total_waivers'] > 0 else 0
-        
+        faab_efficiency = (stats['total_impact'] / stats['total_faab_spent']) if stats['total_faab_spent'] > 0 else 0.0
+
         leaderboard_data.append([
             manager,
             f"{avg_impact:+.2f}",
@@ -1091,7 +1202,9 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             str(stats['total_waivers']),
             f"{success_rate:.1f}%",
             stats['best_pickup'] or 'None',
-            "📈" if avg_impact > 1 else "📉" if avg_impact < -1 else "➡️"
+            "📈" if avg_impact > 1 else "📉" if avg_impact < -1 else "➡️",
+            f"${stats['total_faab_spent']:.0f}",
+            f"{faab_efficiency:+.2f}" if stats['total_faab_spent'] > 0 else "-",
         ])
     
     # Sort by average impact
@@ -1160,9 +1273,11 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Success Rate</th>
         <th style="border: 1px solid #ddd; padding: 8px;">Best Pickup</th>
         <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Trend</th>
+        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">FAAB Spent</th>
+        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Impact/$</th>
     </tr>
     """
-    
+
     for row in leaderboard_data:
         rank = int(row[0])
         color = "#e8f5e8" if rank <= 3 else "#fff5e6" if rank <= 6 else "#ffeaea"
@@ -1176,13 +1291,16 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[5]}</td>
             <td style="border: 1px solid #ddd; padding: 8px;">{row[6]}</td>
             <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[7]}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[8]}</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[9]}</td>
         </tr>"""
-    
+
     leaderboard_html += """
     </table>
     <div style="margin-top: 10px; font-size: 11px; color: #666;">
-        <strong>Legend:</strong> Avg Impact = Average net effect per waiver move | Total Gain = Sum of all pickup impacts | 
-        Success Rate = % of moves with positive impact | Best Pickup = Highest impact player acquired
+        <strong>Legend:</strong> Avg Impact = Average net effect per waiver move | Total Gain = Sum of all pickup impacts |
+        Success Rate = % of moves with positive impact | Best Pickup = Highest impact player acquired |
+        FAAB Spent/Impact per $ only populate in leagues on FAAB bidding
     </div>
     """
     leaderboard_div = Div(text=leaderboard_html, width=600, height=350)
@@ -1223,7 +1341,8 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             'player_dropped': data['players_dropped'],
             'transaction_type': data['transaction_types'],
             'manager': [manager] * len(data['weeks']),
-            'waiver_id': data['waiver_ids']
+            'waiver_id': data['waiver_ids'],
+            'faab_label': data['faab_labels'],
         })
         
         # Add scatter plot with triangles for waivers
@@ -1257,7 +1376,8 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         ("Player Dropped", "@player_dropped"),
         ("Power Impact", "@power_impact{+0.1f}"),
         ("Roster Impact", "@grade_impact{+0.1f}"),
-        ("Net Effect", "@combined_impact{+0.1f}")
+        ("Net Effect", "@combined_impact{+0.1f}"),
+        ("FAAB", "@faab_label"),
     ])
     p.add_tools(hover)
     
@@ -1867,23 +1987,23 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
         <div class="methodology">
             <h3>📊 Methodology</h3>
             <ul>
-                <li><strong>Balanced Combined Score</strong> = (Power Impact ÷ 5) + (Grade Impact × 3)</li>
-                <li><strong>Balanced scoring</strong> gives equal weight to power and roster grade impacts</li>
-                <li><strong>Negative values</strong> indicate trades that weakened the team</li>
-                <li><strong>Rankings</strong> based on most negative balanced score</li>
-                <li><strong>Power Impact</strong> measures effect on team's weekly scoring potential</li>
-                <li><strong>Grade Impact</strong> measures effect on roster construction quality</li>
+                <li><strong>Combined Impact</strong> = Net Player Value = Value Acquired − Value Given Up</li>
+                <li><strong>Player value</strong> comes from ESPN's season stat-leader tiers (~1-10 scale per player)</li>
+                <li><strong>Negative values</strong> mean this manager gave up more value than they received</li>
+                <li><strong>Rankings</strong> based on most negative Combined Impact</li>
+                <li><strong>Power/Grade Impact</strong> below are supplementary context only (this manager's team-wide trend around the trade date) - not part of the Combined Impact score</li>
+                <li><strong>FAAB</strong> shown when the trade also included a FAAB budget transfer</li>
             </ul>
         </div>
 
-        <h2>🏆 Top 10 Worst Trades (Balanced Scoring)</h2>
+        <h2>🏆 Top 10 Worst Trades (Net Player Value)</h2>
         <table class="trades-table">
             <thead>
                 <tr>
                     <th>Rank</th>
                     <th>Manager</th>
                     <th>Week</th>
-                    <th>Balanced Score</th>
+                    <th>Combined Impact</th>
                     <th>Acquired Players</th>
                     <th>Gave Up Players</th>
                     <th>Trading Partner</th>
@@ -1895,14 +2015,14 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
     # Add top 10 worst trades to table
     for i, trade in enumerate(worst_trades[:10]):
         rank_class = f"rank-{min(i+1, 3)}"
-        impact_class = "impact-negative" if trade['balanced_combined'] < 0 else "impact-positive"
-        
+        impact_class = "impact-negative" if trade['combined_impact'] < 0 else "impact-positive"
+
         html_content += f"""
                 <tr class="{rank_class}">
                     <td>#{i+1}</td>
                     <td><strong>{trade['manager']}</strong></td>
                     <td>{trade['week']}</td>
-                    <td class="{impact_class}">{trade['balanced_combined']:+.1f}</td>
+                    <td class="{impact_class}">{trade['combined_impact']:+.1f}</td>
                     <td>{trade['acquired']}</td>
                     <td>{trade['gave_up']}</td>
                     <td>{trade['other_manager']}</td>
@@ -1918,27 +2038,31 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
 
     # Add detailed breakdown cards for top 10
     for i, trade in enumerate(worst_trades[:10]):
-        impact_color = "#e74c3c" if trade['balanced_combined'] < 0 else "#27ae60"
-        
+        impact_color = "#e74c3c" if trade['combined_impact'] < 0 else "#27ae60"
+
         html_content += f"""
             <div class="trade-card">
                 <h4>#{i+1} - {trade['manager']} (Week {trade['week']})</h4>
-                
+
                 <div class="impact-stats">
                     <div class="stat">
-                        <div class="label">Balanced Score</div>
-                        <div class="value" style="color: {impact_color}">{trade['balanced_combined']:+.1f}</div>
+                        <div class="label">Combined Impact (Net Player Value)</div>
+                        <div class="value" style="color: {impact_color}">{trade['combined_impact']:+.1f}</div>
                     </div>
                     <div class="stat">
-                        <div class="label">Power Impact</div>
+                        <div class="label">Team Trend: Power</div>
                         <div class="value">{trade['power_impact']:+.1f}</div>
                     </div>
                     <div class="stat">
-                        <div class="label">Grade Impact</div>
+                        <div class="label">Team Trend: Grade</div>
                         <div class="value">{trade['grade_impact']:+.1f}</div>
                     </div>
+                    <div class="stat">
+                        <div class="label">FAAB</div>
+                        <div class="value">{trade.get('faab_note', 'No FAAB')}</div>
+                    </div>
                 </div>
-                
+
                 <div class="trade-details">
                     <div class="players-section">
                         <h5>📥 Acquired Players</h5>
@@ -2054,12 +2178,6 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
     return html_content
 
 
-# Legacy support functions for backward compatibility
-def calculate_combined_trade_impact(trade_impacts, roster_grade_impacts=None):
-    """Backward compatibility for existing main.py calls"""
-    return trade_impacts  # New system already combines impacts
-
-
 def print_trade_analysis_results(trade_impacts, waiver_impacts=None, combined_impacts=None):
     """Print comprehensive analysis results"""
     print("\n" + "="*65)
@@ -2087,18 +2205,3 @@ def print_trade_analysis_results(trade_impacts, waiver_impacts=None, combined_im
         print(f"   • Average Waiver Impact: {statistics.mean([w['combined_impact'] for w in waiver_impacts]):+.1f}")
     
     print("\n" + "="*65)
-
-
-def categorize_trade_significance(impact_score):
-    """Categorize trade significance for compatibility"""
-    abs_impact = abs(impact_score)
-    if abs_impact >= 15:
-        return "Critical"
-    elif abs_impact >= 8:
-        return "Major"
-    elif abs_impact >= 3:
-        return "Moderate"
-    elif abs_impact >= 1:
-        return "Minor"
-    else:
-        return "Minimal"

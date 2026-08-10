@@ -1,5 +1,6 @@
 {
   "sleeper_username": "YOUR_USERNAME_HERE",
-  "league_id": "YOUR_LEAGUE_ID_HERE", 
-  "target_season": "2025"
+  "league_id": "YOUR_LEAGUE_ID_HERE",
+  "target_season": 2025,
+  "auto_select": true
 }

@@ -6,134 +6,147 @@
     <title>🏈 Fantasy Football League Analysis Results</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
     <style>
+        /* Chicago Bears palette (navy + orange) on a light canvas - kept in sync with the
+           tokens in index.html and src/ai_overview.py's generated CSS. */
+        :root {
+            --color-ink: #0B162A;
+            --color-ink-secondary: #52607A;
+            --color-canvas: #F2F4F8;
+            --color-paper: #FFFFFF;
+            --color-hairline: #DCE0E8;
+            --color-accent: #C83803;
+            --color-accent-hover: #A62E02;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--color-canvas);
+            color: var(--color-ink);
             min-height: 100vh;
             padding: 20px;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
-        
+
         .header {
             text-align: center;
             margin-bottom: 40px;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
+            padding: 32px 30px;
+            background: var(--color-ink);
+            border-radius: 28px;
+            color: white;
         }
-        
+
         .header h1 {
-            font-size: 3rem;
+            font-size: 2.75rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        
+
         .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
+            font-size: 1.1rem;
+            opacity: 0.75;
         }
-        
+
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
             margin-bottom: 40px;
         }
-        
+
         .dashboard-card {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 15px;
+            background: var(--color-paper);
+            border-radius: 20px;
             padding: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--color-hairline);
+            transition: border-color 0.2s ease;
             cursor: pointer;
         }
-        
+
         .dashboard-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-color: var(--color-accent);
         }
-        
+
         .card-icon {
             font-size: 3rem;
             margin-bottom: 15px;
         }
-        
+
         .card-title {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.4rem;
+            font-weight: 600;
             margin-bottom: 10px;
+            color: var(--color-ink);
         }
-        
+
         .card-description {
-            opacity: 0.9;
+            color: var(--color-ink-secondary);
             line-height: 1.5;
             margin-bottom: 15px;
         }
-        
+
         .card-button {
-            background: #ff6b6b;
+            background: var(--color-accent);
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: bold;
+            border-radius: 999px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: background 0.2s ease;
             text-decoration: none;
             display: inline-block;
         }
-        
+
         .card-button:hover {
-            background: #ee5a5a;
+            background: var(--color-accent-hover);
         }
-        
+
         .footer {
             text-align: center;
             margin-top: 40px;
-            opacity: 0.8;
+            color: var(--color-ink-secondary);
         }
-        
+
         .last-updated {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--color-paper);
+            border: 1px solid var(--color-hairline);
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 14px;
             margin-bottom: 20px;
             text-align: center;
+            color: var(--color-ink-secondary);
         }
-        
+
         .back-btn {
-            background: linear-gradient(135deg, #51cf66, #40c057);
+            background: var(--color-ink);
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: bold;
+            border-radius: 999px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             text-decoration: none;
             display: inline-block;
             margin-bottom: 20px;
         }
-        
+
         .back-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            background: #1B3B6F;
         }
-        
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2rem;
@@ -159,71 +172,81 @@
         </div>
         
         <div class="dashboard-grid">
-            <div class="dashboard-card" onclick="window.open('power_rating_interactive.html', '_blank')">
+            <div class="dashboard-card" onclick="window.open('ai_overview_latest.html', '_blank')">
+                <div class="card-icon">🤖</div>
+                <div class="card-title">League Overview</div>
+                <div class="card-description">
+                    Top players of the week, biggest upsets, power ranking movers, matchups to watch,
+                    projected playoff teams, and top waiver pickups - all in one place.
+                </div>
+                <a href="#" class="card-button">View League Overview</a>
+            </div>
+
+            <div class="dashboard-card" onclick="window.open('power_rating_interactive_latest.html', '_blank')">
                 <div class="card-icon">⚡</div>
                 <div class="card-title">Power Rankings</div>
                 <div class="card-description">
-                    Track team performance over time with interactive power rating progression charts. 
+                    Track team performance over time with interactive power rating progression charts.
                     See how each team's strength has evolved throughout the season.
                 </div>
                 <a href="#" class="card-button">View Power Rankings</a>
             </div>
-            
-            <div class="dashboard-card" onclick="window.open('roster_grades_interactive.html', '_blank')">
+
+            <div class="dashboard-card" onclick="window.open('roster_grades_interactive_latest.html', '_blank')">
                 <div class="card-icon">📊</div>
                 <div class="card-title">Roster Grades</div>
                 <div class="card-description">
-                    Analyze roster quality and talent distribution across all teams. 
+                    Analyze roster quality and talent distribution across all teams.
                     Compare player values and roster construction strategies.
                 </div>
                 <a href="#" class="card-button">View Roster Analysis</a>
             </div>
-            
-            <div class="dashboard-card" onclick="window.open('luck_analysis.html', '_blank')">
+
+            <div class="dashboard-card" onclick="window.open('luck_analysis_latest.html', '_blank')">
                 <div class="card-icon">🍀</div>
                 <div class="card-title">Luck Analysis</div>
                 <div class="card-description">
-                    Discover who's been lucky vs unlucky! Compare regular wins to median-based performance. 
+                    Discover who's been lucky vs unlucky! Compare regular wins to median-based performance.
                     See the line of fairness and find out who earned their record.
                 </div>
                 <a href="#" class="card-button">View Luck Analysis</a>
             </div>
-            
-            <div class="dashboard-card" onclick="window.open('trade_analysis.html', '_blank')">
+
+            <div class="dashboard-card" onclick="window.open('trade_analysis_latest.html', '_blank')">
                 <div class="card-icon">🔄</div>
                 <div class="card-title">Trade Analysis</div>
                 <div class="card-description">
-                    Deep dive into all league trades with impact scoring and winner/loser analysis. 
-                    See who made the best and worst moves.
+                    Deep dive into all league trades with player-value impact scoring (and FAAB context
+                    for leagues that use it). See who made the best and worst moves.
                 </div>
                 <a href="#" class="card-button">View Trade Impact</a>
             </div>
-            
-            <div class="dashboard-card" onclick="window.open('waiver_analysis.html', '_blank')">
+
+            <div class="dashboard-card" onclick="window.open('waiver_analysis_latest.html', '_blank')">
                 <div class="card-icon">📈</div>
                 <div class="card-title">Waiver Wire Analysis</div>
                 <div class="card-description">
-                    Track waiver wire pickups and free agent acquisitions. 
-                    Identify the best and worst waiver claims of the season.
+                    Track waiver wire pickups and free agent acquisitions, including FAAB spend and
+                    efficiency for leagues that use FAAB bidding.
                 </div>
                 <a href="#" class="card-button">View Waiver Activity</a>
             </div>
-            
-            <div class="dashboard-card" onclick="window.open('manager_grades.html', '_blank')">
+
+            <div class="dashboard-card" onclick="window.open('manager_grades_latest.html', '_blank')">
                 <div class="card-icon">🏆</div>
                 <div class="card-title">Manager Report Cards</div>
                 <div class="card-description">
-                    Comprehensive manager performance grades based on trades, waivers, and overall strategy. 
+                    Comprehensive manager performance grades based on trades, waivers, and overall strategy.
                     See who's managing their team most effectively.
                 </div>
                 <a href="#" class="card-button">View Manager Grades</a>
             </div>
-            
-            <div class="dashboard-card" onclick="window.open('worst_trades_report.html', '_blank')">
+
+            <div class="dashboard-card" onclick="window.open('worst_trades_report_latest.html', '_blank')">
                 <div class="card-icon">🚨</div>
                 <div class="card-title">Worst Trades Report</div>
                 <div class="card-description">
-                    Interactive report highlighting the worst trades in your league with detailed impact analysis. 
+                    Interactive report highlighting the worst trades in your league with detailed impact analysis.
                     Perfect for roasting your leaguemates with style!
                 </div>
                 <a href="#" class="card-button">View Worst Trades</a>
@@ -237,8 +260,8 @@
     </div>
     
     <script>
-        // Load the latest analysis timestamp
-        fetch('data/fantasy_analysis.json')
+        // Load the latest analysis timestamp (build.js writes files with a _latest suffix)
+        fetch('data/fantasy_analysis_latest.json')
             .then(response => response.json())
             .then(data => {
                 const timestamp = data.analysis_info?.timestamp;
