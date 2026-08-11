@@ -223,11 +223,18 @@ Sections, each backed by data that is now actually persisted (previously fetched
 5. **Projected playoff teams** — "if the season ended today" standings (wins, then points as
    tiebreak) against the league's real `playoff_teams` count, with games-back-from-the-cutoff for
    the bubble teams. Explicitly labeled as a snapshot projection, not a playoff-odds simulation.
-6. **Top waiver pickups** — season-to-date and this-week leaders from the (now de-duplicated,
+6. **Median standings** — "if a median-scoring rule had been in place all season": each week the
+   top half of scorers league-wide get a bonus win against "the median" and the bottom half get
+   a bonus loss, on top of the real head-to-head result (2-0 if you beat both your opponent and
+   the median; 1-1 if you're the 2nd-highest score in a week the highest scorer also plays in).
+   The per-week math already existed in `median_record_calculator.py` and fed the Luck Analysis
+   Bokeh chart; this section just presents its manager-level season totals (real/median/combined
+   record) as a standalone, easy-to-read table (`median_standings_table()` in `src/ai_overview.py`,
+   sourced from `output_data['median_standings']`, built in `main.py`).
+7. **Top waiver pickups** — season-to-date and this-week leaders from the (now de-duplicated,
    FAAB-efficiency-aware) waiver analysis in §4.
 
-Rendering keeps the existing dark-gradient card visual style from the current `ai_overview.html`
-(it looks fine) — only the data source and section set change.
+Rendering uses the same Bears navy/orange light theme as the rest of the app (§10).
 
 ## 6. Performance plan
 
@@ -267,10 +274,53 @@ Rendering keeps the existing dark-gradient card visual style from the current `a
 - Real LLM-generated narrative in the AI Overview (user chose deterministic-only, §2).
 - Actual Azure resource provisioning/deployment (no credentials available in this environment,
   §2).
-- Rewriting the Bokeh visualization/HTML-building code paths that aren't part of the above fixes
-  (e.g., manager-grade chart chrome) — only the underlying data/scoring feeding them changes.
+- Rewriting the Bokeh *chart-building logic itself* (the figure/data-source/hover-tool code in
+  `src/trade_analysis.py`, `src/power_rankings.py`, `src/visualizations.py`) — only the
+  underlying data/scoring feeding those charts changes. The HTML/CSS *chrome* around each chart
+  (explanation panels, leaderboards, page background) was re-themed in §10 to match the rest of
+  the app, since that's presentation, not the analysis logic.
 
-## 9. Dev workflow
+## 9. Results page UX (index.html / results_template.html)
+
+Every generated report (League Overview, Power Rankings, Roster Grades, Luck Analysis, Trade
+Analysis, Waiver Analysis, Manager Grades, Worst Trades) is its own standalone HTML file under
+`html_reports/`, same as before. What changed is how they're presented to the user:
+
+- **One scrollable page, not a grid of links that open new tabs.** `index.html`'s step 4 (and
+  `results_template.html` for the static/Netlify build) renders a sticky pill nav
+  (`#resultsNav`) plus one `<section>` per report, each embedding that report via `<iframe>` so
+  you can scroll straight down through everything or click a nav pill to smooth-scroll to one.
+  Every section also keeps an "Open full size ↗" link for when a chart wants more room than the
+  iframe gives it.
+- `REPORT_META`/`REPORT_ORDER` in `index.html` (and the hardcoded section list in
+  `results_template.html`) is the canonical mapping from filename → display title/icon/order.
+  Add a new report there when adding a new report type.
+- `results_template.html`'s version checks each file exists (`fetch(..., {method: 'HEAD'})`)
+  before embedding it, since a static build won't have every report for every league (e.g. no
+  trades this season → no `trade_analysis_latest.html`) — shows a plain "not generated" note
+  instead of a broken iframe.
+- The Step 3 progress bar's text is deliberately *not* the literal backend status message
+  anymore — `FUN_LOADING_MESSAGES` in `index.html` maps the same real progress-percent
+  checkpoints to football-themed phrases ("Going for it on 4th down...", etc.) per explicit user
+  request; the real message is still logged to the console for anyone who wants it.
+
+## 10. Visual theme
+
+Chicago Bears palette (navy `#0B162A` + orange `#C83803`) on a light canvas, applied consistently
+across every surface the app renders:
+
+- `index.html`, `results_template.html`: CSS custom properties (`--color-ink`, `--color-accent`,
+  etc.) — see the `:root` block in either file for the full token list.
+- `src/ai_overview.py`'s `render_ai_overview_html()`: the same token values, inlined (this HTML
+  is generated server-side, so it can't share a CSS file with the frontend — token *values* are
+  kept in sync manually, not the mechanism).
+- The Bokeh-generated reports' HTML/CSS chrome (explanation panels, leaderboard tables, the
+  worst-trades standalone page) — updated to the same palette. The Category20 chart-data palette
+  (the actual per-manager line/dot colors inside each chart) and the gold/silver/bronze
+  rank-medal colors were deliberately left alone — those are functional data encoding and
+  universal medal colors, not decorative theme choices that were clashing.
+
+## 11. Dev workflow
 
 ```bash
 pip install -r requirements.txt

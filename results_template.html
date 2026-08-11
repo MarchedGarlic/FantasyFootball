@@ -58,59 +58,93 @@
             opacity: 0.75;
         }
 
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-
-        .dashboard-card {
+        /* Sticky jump-to nav - every report gets a pill link, clicking smooth-scrolls to its
+           section further down the same page instead of opening a separate file. */
+        .results-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+            position: sticky;
+            top: 10px;
+            z-index: 10;
             background: var(--color-paper);
-            border-radius: 20px;
-            padding: 25px;
-            border: 1px solid var(--color-hairline);
-            transition: border-color 0.2s ease;
-            cursor: pointer;
-        }
-
-        .dashboard-card:hover {
-            border-color: var(--color-accent);
-        }
-
-        .card-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-
-        .card-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: var(--color-ink);
-        }
-
-        .card-description {
-            color: var(--color-ink-secondary);
-            line-height: 1.5;
-            margin-bottom: 15px;
-        }
-
-        .card-button {
-            background: var(--color-accent);
-            color: white;
-            border: none;
-            padding: 12px 24px;
+            padding: 10px;
             border-radius: 999px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s ease;
-            text-decoration: none;
-            display: inline-block;
+            border: 1px solid var(--color-hairline);
         }
 
-        .card-button:hover {
-            background: var(--color-accent-hover);
+        .results-nav a {
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: #E7EAF2;
+            color: var(--color-ink);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: background 0.2s ease, color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .results-nav a:hover {
+            background: #FCE7DC;
+            color: var(--color-accent);
+        }
+
+        .result-section {
+            background: var(--color-paper);
+            border: 1px solid var(--color-hairline);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            scroll-margin-top: 70px;
+        }
+
+        .result-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .result-section-header h2 {
+            color: var(--color-ink);
+            font-size: 1.3rem;
+        }
+
+        .result-section-header a.open-full {
+            font-size: 0.85rem;
+            color: var(--color-accent);
+            text-decoration: none;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .result-section-description {
+            color: var(--color-ink-secondary);
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .result-section-frame-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--color-hairline);
+            border-radius: 14px;
+        }
+
+        .result-section iframe {
+            width: 100%;
+            height: 820px;
+            border: none;
+            display: block;
+        }
+
+        .result-section .unavailable-note {
+            color: var(--color-ink-secondary);
+            font-style: italic;
+            padding: 20px;
         }
 
         .footer {
@@ -151,9 +185,23 @@
             .header h1 {
                 font-size: 2rem;
             }
-            
-            .dashboard-grid {
-                grid-template-columns: 1fr;
+
+            .results-nav {
+                gap: 6px;
+                padding: 8px;
+            }
+
+            .results-nav a {
+                padding: 7px 12px;
+                font-size: 0.8rem;
+            }
+
+            .result-section {
+                padding: 16px;
+            }
+
+            .result-section iframe {
+                height: 600px;
             }
         }
     </style>
@@ -161,114 +209,117 @@
 <body>
     <div class="container">
         <a href="/" class="back-btn">← Start New Analysis</a>
-        
+
         <div class="header">
             <h1>🏈 Fantasy Football Analysis Results</h1>
-            <p>Interactive dashboards and comprehensive league insights</p>
+            <p>Every report lives on this page - scroll down or jump to one</p>
         </div>
-        
+
         <div class="last-updated" id="lastUpdated">
             📅 Loading analysis timestamp...
         </div>
-        
-        <div class="dashboard-grid">
-            <div class="dashboard-card" onclick="window.open('ai_overview_latest.html', '_blank')">
-                <div class="card-icon">🤖</div>
-                <div class="card-title">League Overview</div>
-                <div class="card-description">
-                    Top players of the week, biggest upsets, power ranking movers, matchups to watch,
-                    projected playoff teams, and top waiver pickups - all in one place.
-                </div>
-                <a href="#" class="card-button">View League Overview</a>
-            </div>
 
-            <div class="dashboard-card" onclick="window.open('power_rating_interactive_latest.html', '_blank')">
-                <div class="card-icon">⚡</div>
-                <div class="card-title">Power Rankings</div>
-                <div class="card-description">
-                    Track team performance over time with interactive power rating progression charts.
-                    See how each team's strength has evolved throughout the season.
-                </div>
-                <a href="#" class="card-button">View Power Rankings</a>
-            </div>
+        <nav class="results-nav" id="resultsNav">
+            <a href="#report-overview">🤖 League Overview</a>
+            <a href="#report-power">⚡ Power Rankings</a>
+            <a href="#report-power-leaderboard">📋 Power Ranking Leaderboard</a>
+            <a href="#report-roster">📊 Roster Grades</a>
+            <a href="#report-luck">🍀 Luck Analysis</a>
+            <a href="#report-trade">🔄 Trade Analysis</a>
+            <a href="#report-waiver">📈 Waiver Analysis</a>
+            <a href="#report-manager">🏆 Manager Grades</a>
+            <a href="#report-worst">🚨 Worst Trades</a>
+        </nav>
 
-            <div class="dashboard-card" onclick="window.open('roster_grades_interactive_latest.html', '_blank')">
-                <div class="card-icon">📊</div>
-                <div class="card-title">Roster Grades</div>
-                <div class="card-description">
-                    Analyze roster quality and talent distribution across all teams.
-                    Compare player values and roster construction strategies.
-                </div>
-                <a href="#" class="card-button">View Roster Analysis</a>
-            </div>
+        <section class="result-section" id="report-overview">
+            <div class="result-section-header"><h2>🤖 League Overview</h2></div>
+            <p class="result-section-description">
+                Top players of the week, biggest upsets, power ranking movers, matchups to watch,
+                projected playoff teams, and top waiver pickups - all in one place.
+            </p>
+            <div class="result-section-frame-wrap" data-file="ai_overview_latest.html"></div>
+        </section>
 
-            <div class="dashboard-card" onclick="window.open('luck_analysis_latest.html', '_blank')">
-                <div class="card-icon">🍀</div>
-                <div class="card-title">Luck Analysis</div>
-                <div class="card-description">
-                    Discover who's been lucky vs unlucky! Compare regular wins to median-based performance.
-                    See the line of fairness and find out who earned their record.
-                </div>
-                <a href="#" class="card-button">View Luck Analysis</a>
-            </div>
+        <section class="result-section" id="report-power">
+            <div class="result-section-header"><h2>⚡ Power Rankings</h2></div>
+            <p class="result-section-description">
+                Track team performance over time with interactive power rating progression charts.
+            </p>
+            <div class="result-section-frame-wrap" data-file="power_rating_interactive_latest.html"></div>
+        </section>
 
-            <div class="dashboard-card" onclick="window.open('trade_analysis_latest.html', '_blank')">
-                <div class="card-icon">🔄</div>
-                <div class="card-title">Trade Analysis</div>
-                <div class="card-description">
-                    Deep dive into all league trades with player-value impact scoring (and FAAB context
-                    for leagues that use it). See who made the best and worst moves.
-                </div>
-                <a href="#" class="card-button">View Trade Impact</a>
-            </div>
+        <section class="result-section" id="report-power-leaderboard">
+            <div class="result-section-header"><h2>📋 Power Ranking Leaderboard</h2></div>
+            <p class="result-section-description">
+                A sortable leaderboard view of the same power ratings.
+            </p>
+            <div class="result-section-frame-wrap" data-file="power_ranking_leaderboard_latest.html"></div>
+        </section>
 
-            <div class="dashboard-card" onclick="window.open('waiver_analysis_latest.html', '_blank')">
-                <div class="card-icon">📈</div>
-                <div class="card-title">Waiver Wire Analysis</div>
-                <div class="card-description">
-                    Track waiver wire pickups and free agent acquisitions, including FAAB spend and
-                    efficiency for leagues that use FAAB bidding.
-                </div>
-                <a href="#" class="card-button">View Waiver Activity</a>
-            </div>
+        <section class="result-section" id="report-roster">
+            <div class="result-section-header"><h2>📊 Roster Grades</h2></div>
+            <p class="result-section-description">
+                Analyze roster quality and talent distribution across all teams.
+            </p>
+            <div class="result-section-frame-wrap" data-file="roster_grades_interactive_latest.html"></div>
+        </section>
 
-            <div class="dashboard-card" onclick="window.open('manager_grades_latest.html', '_blank')">
-                <div class="card-icon">🏆</div>
-                <div class="card-title">Manager Report Cards</div>
-                <div class="card-description">
-                    Comprehensive manager performance grades based on trades, waivers, and overall strategy.
-                    See who's managing their team most effectively.
-                </div>
-                <a href="#" class="card-button">View Manager Grades</a>
-            </div>
+        <section class="result-section" id="report-luck">
+            <div class="result-section-header"><h2>🍀 Luck Analysis</h2></div>
+            <p class="result-section-description">
+                Compare regular wins to median-based performance - who's been lucky vs. unlucky.
+            </p>
+            <div class="result-section-frame-wrap" data-file="luck_analysis_latest.html"></div>
+        </section>
 
-            <div class="dashboard-card" onclick="window.open('worst_trades_report_latest.html', '_blank')">
-                <div class="card-icon">🚨</div>
-                <div class="card-title">Worst Trades Report</div>
-                <div class="card-description">
-                    Interactive report highlighting the worst trades in your league with detailed impact analysis.
-                    Perfect for roasting your leaguemates with style!
-                </div>
-                <a href="#" class="card-button">View Worst Trades</a>
-            </div>
-        </div>
-        
+        <section class="result-section" id="report-trade">
+            <div class="result-section-header"><h2>🔄 Trade Analysis</h2></div>
+            <p class="result-section-description">
+                Every league trade with player-value impact scoring (and FAAB context for leagues that use it).
+            </p>
+            <div class="result-section-frame-wrap" data-file="trade_analysis_latest.html"></div>
+        </section>
+
+        <section class="result-section" id="report-waiver">
+            <div class="result-section-header"><h2>📈 Waiver Wire Analysis</h2></div>
+            <p class="result-section-description">
+                Waiver wire pickups and free agent acquisitions, including FAAB spend and efficiency.
+            </p>
+            <div class="result-section-frame-wrap" data-file="waiver_analysis_latest.html"></div>
+        </section>
+
+        <section class="result-section" id="report-manager">
+            <div class="result-section-header"><h2>🏆 Manager Report Cards</h2></div>
+            <p class="result-section-description">
+                Comprehensive manager performance grades based on trades, waivers, and overall strategy.
+            </p>
+            <div class="result-section-frame-wrap" data-file="manager_grades_latest.html"></div>
+        </section>
+
+        <section class="result-section" id="report-worst">
+            <div class="result-section-header"><h2>🚨 Worst Trades Report</h2></div>
+            <p class="result-section-description">
+                The worst trades in your league with detailed impact analysis.
+            </p>
+            <div class="result-section-frame-wrap" data-file="worst_trades_report_latest.html"></div>
+        </section>
+
         <div class="footer">
             <p>💡 All visualizations are interactive - hover, click, and explore!</p>
             <p>📱 Mobile-friendly dashboards for on-the-go analysis</p>
         </div>
     </div>
-    
+
     <script>
         // Load the latest analysis timestamp (build.js writes files with a _latest suffix)
         fetch('data/fantasy_analysis_latest.json')
             .then(response => response.json())
             .then(data => {
                 const timestamp = data.analysis_info?.timestamp;
-                
+
                 if (timestamp) {
                     const date = new Date(timestamp);
-                    document.getElementById('lastUpdated').innerHTML = 
+                    document.getElementById('lastUpdated').innerHTML =
                         `📅 Last Updated: ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
                 }
             })
@@ -276,6 +327,35 @@
                 console.log('Error loading data:', error);
                 document.getElementById('lastUpdated').innerHTML = '📅 Analysis data loading...';
             });
+
+        // Not every report exists for every league (e.g. no trades this season means no
+        // trade_analysis file) - check each one exists before embedding it, and show a plain
+        // note instead of a broken iframe when it doesn't.
+        document.querySelectorAll('.result-section-frame-wrap').forEach(async (wrap) => {
+            const file = wrap.dataset.file;
+            try {
+                const response = await fetch(file, { method: 'HEAD' });
+                if (response.ok) {
+                    const iframe = document.createElement('iframe');
+                    iframe.src = file;
+                    iframe.loading = 'lazy';
+                    wrap.appendChild(iframe);
+
+                    const header = wrap.closest('.result-section').querySelector('.result-section-header');
+                    const openLink = document.createElement('a');
+                    openLink.className = 'open-full';
+                    openLink.href = file;
+                    openLink.target = '_blank';
+                    openLink.rel = 'noopener noreferrer';
+                    openLink.innerHTML = 'Open full size &#8599;';
+                    header.appendChild(openLink);
+                } else {
+                    wrap.innerHTML = '<p class="unavailable-note">Not generated for this analysis.</p>';
+                }
+            } catch (error) {
+                wrap.innerHTML = '<p class="unavailable-note">Not generated for this analysis.</p>';
+            }
+        });
     </script>
 </body>
 </html>

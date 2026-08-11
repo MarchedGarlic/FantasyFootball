@@ -868,26 +868,26 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     # Create collapsible explanation panel
     explanation_text = """
     <h3 style="margin:10px 0 5px 0;">📊 Trade Impact Analysis Methodology</h3>
-    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 5px 0;">
-        <h4 style="margin: 0 0 10px 0; color: #2c3e50;">🔍 Data Collection & Processing</h4>
+    <div style="background-color: #F2F4F8; padding: 15px; border-radius: 5px; margin: 5px 0;">
+        <h4 style="margin: 0 0 10px 0; color: #0B162A;">🔍 Data Collection & Processing</h4>
         <p style="margin: 3px 0;"><strong>Trade Detection:</strong> Real fantasy football trades identified from league transaction data</p>
         <p style="margin: 3px 0;"><strong>Individual Transactions:</strong> Each trade shown as separate data point (no aggregation)</p>
         <p style="margin: 3px 0;"><strong>Multi-Manager Trades:</strong> Complex trades broken down by individual manager perspective</p>
         <p style="margin: 3px 0;"><strong>Time Analysis:</strong> Before/after trade performance comparison with 2-week windows</p>
         
-        <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">📈 Impact Calculation Formula</h4>
+        <h4 style="margin: 15px 0 10px 0; color: #0B162A;">📈 Impact Calculation Formula</h4>
         <p style="margin: 3px 0;"><strong>Combined Impact (the plotted score):</strong> Net player value = value of players acquired minus value of players given up, each player graded on ESPN's season stat-leader tiers (~1-10 scale)</p>
         <p style="margin: 3px 0;"><strong>Team Trend (context only, shown on hover):</strong> This manager's weekly power rating / roster grade change from the week before the trade to the week of the trade - correlation, not the trade's cause</p>
         <p style="margin: 3px 0;"><strong>FAAB:</strong> Shown on hover when the trade also included a FAAB budget transfer</p>
         
-        <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">🎯 Impact Scale & Interpretation</h4>
+        <h4 style="margin: 15px 0 10px 0; color: #0B162A;">🎯 Impact Scale & Interpretation</h4>
         <p style="margin: 3px 0;"><strong>Excellent Trade (+15+):</strong> Significantly improved team strength and performance</p>
         <p style="margin: 3px 0;"><strong>Good Trade (+5 to +15):</strong> Solid improvement with positive team impact</p>
         <p style="margin: 3px 0;"><strong>Neutral Trade (-5 to +5):</strong> Minimal impact, roughly equal value exchange</p>
         <p style="margin: 3px 0;"><strong>Poor Trade (-5 to -15):</strong> Negative impact, team likely weakened</p>
         <p style="margin: 3px 0;"><strong>Terrible Trade (-15+):</strong> Significant team damage, very poor value</p>
         
-        <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">🔧 Technical Features</h4>
+        <h4 style="margin: 15px 0 10px 0; color: #0B162A;">🔧 Technical Features</h4>
         <p style="margin: 3px 0;"><strong>Hover Details:</strong> Teams involved, players exchanged, impact breakdown</p>
         <p style="margin: 3px 0;"><strong>Color Legend:</strong> Each manager assigned unique color for easy identification</p>
         <p style="margin: 3px 0;"><strong>Jitter Positioning:</strong> Overlapping trades separated slightly for visibility</p>
@@ -901,14 +901,14 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     leaderboard_html = """
     <h3 style="margin:10px 0 5px 0;">🏆 Trade Performance Leaderboard</h3>
     <table style="border-collapse: collapse; width: 100%; font-size: 12px; margin: 5px 0;">
-    <tr style="background-color: #f0f0f0; font-weight: bold;">
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">#</th>
-        <th style="border: 1px solid #ddd; padding: 8px;">Manager</th>
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Avg Impact</th>
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Total Gain</th>
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Total Trades</th>
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Success Rate</th>
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Trend</th>
+    <tr style="background-color: #E7EAF2; font-weight: bold;">
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">#</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px;">Manager</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Avg Impact</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Total Gain</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Total Trades</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Success Rate</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Trend</th>
     </tr>
     """
     
@@ -917,18 +917,18 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         color = "#e8f5e8" if rank <= 3 else "#fff5e6" if rank <= 6 else "#ffeaea"
         leaderboard_html += f"""
         <tr style="background-color: {color};">
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[0]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">{row[1]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[2]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[3]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[4]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[5]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[6]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[0]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px;">{row[1]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[2]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[3]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[4]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[5]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[6]}</td>
         </tr>"""
     
     leaderboard_html += """
     </table>
-    <div style="margin-top: 10px; font-size: 11px; color: #666;">
+    <div style="margin-top: 10px; font-size: 11px; color: #52607A;">
         <strong>Legend:</strong> Avg Impact = Average net effect per trade | Total Gain = Sum of all trade impacts | 
         Success Rate = % of trades with positive impact | Trend = Overall performance direction
     </div>
@@ -938,13 +938,13 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     # Create calculation explanation panel (always visible)
     calc_explanation_html = """
     <h3 style="margin:10px 0 5px 0;">📋 How Trade Impact Is Calculated</h3>
-    <div style="background-color: #e7f3ff; padding: 12px; border-radius: 5px; margin: 5px 0; border-left: 4px solid #2196F3;">
+    <div style="background-color: #FCE7DC; padding: 12px; border-radius: 5px; margin: 5px 0; border-left: 4px solid #C83803;">
         <p style="margin: 5px 0; font-size: 13px;"><strong>Step 1:</strong> Grade every player acquired and every player given up (ESPN season stat-leader tiers, ~1-10 scale)</p>
         <p style="margin: 5px 0; font-size: 13px;"><strong>Step 2:</strong> Value Acquired = sum of acquired players' grades</p>
         <p style="margin: 5px 0; font-size: 13px;"><strong>Step 3:</strong> Value Given Up = sum of given-up players' grades</p>
         <p style="margin: 5px 0; font-size: 13px;"><strong>Step 4:</strong> Combined Impact = Value Acquired - Value Given Up</p>
         <p style="margin: 5px 0; font-size: 13px;"><strong>Context only:</strong> Team Trend (hover) compares this manager's power rating/roster grade the week before vs. the week of the trade - it is not part of the score</p>
-        <p style="margin: 8px 0 5px 0; font-size: 12px; color: #555;"><em>Positive values mean the manager received more value than they gave up; negative values mean the opposite</em></p>
+        <p style="margin: 8px 0 5px 0; font-size: 12px; color: #52607A;"><em>Positive values mean the manager received more value than they gave up; negative values mean the opposite</em></p>
     </div>
     """
     calc_explanation_div = Div(text=calc_explanation_html, width=1200, height=120)
@@ -1230,27 +1230,27 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     # Create collapsible explanation panel
     explanation_text = """
     <h3 style="margin:10px 0 5px 0;">📊 Waiver Wire Impact Analysis Methodology</h3>
-    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 5px 0;">
-        <h4 style="margin: 0 0 10px 0; color: #2c3e50;">🔍 Data Collection & Processing</h4>
+    <div style="background-color: #F2F4F8; padding: 15px; border-radius: 5px; margin: 5px 0;">
+        <h4 style="margin: 0 0 10px 0; color: #0B162A;">🔍 Data Collection & Processing</h4>
         <p style="margin: 3px 0;"><strong>Transaction Detection:</strong> All waiver claims and free agent pickups identified</p>
         <p style="margin: 3px 0;"><strong>Individual Transactions:</strong> Each pickup/drop shown as separate data point</p>
         <p style="margin: 3px 0;"><strong>Transaction Types:</strong> Waiver claims, free agent pickups, and drops tracked</p>
         <p style="margin: 3px 0;"><strong>Time Analysis:</strong> Before/after pickup performance comparison with 2-week windows</p>
         
-        <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">📈 Impact Calculation Formula</h4>
+        <h4 style="margin: 15px 0 10px 0; color: #0B162A;">📈 Impact Calculation Formula</h4>
         <p style="margin: 3px 0;"><strong>Power Rating Impact:</strong> Change in weekly power score after pickup</p>
         <p style="margin: 3px 0;"><strong>Roster Grade Impact:</strong> Change in roster talent evaluation after pickup</p>
         <p style="margin: 3px 0;"><strong>Combined Score:</strong> Power Impact + Roster Impact (equal weighting)</p>
         <p style="margin: 3px 0;"><strong>Baseline Comparison:</strong> 2 weeks before pickup vs 2 weeks after pickup</p>
         
-        <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">🎯 Impact Scale & Interpretation</h4>
+        <h4 style="margin: 15px 0 10px 0; color: #0B162A;">🎯 Impact Scale & Interpretation</h4>
         <p style="margin: 3px 0;"><strong>Excellent Pickup (+10+):</strong> Significantly improved team strength</p>
         <p style="margin: 3px 0;"><strong>Good Pickup (+3 to +10):</strong> Solid improvement with positive impact</p>
         <p style="margin: 3px 0;"><strong>Neutral Pickup (-3 to +3):</strong> Minimal impact, depth/bye week move</p>
         <p style="margin: 3px 0;"><strong>Poor Pickup (-3 to -10):</strong> Negative impact, wasted claim/spot</p>
         <p style="margin: 3px 0;"><strong>Terrible Pickup (-10+):</strong> Significant team damage, very poor decision</p>
         
-        <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">🔧 Technical Features</h4>
+        <h4 style="margin: 15px 0 10px 0; color: #0B162A;">🔧 Technical Features</h4>
         <p style="margin: 3px 0;"><strong>Hover Details:</strong> Manager, players involved, impact breakdown</p>
         <p style="margin: 3px 0;"><strong>Color Legend:</strong> Each manager assigned unique color</p>
         <p style="margin: 3px 0;"><strong>Transaction Separation:</strong> Overlapping pickups separated for visibility</p>
@@ -1264,17 +1264,17 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     leaderboard_html = """
     <h3 style="margin:10px 0 5px 0;">🏆 Waiver Wire Performance Leaderboard</h3>
     <table style="border-collapse: collapse; width: 100%; font-size: 12px; margin: 5px 0;">
-    <tr style="background-color: #f0f0f0; font-weight: bold;">
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">#</th>
-        <th style="border: 1px solid #ddd; padding: 8px;">Manager</th>
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Avg Impact</th>
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Total Gain</th>
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Total Moves</th>
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Success Rate</th>
-        <th style="border: 1px solid #ddd; padding: 8px;">Best Pickup</th>
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Trend</th>
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">FAAB Spent</th>
-        <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Impact/$</th>
+    <tr style="background-color: #E7EAF2; font-weight: bold;">
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">#</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px;">Manager</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Avg Impact</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Total Gain</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Total Moves</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Success Rate</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px;">Best Pickup</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Trend</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">FAAB Spent</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Impact/$</th>
     </tr>
     """
 
@@ -1283,21 +1283,21 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         color = "#e8f5e8" if rank <= 3 else "#fff5e6" if rank <= 6 else "#ffeaea"
         leaderboard_html += f"""
         <tr style="background-color: {color};">
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[0]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">{row[1]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[2]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[3]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[4]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[5]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">{row[6]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[7]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[8]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[9]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[0]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px;">{row[1]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[2]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[3]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[4]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[5]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px;">{row[6]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[7]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[8]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[9]}</td>
         </tr>"""
 
     leaderboard_html += """
     </table>
-    <div style="margin-top: 10px; font-size: 11px; color: #666;">
+    <div style="margin-top: 10px; font-size: 11px; color: #52607A;">
         <strong>Legend:</strong> Avg Impact = Average net effect per waiver move | Total Gain = Sum of all pickup impacts |
         Success Rate = % of moves with positive impact | Best Pickup = Highest impact player acquired |
         FAAB Spent/Impact per $ only populate in leagues on FAAB bidding
@@ -1308,14 +1308,14 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     # Create calculation explanation panel (always visible)
     calc_explanation_html = """
     <h3 style="margin:10px 0 5px 0;">📋 How Waiver Wire Impact Is Calculated</h3>
-    <div style="background-color: #e7f3ff; padding: 12px; border-radius: 5px; margin: 5px 0; border-left: 4px solid #2196F3;">
+    <div style="background-color: #FCE7DC; padding: 12px; border-radius: 5px; margin: 5px 0; border-left: 4px solid #C83803;">
         <p style="margin: 5px 0; font-size: 13px;"><strong>Step 1:</strong> Identify the 2 weeks before and 2 weeks after each pickup</p>
         <p style="margin: 5px 0; font-size: 13px;"><strong>Step 2:</strong> Calculate average Power Rating for before/after periods</p>
         <p style="margin: 5px 0; font-size: 13px;"><strong>Step 3:</strong> Calculate average Roster Grade for before/after periods</p>
         <p style="margin: 5px 0; font-size: 13px;"><strong>Step 4:</strong> Power Impact = After Power - Before Power</p>
         <p style="margin: 5px 0; font-size: 13px;"><strong>Step 5:</strong> Roster Impact = After Grade - Before Grade</p>
         <p style="margin: 5px 0; font-size: 13px;"><strong>Step 6:</strong> Net Effect = Power Impact + Roster Impact</p>
-        <p style="margin: 8px 0 5px 0; font-size: 12px; color: #555;"><em>Positive values mean the pickup helped your team, negative values mean it hurt or had no benefit</em></p>
+        <p style="margin: 8px 0 5px 0; font-size: 12px; color: #52607A;"><em>Positive values mean the pickup helped your team, negative values mean it hurt or had no benefit</em></p>
     </div>
     """
     calc_explanation_div = Div(text=calc_explanation_html, width=1200, height=120)
@@ -1708,12 +1708,12 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     leaderboard_html = """
     <h3 style="margin:10px 0 5px 0;">Manager Performance Leaderboard</h3>
     <table style="border-collapse: collapse; width: 100%; font-size: 12px;">
-    <tr style="background-color: #f0f0f0; font-weight: bold;">
-        <th style="border: 1px solid #ddd; padding: 8px;">#</th>
-        <th style="border: 1px solid #ddd; padding: 8px;">Manager</th>
-        <th style="border: 1px solid #ddd; padding: 8px;">Grade</th>
-        <th style="border: 1px solid #ddd; padding: 8px;">Trend</th>
-        <th style="border: 1px solid #ddd; padding: 8px;">Direction</th>
+    <tr style="background-color: #E7EAF2; font-weight: bold;">
+        <th style="border: 1px solid #DCE0E8; padding: 8px;">#</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px;">Manager</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px;">Grade</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px;">Trend</th>
+        <th style="border: 1px solid #DCE0E8; padding: 8px;">Direction</th>
     </tr>
     """
     
@@ -1721,11 +1721,11 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         color = "#e8f5e8" if row[0] <= 3 else "#fff5e6" if row[0] <= 6 else "#ffeaea"
         leaderboard_html += f"""
         <tr style="background-color: {color};">
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[0]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px;">{row[1]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[2]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[3]}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[4]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[0]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px;">{row[1]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[2]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[3]}</td>
+            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[4]}</td>
         </tr>"""
     
     leaderboard_html += "</table>"
@@ -1816,48 +1816,54 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Worst Trades Report - Fantasy Football Analysis</title>
     <style>
+        /* Chicago Bears palette (navy + orange) - kept in sync with index.html and
+           src/ai_overview.py's generated CSS, so every report page matches the homepage. */
         body {{
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #F2F4F8;
+            color: #0B162A;
             min-height: 100vh;
         }}
         .container {{
             max-width: 1200px;
             margin: 0 auto;
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid #DCE0E8;
+            border-radius: 20px;
             padding: 30px;
         }}
         .header {{
             text-align: center;
             margin-bottom: 30px;
-            border-bottom: 3px solid #e74c3c;
-            padding-bottom: 20px;
+            padding: 22px 20px;
+            background: #0B162A;
+            border-radius: 16px;
+            color: white;
         }}
         .header h1 {{
-            color: #e74c3c;
+            color: white;
             margin: 0;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            font-size: 2.2em;
+            font-weight: 700;
+            letter-spacing: -0.02em;
         }}
         .header p {{
-            color: #666;
+            color: rgba(255,255,255,0.75);
             margin: 10px 0 0 0;
             font-size: 1.1em;
         }}
         .methodology {{
-            background: #f8f9fa;
-            border-left: 5px solid #e74c3c;
+            background: #F2F4F8;
+            border-left: 5px solid #C83803;
             padding: 15px 20px;
             margin: 20px 0;
             border-radius: 5px;
         }}
         .methodology h3 {{
-            color: #e74c3c;
+            color: #C83803;
             margin-top: 0;
         }}
         .trades-table {{
@@ -1865,12 +1871,12 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
             border-collapse: collapse;
             margin: 20px 0;
             font-size: 14px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 1px solid #DCE0E8;
             border-radius: 10px;
             overflow: hidden;
         }}
         .trades-table th {{
-            background: #e74c3c;
+            background: #0B162A;
             color: white;
             font-weight: bold;
             padding: 15px 10px;
@@ -1878,27 +1884,29 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
         }}
         .trades-table td {{
             padding: 12px 10px;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #DCE0E8;
         }}
         .trades-table tr:hover {{
-            background: #f8f9fa;
+            background: #F2F4F8;
         }}
         .rank-1 {{
-            background: rgba(231, 76, 60, 0.1);
+            background: #FCE7DC;
             font-weight: bold;
         }}
         .rank-2 {{
-            background: rgba(231, 76, 60, 0.05);
+            background: #FCE7DC;
+            opacity: 0.7;
         }}
         .rank-3 {{
-            background: rgba(231, 76, 60, 0.03);
+            background: #FCE7DC;
+            opacity: 0.45;
         }}
         .impact-negative {{
-            color: #e74c3c;
+            color: #C0392B;
             font-weight: bold;
         }}
         .impact-positive {{
-            color: #27ae60;
+            color: #1B8A5A;
             font-weight: bold;
         }}
         .detailed-section {{
@@ -1906,14 +1914,13 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
         }}
         .trade-card {{
             background: white;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
+            border: 1px solid #DCE0E8;
+            border-radius: 14px;
             padding: 20px;
             margin: 15px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }}
         .trade-card h4 {{
-            color: #e74c3c;
+            color: #C83803;
             margin-top: 0;
             font-size: 1.3em;
         }}
@@ -1924,13 +1931,13 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
             margin-top: 15px;
         }}
         .players-section {{
-            background: #f8f9fa;
+            background: #F2F4F8;
             padding: 15px;
             border-radius: 5px;
         }}
         .players-section h5 {{
             margin-top: 0;
-            color: #2c3e50;
+            color: #0B162A;
         }}
         .impact-stats {{
             display: flex;
@@ -1939,7 +1946,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
             text-align: center;
         }}
         .stat {{
-            background: #e9ecef;
+            background: #E7EAF2;
             padding: 10px;
             border-radius: 5px;
             flex: 1;
@@ -1947,19 +1954,19 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
         }}
         .stat .label {{
             font-size: 0.9em;
-            color: #666;
+            color: #52607A;
         }}
         .stat .value {{
             font-size: 1.2em;
             font-weight: bold;
-            color: #2c3e50;
+            color: #0B162A;
         }}
         .footer {{
             text-align: center;
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 2px solid #e9ecef;
-            color: #666;
+            border-top: 2px solid #DCE0E8;
+            color: #52607A;
         }}
         @media (max-width: 768px) {{
             .container {{
@@ -2038,7 +2045,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
 
     # Add detailed breakdown cards for top 10
     for i, trade in enumerate(worst_trades[:10]):
-        impact_color = "#e74c3c" if trade['combined_impact'] < 0 else "#27ae60"
+        impact_color = "#C0392B" if trade['combined_impact'] < 0 else "#1B8A5A"
 
         html_content += f"""
             <div class="trade-card">
@@ -2086,7 +2093,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
 
         <div class="detailed-section">
             <h2>⚡ Worst Power Impact Trades</h2>
-            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+            <p style="text-align: center; color: #52607A; margin-bottom: 20px;">
                 Trades ranked by most negative impact on weekly scoring potential
             </p>
             <table class="trades-table">
@@ -2127,7 +2134,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
 
         <div class="detailed-section">
             <h2>📊 Worst Roster Grade Impact Trades</h2>
-            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+            <p style="text-align: center; color: #52607A; margin-bottom: 20px;">
                 Trades ranked by most negative impact on roster construction quality
             </p>
             <table class="trades-table">

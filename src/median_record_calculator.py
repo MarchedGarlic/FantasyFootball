@@ -108,11 +108,25 @@ def calculate_median_records(all_weekly_matchups: Dict, rosters: List, user_look
                             team_records[team1_user]['regular_record']['ties'] += 1
                             team_records[team2_user]['regular_record']['ties'] += 1
             
+            # Only apply a median result to teams that also had a real head-to-head matchup
+            # this week - a team without a real paired opponent (a bye or an odd consolation
+            # grouping during playoffs) shouldn't get a "free" median decision that week, or
+            # its median-game count would drift ahead of its real-game count (the whole point
+            # of this comparison is that both records cover the same games).
+            teams_with_real_matchup = {
+                roster_to_user.get(m.get('roster_id'))
+                for teams in matchup_groups.values() if len(teams) == 2
+                for m in teams
+            }
+            teams_with_real_matchup.discard(None)
+
             # Calculate median-based wins/losses
             teams_above_median = []
             teams_below_median = []
-            
+
             for user_id, score in week_data.items():
+                if user_id not in teams_with_real_matchup:
+                    continue
                 if score > median_score:
                     team_records[user_id]['median_record']['wins'] += 1
                     team_records[user_id]['weekly_median_results'][week] = 'W'
