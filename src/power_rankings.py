@@ -543,13 +543,13 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         # Create leaderboard HTML
         leaderboard_html = "<h3>Power Rankings Leaderboard</h3>"
         leaderboard_html += "<table style='border-collapse: collapse; width: 100%; font-size: 12px;'>"
-        leaderboard_html += "<tr style='background-color: #f0f0f0; font-weight: bold;'>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Rank</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Team</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Current Rating</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Record</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Avg Score</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Trend</th>"
+        leaderboard_html += "<tr style='background-color: #0B162A; color: white; font-weight: bold;'>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Rank</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Team</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Current Rating</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Record</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Avg Score</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Trend</th>"
         leaderboard_html += "</tr>"
         
         # Sort teams by current power rating for leaderboard
@@ -563,24 +563,24 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
             if i < 3:
                 row_color = "#fff3cd"  # Gold for top 3
             elif i < 6:
-                row_color = "#d1ecf1"  # Light blue for middle
+                row_color = "#E7EAF2"  # Navy-soft for middle
             else:
-                row_color = "#f8f9fa"  # Light gray for bottom
+                row_color = "#F2F4F8"  # Canvas for bottom
             
             trend_icon = "📈" if team['slope'] > 0.5 else "📉" if team['slope'] < -0.5 else "➡️"
             trend_text = f"{trend_icon} {team['slope']:+.1f}"
             
             leaderboard_html += f"<tr style='background-color: {row_color};'>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold;'>{rank_display}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{team['name']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold;'>{team['current_rating']:.1f}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{team['record']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{team['avg_score']:.1f}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{trend_text}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center; font-weight: bold;'>{rank_display}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px;'>{team['name']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center; font-weight: bold;'>{team['current_rating']:.1f}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{team['record']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{team['avg_score']:.1f}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{trend_text}</td>"
             leaderboard_html += "</tr>"
         
         leaderboard_html += "</table>"
-        leaderboard_html += "<p style='font-size: 10px; color: #666; margin-top: 10px;'>"
+        leaderboard_html += "<p style='font-size: 10px; color: #52607A; margin-top: 10px;'>"
         leaderboard_html += "Current Rating = Latest week's power rating | "
         leaderboard_html += "Trend = Weekly rating change direction and slope"
         leaderboard_html += "</p>"

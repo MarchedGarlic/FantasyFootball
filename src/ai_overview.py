@@ -201,6 +201,44 @@ def matchups_to_watch(next_week_matchups, standings, playoff_teams_count, limit=
     return scored[:limit]
 
 
+def median_standings_table(median_standings):
+    """'If a median-scoring rule had been in place all season' standings.
+
+    Each week, every team still plays its real head-to-head matchup, but the top half of
+    scorers league-wide also get a bonus win against "the median" and the bottom half get a
+    bonus loss, regardless of who they actually played. Beating both your opponent and the
+    median in the same week goes 2-0; being the 2nd-highest score in a week against the
+    highest-scoring team goes 1-1 (loses the head-to-head, still beats the median). The
+    underlying per-week math lives in median_record_calculator.py - this just presents the
+    manager-level season totals it already computes as a comparable secondary standings.
+    """
+    rows = []
+    for uid, data in (median_standings or {}).items():
+        regular = data.get('regular_record') or {}
+        median = data.get('median_record') or {}
+        combined = data.get('combined_record') or {}
+        combined_games = combined.get('wins', 0) + combined.get('losses', 0)
+        combined_pct = (combined.get('wins', 0) / combined_games) if combined_games else 0.0
+
+        rows.append({
+            'name': data.get('name', 'Unknown'),
+            'regular_wins': regular.get('wins', 0),
+            'regular_losses': regular.get('losses', 0),
+            'regular_ties': regular.get('ties', 0),
+            'median_wins': median.get('wins', 0),
+            'median_losses': median.get('losses', 0),
+            'combined_wins': combined.get('wins', 0),
+            'combined_losses': combined.get('losses', 0),
+            'combined_pct': combined_pct,
+        })
+
+    rows.sort(key=lambda r: r['combined_pct'], reverse=True)
+    for i, row in enumerate(rows):
+        row['rank'] = i + 1
+
+    return rows
+
+
 def top_waiver_pickups(waiver_impacts, faab_enabled, limit=5):
     """Season-best and this-week-best waiver/free-agent pickups, from the de-duplicated
     (one entry per transaction, not per added player) waiver analysis."""
@@ -269,6 +307,7 @@ def build_ai_overview(output_data, detailed_data, roster_data, league_settings, 
         'power_movers': power_rank_movers(power_rank_history, manager_names),
         'matchups_to_watch': matchups_to_watch(next_week_matchups, standings, playoff_teams_count),
         'playoff_picture': projected_playoff_teams(standings, playoff_teams_count),
+        'median_standings': median_standings_table(output_data.get('median_standings') or {}),
         'waiver_pickups': top_waiver_pickups(
             (output_data.get('trade_analysis') or {}).get('waiver_impacts') or [], faab_enabled
         ),
@@ -383,6 +422,40 @@ def _render_playoff_picture(picture):
     """
 
 
+def _render_median_standings(rows):
+    if not rows:
+        return "<p class='empty'>No median standings available yet.</p>"
+
+    table_rows = "".join(
+        f"""<tr>
+            <td>#{r['rank']}</td>
+            <td>{r['name']}</td>
+            <td class="num">{r['regular_wins']}-{r['regular_losses']}{'-' + str(r['regular_ties']) if r['regular_ties'] else ''}</td>
+            <td class="num">{r['median_wins']}-{r['median_losses']}</td>
+            <td class="num">{r['combined_wins']}-{r['combined_losses']}</td>
+            <td class="num">{r['combined_pct'] * 100:.1f}%</td>
+        </tr>"""
+        for r in rows
+    )
+
+    return f"""
+    <p class="section-caption">If every week also counted as a win/loss against the league median score</p>
+    <table>
+        <tr>
+            <th>Rank</th><th>Manager</th><th>Real Record</th><th>vs. Median</th>
+            <th>Combined</th><th>Combined %</th>
+        </tr>
+        {table_rows}
+    </table>
+    <p class="notes" style="margin-top: 10px;">
+        Each week, the top half of scorers league-wide also get a bonus win against "the median" and the
+        bottom half get a bonus loss - regardless of who they actually played. Beat both your real
+        opponent and the median in the same week and you go 2-0; be the 2nd-highest score in a week the
+        top scorer also plays in and you go 1-1 (lose the head-to-head, still beat the median).
+    </p>
+    """
+
+
 def _render_waiver_pickups(section):
     if not section['season']:
         return "<p class='empty'>No waiver/free-agent activity analyzed yet.</p>"
@@ -447,6 +520,7 @@ def render_ai_overview_html(analysis_info, sections, faab_ledger, roster_to_mana
         + _card("Power Ranking Movers: Last Week vs This Week", _render_power_movers(sections['power_movers']))
         + _card("Matchups to Watch", _render_matchups_to_watch(sections['matchups_to_watch']))
         + _card("Projected Playoff Picture", _render_playoff_picture(sections['playoff_picture']))
+        + _card("Median Standings", _render_median_standings(sections['median_standings']))
         + _card("Top Waiver Pickups", _render_waiver_pickups(sections['waiver_pickups']))
         + _render_faab_tracker(faab_ledger, roster_to_manager, manager_names)
     )

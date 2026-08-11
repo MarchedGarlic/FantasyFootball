@@ -557,6 +557,14 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
         },
         'faab_ledger': faab_ledger,
         'power_rank_history': power_rank_history,
+        'median_standings': {
+            uid: {
+                'name': data['name'],
+                'regular_record': data['regular_record'],
+                'median_record': data['median_record'],
+                'combined_record': data['combined_record'],
+            } for uid, data in median_records.items()
+        },
         'summary_statistics': {
             'comprehensive_analysis': {
                 'total_trades': len(all_trades),

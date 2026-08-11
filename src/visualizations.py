@@ -175,25 +175,25 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         # Create collapsible explanation panel
         explanation_text = """
         <h3 style="margin:10px 0 5px 0;">📊 Roster Grade Calculation Methodology</h3>
-        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 5px 0;">
-            <h4 style="margin: 0 0 10px 0; color: #2c3e50;">📈 Data Sources & Collection</h4>
+        <div style="background-color: #F2F4F8; padding: 15px; border-radius: 5px; margin: 5px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #0B162A;">📈 Data Sources & Collection</h4>
             <p style="margin: 3px 0;"><strong>Player Rankings:</strong> ESPN weekly statistical leaders by position</p>
             <p style="margin: 3px 0;"><strong>Position Tiers:</strong> QB top 30, RB top 60, WR/TE top 80 performers</p>
             <p style="margin: 3px 0;"><strong>Update Frequency:</strong> Weekly analysis based on current statistical performance</p>
             
-            <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">🎯 Scoring System</h4>
+            <h4 style="margin: 15px 0 10px 0; color: #0B162A;">🎯 Scoring System</h4>
             <p style="margin: 3px 0;"><strong>Starter Scoring:</strong> Full points based on tier ranking (higher tiers = more points)</p>
             <p style="margin: 3px 0;"><strong>Bench Scoring:</strong> 50% value for depth analysis and injury protection</p>
             <p style="margin: 3px 0;"><strong>Position Bonuses:</strong> Additional points for top-tier performers (top 10 in position)</p>
             <p style="margin: 3px 0;"><strong>Roster Balance:</strong> Weighted scoring accounts for positional scarcity</p>
             
-            <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">🔢 Grade Calculation</h4>
+            <h4 style="margin: 15px 0 10px 0; color: #0B162A;">🔢 Grade Calculation</h4>
             <p style="margin: 3px 0;"><strong>Raw Score:</strong> Sum of all player tier values + position bonuses</p>
             <p style="margin: 3px 0;"><strong>Normalization:</strong> Scaled to league-relative performance metrics</p>
             <p style="margin: 3px 0;"><strong>Final Grade:</strong> Composite score representing overall roster strength</p>
             <p style="margin: 3px 0;"><strong>Scale Range:</strong> Typically 15-35 points, higher = stronger roster talent</p>
             
-            <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">📊 Analysis Features</h4>
+            <h4 style="margin: 15px 0 10px 0; color: #0B162A;">📊 Analysis Features</h4>
             <p style="margin: 3px 0;"><strong>Trend Lines:</strong> Week-over-week progression showing roster improvement/decline</p>
             <p style="margin: 3px 0;"><strong>Comparative Analysis:</strong> Performance relative to league average and competitors</p>
             <p style="margin: 3px 0;"><strong>Interactive Elements:</strong> Hover for detailed breakdowns, toggle visibility controls</p>
@@ -206,13 +206,13 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         leaderboard_html = """
         <h3 style="margin:10px 0 5px 0;">🏆 Current Roster Grade Leaderboard</h3>
         <table style="border-collapse: collapse; width: 100%; font-size: 12px; margin: 5px 0;">
-        <tr style="background-color: #f0f0f0; font-weight: bold;">
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">#</th>
-            <th style="border: 1px solid #ddd; padding: 8px;">Manager</th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Current Grade</th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Season Avg</th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Trend</th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Direction</th>
+        <tr style="background-color: #E7EAF2; font-weight: bold;">
+            <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">#</th>
+            <th style="border: 1px solid #DCE0E8; padding: 8px;">Manager</th>
+            <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Current Grade</th>
+            <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Season Avg</th>
+            <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Trend</th>
+            <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Direction</th>
         </tr>
         """
         
@@ -221,12 +221,12 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             color = "#e8f5e8" if rank <= 3 else "#fff5e6" if rank <= 6 else "#ffeaea"
             leaderboard_html += f"""
             <tr style="background-color: {color};">
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[0]}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{row[1]}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[2]}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[3]}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[4]}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{row[5]}</td>
+                <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[0]}</td>
+                <td style="border: 1px solid #DCE0E8; padding: 8px;">{row[1]}</td>
+                <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[2]}</td>
+                <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[3]}</td>
+                <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[4]}</td>
+                <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[5]}</td>
             </tr>"""
         
         leaderboard_html += "</table>"
@@ -1142,7 +1142,7 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
             <p style="margin:2px;"><b>Median Wins:</b> Theoretical wins if you played against the weekly league median</p>
             <p style="margin:2px;"><b>Regular Wins:</b> Actual head-to-head wins from your schedule</p>
             <p style="margin:2px;"><b>Color Coding:</b> Green (Lucky), Blue (Fair), Orange (Unlucky), Red (Very Unlucky)</p>
-            <p style="margin:10px 0px 2px 0px; font-style: italic; color: #666;"><b>Note:</b> This analysis focuses on luck related to matchups and scheduling. It does not factor in injuries or other external circumstances that may affect team performance.</p>
+            <p style="margin:10px 0px 2px 0px; font-style: italic; color: #52607A;"><b>Note:</b> This analysis focuses on luck related to matchups and scheduling. It does not factor in injuries or other external circumstances that may affect team performance.</p>
             """,
             width=900, height=170,
             visible=False,
@@ -1152,25 +1152,25 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         
         # Create leaderboard
         leaderboard_html = "<h3>Luck Leaderboard</h3><table style='border-collapse: collapse; width: 100%; font-size: 12px;'>"
-        leaderboard_html += "<tr style='background-color: #f0f0f0; font-weight: bold;'>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>#</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Team</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Record</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Median Wins</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Luck Factor</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 8px;'>Category</th>"
+        leaderboard_html += "<tr style='background-color: #E7EAF2; font-weight: bold;'>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>#</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Team</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Record</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Median Wins</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Luck Factor</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Category</th>"
         leaderboard_html += "</tr>"
         
         for i, data in enumerate(luck_data):
-            row_color = "#e8f5e8" if data['luck_factor'] > 0 else "#ffeaea" if data['luck_factor'] < 0 else "#f8f8f8"
+            row_color = "#e8f5e8" if data['luck_factor'] > 0 else "#ffeaea" if data['luck_factor'] < 0 else "#F2F4F8"
             leaderboard_html += f"<tr style='background-color: {row_color};'>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{i+1}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px;'>{data['team_name']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{data['record_display']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{data['median_wins']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{i+1}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px;'>{data['team_name']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{data['record_display']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{data['median_wins']}</td>"
             luck_sign = "+" if data['luck_factor'] > 0 else ""
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{luck_sign}{data['luck_factor']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 8px; text-align: center;'>{data['luck_category']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{luck_sign}{data['luck_factor']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{data['luck_category']}</td>"
             leaderboard_html += "</tr>"
         
         leaderboard_html += "</table>"
@@ -1307,33 +1307,33 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         ranking_data.sort(key=lambda x: x['power_rating'], reverse=True)
         
         # Create main leaderboard table
-        leaderboard_html = "<h2 style='text-align: center; color: #333; margin-bottom: 20px;'>🏆 Power Ranking Leaderboard</h2>"
+        leaderboard_html = "<h2 style='text-align: center; color: #0B162A; margin-bottom: 20px;'>🏆 Power Ranking Leaderboard</h2>"
         leaderboard_html += "<table style='border-collapse: collapse; width: 100%; margin: 0 auto; font-family: Arial, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>"
         
         # Header row
-        leaderboard_html += "<tr style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold;'>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 12px; text-align: center;'>Rank</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 12px; text-align: left;'>Team</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 12px; text-align: center;'>Power Rating</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 12px; text-align: center;'>H2H Record</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 12px; text-align: center;'>Combined Record</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 12px; text-align: center;'>Avg Score</th>"
-        leaderboard_html += "<th style='border: 1px solid #ddd; padding: 12px; text-align: center;'>Total Points</th>"
+        leaderboard_html += "<tr style='background: #0B162A; color: white; font-weight: bold;'>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>Rank</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: left;'>Team</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>Power Rating</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>H2H Record</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>Combined Record</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>Avg Score</th>"
+        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>Total Points</th>"
         leaderboard_html += "</tr>"
         
         # Data rows
         for i, team in enumerate(ranking_data):
             # Color coding based on rank
             if i == 0:
-                row_style = "background-color: #ffd700; color: #333;"  # Gold for 1st
+                row_style = "background-color: #ffd700; color: #0B162A;"  # Gold for 1st
             elif i == 1:
-                row_style = "background-color: #c0c0c0; color: #333;"  # Silver for 2nd
+                row_style = "background-color: #c0c0c0; color: #0B162A;"  # Silver for 2nd
             elif i == 2:
                 row_style = "background-color: #cd7f32; color: white;"  # Bronze for 3rd
             elif i < len(ranking_data) // 2:
-                row_style = "background-color: #e8f5e8; color: #333;"  # Light green for top half
+                row_style = "background-color: #e8f5e8; color: #0B162A;"  # Light green for top half
             else:
-                row_style = "background-color: #ffeaea; color: #333;"  # Light red for bottom half
+                row_style = "background-color: #ffeaea; color: #0B162A;"  # Light red for bottom half
             
             leaderboard_html += f"<tr style='{row_style}'>"
             
@@ -1346,25 +1346,25 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
             elif i == 2:
                 rank_display = "🥉 #3"
             
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 12px; text-align: center; font-weight: bold;'>{rank_display}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 12px; font-weight: bold;'>{team['team_name']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 12px; text-align: center; font-weight: bold; font-size: 16px;'>{team['power_rating']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 12px; text-align: center;'>{team['regular_record']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 12px; text-align: center;'>{team['combined_record']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 12px; text-align: center;'>{team['avg_score']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #ddd; padding: 12px; text-align: center;'>{team['total_points']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; text-align: center; font-weight: bold;'>{rank_display}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; font-weight: bold;'>{team['team_name']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; text-align: center; font-weight: bold; font-size: 16px;'>{team['power_rating']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>{team['regular_record']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>{team['combined_record']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>{team['avg_score']}</td>"
+            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>{team['total_points']}</td>"
             leaderboard_html += "</tr>"
         
         leaderboard_html += "</table>"
         
         # Create explanation
         explanation_html = """
-        <div style='margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;'>
-            <h3 style='margin-top: 0; color: #333;'>📋 Power Rating Explanation</h3>
-            <p style='margin: 5px 0; color: #666;'><strong>Power Rating Formula:</strong> (Average Score × 6 + (High + Low) × 2 + (Win% × 200) × 2) ÷ 10</p>
-            <p style='margin: 5px 0; color: #666;'><strong>H2H Record:</strong> Head-to-head wins/losses from your actual schedule</p>
-            <p style='margin: 5px 0; color: #666;'><strong>Combined Record:</strong> H2H record + theoretical median record</p>
-            <p style='margin: 5px 0; color: #666;'><strong>Ranking Colors:</strong> 🏆 Gold (1st), 🥈 Silver (2nd), 🥉 Bronze (3rd), Green (Top Half), Red (Bottom Half)</p>
+        <div style='margin-top: 30px; padding: 20px; background-color: #FCE7DC; border-radius: 8px; border-left: 4px solid #C83803;'>
+            <h3 style='margin-top: 0; color: #0B162A;'>📋 Power Rating Explanation</h3>
+            <p style='margin: 5px 0; color: #52607A;'><strong>Power Rating Formula:</strong> (Average Score × 6 + (High + Low) × 2 + (Win% × 200) × 2) ÷ 10</p>
+            <p style='margin: 5px 0; color: #52607A;'><strong>H2H Record:</strong> Head-to-head wins/losses from your actual schedule</p>
+            <p style='margin: 5px 0; color: #52607A;'><strong>Combined Record:</strong> H2H record + theoretical median record</p>
+            <p style='margin: 5px 0; color: #52607A;'><strong>Ranking Colors:</strong> 🏆 Gold (1st), 🥈 Silver (2nd), 🥉 Bronze (3rd), Green (Top Half), Red (Bottom Half)</p>
         </div>
         """
         
