@@ -7,7 +7,6 @@ then combines with regular record for comprehensive team evaluation.
 
 import statistics
 from typing import Dict, List, Tuple
-from .api_clients import SleeperAPI
 
 
 def calculate_median_records(all_weekly_matchups: Dict, rosters: List, user_lookup: Dict) -> Dict:
@@ -44,7 +43,11 @@ def calculate_median_records(all_weekly_matchups: Dict, rosters: List, user_look
                 'weekly_scores': {},
                 'weekly_median_results': {}
             }
-    
+
+    # Reverse lookup built once, instead of linearly scanning user_to_roster for every
+    # matchup/pairing below (previously O(teams) per matchup, every week).
+    roster_to_user = {rid: uid for uid, rid in user_to_roster.items()}
+
     # Process each week
     for week, matchups in all_weekly_matchups.items():
         if not matchups:
@@ -61,12 +64,8 @@ def calculate_median_records(all_weekly_matchups: Dict, rosters: List, user_look
             points = matchup.get('points', 0) or 0
             
             # Find user_id for this roster_id
-            user_id = None
-            for uid, rid in user_to_roster.items():
-                if rid == roster_id:
-                    user_id = uid
-                    break
-            
+            user_id = roster_to_user.get(roster_id)
+
             if user_id:
                 week_scores.append(points)
                 week_data[user_id] = points
@@ -94,14 +93,9 @@ def calculate_median_records(all_weekly_matchups: Dict, rosters: List, user_look
                     team2_points = team2.get('points', 0) or 0
                     
                     # Find user_ids
-                    team1_user = None
-                    team2_user = None
-                    for uid, rid in user_to_roster.items():
-                        if rid == team1.get('roster_id'):
-                            team1_user = uid
-                        elif rid == team2.get('roster_id'):
-                            team2_user = uid
-                    
+                    team1_user = roster_to_user.get(team1.get('roster_id'))
+                    team2_user = roster_to_user.get(team2.get('roster_id'))
+
                     if team1_user and team2_user:
                         # Record head-to-head results
                         if team1_points > team2_points:
@@ -225,85 +219,3 @@ def analyze_median_performance(team_records: Dict):
         print(f"  {i}. {team['name']}: {diff:+.1%} (Median: {team['median_pct']:.1%}, Regular: {team['regular_pct']:.1%})")
 
 
-def main():
-    """Main function to demonstrate median record calculation"""
-    try:
-        # Load configuration
-        import json
-        import os
-        
-        config_file = 'league_config.json'
-        if os.path.exists(config_file):
-            with open(config_file, 'r') as f:
-                config = json.load(f)
-            
-            league_id = config['league_id']
-            season = config.get('season', 2025)
-            print(f"Using league: {config['league_name']} (ID: {league_id})")
-        else:
-            print("❌ No league configuration found. Please run main.py first.")
-            return
-        
-        # Initialize API
-        sleeper_api = SleeperAPI()
-        
-        # Get league data
-        print("\nFetching league data...")
-        rosters = sleeper_api.get_league_rosters(league_id)
-        users = sleeper_api.get_league_users(league_id)
-        
-        if not rosters or not users:
-            print("❌ Failed to get league data")
-            return
-        
-        # Create user lookup
-        user_lookup = {user['user_id']: user for user in users}
-        
-        # Get weekly matchups
-        print("Fetching weekly matchups...")
-        all_weekly_matchups = {}
-        max_week = 15
-        
-        for week in range(1, max_week + 1):
-            matchups = sleeper_api.get_league_matchups(league_id, week)
-            if matchups:
-                all_weekly_matchups[week] = matchups
-        
-        # Calculate median records
-        team_records = calculate_median_records(all_weekly_matchups, rosters, user_lookup)
-        
-        # Display results
-        print_record_summary(team_records)
-        analyze_median_performance(team_records)
-        
-        # Save results to JSON for use by other scripts
-        import json
-        from datetime import datetime
-        
-        output_file = "median_records.json"
-        with open(output_file, 'w') as f:
-            # Convert for JSON serialization
-            json_data = {}
-            for user_id, data in team_records.items():
-                json_data[user_id] = {
-                    'name': data['name'],
-                    'regular_record': data['regular_record'],
-                    'median_record': data['median_record'],
-                    'combined_record': data['combined_record'],
-                    'weekly_scores': data['weekly_scores'],
-                    'weekly_median_results': data['weekly_median_results']
-                }
-            
-            json.dump(json_data, f, indent=2)
-        
-        print(f"\nResults saved to: {output_file}")
-        print("Median record calculation complete!")
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        import traceback
-        traceback.print_exc()
-
-
-if __name__ == "__main__":
-    main()

@@ -3,7 +3,7 @@ services:
     name: fantasy-football-analysis
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn server:app
+    startCommand: gunicorn server:app --workers 1 --threads 8 --timeout 120
     plan: free
     envVars:
       - key: FLASK_ENV

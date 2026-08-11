@@ -6,6 +6,11 @@ __pycache__/
 .Python
 *.egg-info/
 .coverage
+.venv/
+venv/
+
+# Cross-league/season cache (players.json, ESPN rankings) - purely derived, no reason to commit
+fantasy_analysis_output/cache/
 
 # Node.js
 node_modules/

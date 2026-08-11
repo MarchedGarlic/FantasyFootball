@@ -61,7 +61,11 @@ def calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup, ou
                 'cumulative_wins': {},
                 'cumulative_losses': {}
             }
-    
+
+    # Built once, instead of linearly scanning `rosters` for every matchup pairing below
+    # (previously O(teams) per matchup, every week).
+    roster_to_owner = {roster.get('roster_id'): roster.get('owner_id') for roster in rosters}
+
     # Process each week's matchups
     for week, matchups in all_weekly_matchups.items():
         if not matchups:
@@ -91,15 +95,9 @@ def calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup, ou
                 team2_points = team2.get('points', 0) or 0
                 
                 # Find user_ids for these roster_ids
-                team1_user_id = None
-                team2_user_id = None
-                
-                for roster in rosters:
-                    if roster.get('roster_id') == team1_id:
-                        team1_user_id = roster.get('owner_id')
-                    elif roster.get('roster_id') == team2_id:
-                        team2_user_id = roster.get('owner_id')
-                
+                team1_user_id = roster_to_owner.get(team1_id)
+                team2_user_id = roster_to_owner.get(team2_id)
+
                 if team1_user_id and team2_user_id:
                     # Record scores
                     week_results[team1_user_id] = {
@@ -164,6 +162,37 @@ def calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup, ou
             data['total_weeks'] = len(all_ratings)
     
     return team_power_data
+
+
+def compute_power_rank_history(team_power_data):
+    """Per-week power ranking position for every team.
+
+    This used to be computed ad hoc inside create_power_rating_plot() purely to feed a Bokeh
+    hover tooltip, then thrown away - never persisted, so nothing could build a "last week vs
+    this week" ranking comparison from it. Extracted here so it can be saved to JSON and reused
+    by the AI Overview's power-ranking-movers section.
+
+    Returns {week: [{'user_id', 'rank', 'rating'}, ...]} sorted best (rank 1) to worst.
+    """
+    weeks = sorted({
+        week for data in team_power_data.values()
+        for week in data.get('weekly_power_ratings', {}).keys()
+    })
+
+    history = {}
+    for week in weeks:
+        week_ratings = [
+            (user_id, data['weekly_power_ratings'][week])
+            for user_id, data in team_power_data.items()
+            if week in data.get('weekly_power_ratings', {})
+        ]
+        week_ratings.sort(key=lambda item: item[1], reverse=True)
+        history[week] = [
+            {'user_id': user_id, 'rank': idx + 1, 'rating': rating}
+            for idx, (user_id, rating) in enumerate(week_ratings)
+        ]
+
+    return history
 
 
 def create_power_rating_plot(team_power_data, output_dirs=None):

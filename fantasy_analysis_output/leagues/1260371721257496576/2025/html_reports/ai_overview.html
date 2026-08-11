@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>League Overview - DeShaun & Justin’s Massage Parlor (2025)</title>
+<style>
+    /* Chicago Bears palette (navy + orange) on a light canvas - see index.html for the same
+       token set. Kept in sync manually since this HTML is generated server-side, not shared
+       CSS with the frontend. */
+    :root {
+        --color-ink: #0B162A;
+        --color-ink-secondary: #52607A;
+        --color-canvas: #F2F4F8;
+        --color-paper: #FFFFFF;
+        --color-hairline: #DCE0E8;
+        --color-accent: #C83803;
+        --color-accent-soft: #FCE7DC;
+        --color-success: #1B8A5A;
+        --color-danger: #C0392B;
+    }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Tahoma, Geneva, Verdana, sans-serif;
+        background: var(--color-canvas);
+        color: var(--color-ink);
+        margin: 0;
+        padding: 20px;
+        min-height: 100vh;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 28px 25px;
+        background: var(--color-ink);
+        border-radius: 24px;
+        color: white;
+    }
+    .header h1 { font-weight: 700; letter-spacing: -0.02em; }
+    .header p { opacity: 0.75; margin: 4px 0 0; }
+    .section-card {
+        background: var(--color-paper);
+        border-radius: 20px;
+        padding: 22px 26px;
+        margin-bottom: 22px;
+        border: 1px solid var(--color-hairline);
+    }
+    .section-card h2 { margin: 0 0 12px; color: var(--color-accent); font-size: 1.25rem; font-weight: 600; }
+    .section-caption { color: var(--color-ink-secondary); font-size: 0.9rem; margin: 0 0 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--color-hairline); color: var(--color-ink); }
+    th { color: var(--color-ink-secondary); font-weight: 600; }
+    td.num, th.num { text-align: right; }
+    .positive { color: var(--color-success); }
+    .negative { color: var(--color-danger); }
+    .empty { color: var(--color-ink-secondary); font-style: italic; }
+    ul.upset-list, ul.matchup-list { list-style: none; padding: 0; margin: 0; }
+    ul.upset-list li, ul.matchup-list li {
+        padding: 10px 0; border-bottom: 1px solid var(--color-hairline);
+    }
+    .badge {
+        display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 10px;
+        background: var(--color-accent-soft); color: var(--color-accent); font-size: 0.78rem; font-weight: 600;
+    }
+    .notes { color: var(--color-ink-secondary); font-size: 0.85rem; margin-top: 4px; }
+    .faab-bar { background: var(--color-hairline); border-radius: 6px; height: 10px; width: 140px; }
+    .faab-bar-fill { background: var(--color-accent); height: 100%; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>DeShaun & Justin’s Massage Parlor - League Overview</h1>
+        <p>Season 2025 - Generated August 10, 2026 at 04:46 PM</p>
+    </div>
+    
+    <div class="section-card">
+        <h2>Top Players of the Week</h2>
+        
+    <p class="section-caption">Week 17</p>
+    <table>
+        <tr><th>#</th><th>Player</th><th>Pos / Team</th><th>Manager</th><th>Points</th></tr>
+        <tr>
+            <td>1</td>
+            <td>Derrick Henry</td>
+            <td>RB - BAL</td>
+            <td>joeyscott31</td>
+            <td class="num">45.6</td>
+        </tr><tr>
+            <td>2</td>
+            <td>Bijan Robinson</td>
+            <td>RB - ATL</td>
+            <td>djmarino615</td>
+            <td class="num">39.9</td>
+        </tr><tr>
+            <td>3</td>
+            <td>Brock Purdy</td>
+            <td>QB - SF</td>
+            <td>coletheman88</td>
+            <td class="num">37.9</td>
+        </tr><tr>
+            <td>4</td>
+            <td>Drake Maye</td>
+            <td>QB - NE</td>
+            <td>Tcdun</td>
+            <td class="num">32.4</td>
+        </tr><tr>
+            <td>5</td>
+            <td>Chase Brown</td>
+            <td>RB - CIN</td>
+            <td>CameronMulyk</td>
+            <td class="num">29.1</td>
+        </tr><tr>
+            <td>6</td>
+            <td>Christian McCaffrey</td>
+            <td>RB - SF</td>
+            <td>coletheman88</td>
+            <td class="num">28.1</td>
+        </tr><tr>
+            <td>7</td>
+            <td>Luther Burden</td>
+            <td>WR - CHI</td>
+            <td>Spillywilly69</td>
+            <td class="num">27.8</td>
+        </tr><tr>
+            <td>8</td>
+            <td>Rhamondre Stevenson</td>
+            <td>RB - NE</td>
+            <td>Shockley5</td>
+            <td class="num">27.2</td>
+        </tr><tr>
+            <td>9</td>
+            <td>Zach Charbonnet</td>
+            <td>RB - SEA</td>
+            <td>Tcdun</td>
+            <td class="num">26.2</td>
+        </tr><tr>
+            <td>10</td>
+            <td>Chris Olave</td>
+            <td>WR - NO</td>
+            <td>CallMeBeanz</td>
+            <td class="num">25.9</td>
+        </tr>
+    </table>
+    
+    </div>
+    
+    <div class="section-card">
+        <h2>Biggest Upsets</h2>
+        <ul class='upset-list'><li>
+            <strong>Week 6:</strong> Spillywilly69 (ranked #12)
+            upset CallMeBeanz (ranked #2) by 44.6 points
+            <span class="badge">upset score 14.5</span>
+        </li><li>
+            <strong>Week 11:</strong> coletheman88 (ranked #9)
+            upset djmarino615 (ranked #1) by 62.3 points
+            <span class="badge">upset score 14.2</span>
+        </li><li>
+            <strong>Week 6:</strong> joeyscott31 (ranked #9)
+            upset cmoney2137 (ranked #4) by 75.5 points
+            <span class="badge">upset score 12.6</span>
+        </li><li>
+            <strong>Week 9:</strong> Spillywilly69 (ranked #12)
+            upset coletheman88 (ranked #5) by 46.6 points
+            <span class="badge">upset score 11.7</span>
+        </li><li>
+            <strong>Week 13:</strong> Spillywilly69 (ranked #12)
+            upset djmarino615 (ranked #1) by 1.7 points
+            <span class="badge">upset score 11.2</span>
+        </li></ul>
+    </div>
+    
+    <div class="section-card">
+        <h2>Power Ranking Movers: Last Week vs This Week</h2>
+        
+    <p class="section-caption">Week 16 to Week 17</p>
+    <table>
+        <tr><th>Manager</th><th>Last Week</th><th>This Week</th><th>Change</th></tr>
+        <tr>
+            <td>Spillywilly69</td>
+            <td class="num">#10</td>
+            <td class="num">#6</td>
+            <td class="num positive">
+                +4
+            </td>
+        </tr><tr>
+            <td>jackjohnnsonn26</td>
+            <td class="num">#11</td>
+            <td class="num">#8</td>
+            <td class="num positive">
+                +3
+            </td>
+        </tr><tr>
+            <td>Richmccc</td>
+            <td class="num">#6</td>
+            <td class="num">#5</td>
+            <td class="num positive">
+                +1
+            </td>
+        </tr><tr>
+            <td>djmarino615</td>
+            <td class="num">#1</td>
+            <td class="num">#1</td>
+            <td class="num ">
+                0
+            </td>
+        </tr><tr>
+            <td>joeyscott31</td>
+            <td class="num">#2</td>
+            <td class="num">#2</td>
+            <td class="num ">
+                0
+            </td>
+        </tr><tr>
+            <td>coletheman88</td>
+            <td class="num">#3</td>
+            <td class="num">#3</td>
+            <td class="num ">
+                0
+            </td>
+        </tr><tr>
+            <td>CallMeBeanz</td>
+            <td class="num">#4</td>
+            <td class="num">#4</td>
+            <td class="num ">
+                0
+            </td>
+        </tr><tr>
+            <td>Tcdun</td>
+            <td class="num">#7</td>
+            <td class="num">#7</td>
+            <td class="num ">
+                0
+            </td>
+        </tr>
+    </table>
+    
+    </div>
+    
+    <div class="section-card">
+        <h2>Matchups to Watch</h2>
+        <p class='empty'>No upcoming schedule data available yet.</p>
+    </div>
+    
+    <div class="section-card">
+        <h2>Projected Playoff Picture</h2>
+        
+    <p class="section-caption">If the season ended today - top 6 make the playoffs</p>
+    <table>
+        <tr><th>Rank</th><th>Manager</th><th>Record</th><th>Points For</th><th></th></tr>
+        <tr>
+            <td>#1</td><td>CallMeBeanz</td>
+            <td class="num">11-3</td>
+            <td class="num">1641.9</td>
+            <td></td>
+        </tr><tr>
+            <td>#2</td><td>djmarino615</td>
+            <td class="num">9-5</td>
+            <td class="num">1916.1</td>
+            <td></td>
+        </tr><tr>
+            <td>#3</td><td>joeyscott31</td>
+            <td class="num">8-6</td>
+            <td class="num">1789.7</td>
+            <td></td>
+        </tr><tr>
+            <td>#4</td><td>cmoney2137</td>
+            <td class="num">8-6</td>
+            <td class="num">1619.4</td>
+            <td></td>
+        </tr><tr>
+            <td>#5</td><td>coletheman88</td>
+            <td class="num">7-7</td>
+            <td class="num">1647.8</td>
+            <td></td>
+        </tr><tr>
+            <td>#6</td><td>papabwall69</td>
+            <td class="num">7-7</td>
+            <td class="num">1578.8</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>#7</td><td>Tcdun</td>
+            <td class="num">7-7</td>
+            <td class="num">1538.9</td>
+            <td>0.0 GB</td>
+        </tr><tr>
+            <td>#8</td><td>CameronMulyk</td>
+            <td class="num">7-7</td>
+            <td class="num">1486.6</td>
+            <td>0.0 GB</td>
+        </tr>
+    </table>
+    
+    </div>
+    
+    <div class="section-card">
+        <h2>Top Waiver Pickups</h2>
+        
+    
+        <p class="section-caption">This week's best pickups (Week 17)</p>
+        <table><tr><th>Week</th><th>Manager</th><th>Player Added</th><th>Impact</th><th>FAAB</th></tr><tr>
+            <td>Week 17</td><td>coletheman88</td>
+            <td>Taysom Hill</td>
+            <td class="num">+0.1</td>
+            <td class="num">-</td>
+        </tr><tr>
+            <td>Week 17</td><td>coletheman88</td>
+            <td>Kyle Williams</td>
+            <td class="num">+0.1</td>
+            <td class="num">-</td>
+        </tr><tr>
+            <td>Week 17</td><td>joeyscott31</td>
+            <td>Tom Brady</td>
+            <td class="num">+0.0</td>
+            <td class="num">-</td>
+        </tr><tr>
+            <td>Week 17</td><td>djmarino615</td>
+            <td>Andy Borregales</td>
+            <td class="num">+0.0</td>
+            <td class="num">-</td>
+        </tr><tr>
+            <td>Week 17</td><td>djmarino615</td>
+            <td>Los Angeles Chargers</td>
+            <td class="num">+0.0</td>
+            <td class="num">-</td>
+        </tr></table>
+        
+    <p class="section-caption">Season-best pickups</p>
+    <table><tr><th>Week</th><th>Manager</th><th>Player Added</th><th>Impact</th><th>FAAB</th></tr><tr>
+            <td>Week 4</td><td>Shockley5</td>
+            <td>Malik Washington</td>
+            <td class="num">+37.2</td>
+            <td class="num">-</td>
+        </tr><tr>
+            <td>Week 6</td><td>joeyscott31</td>
+            <td>Kansas City Chiefs</td>
+            <td class="num">+33.8</td>
+            <td class="num">$3</td>
+        </tr><tr>
+            <td>Week 6</td><td>joeyscott31</td>
+            <td>Kimani Vidal</td>
+            <td class="num">+33.8</td>
+            <td class="num">$16</td>
+        </tr><tr>
+            <td>Week 6</td><td>joeyscott31</td>
+            <td>Mason Taylor</td>
+            <td class="num">+33.8</td>
+            <td class="num">-</td>
+        </tr><tr>
+            <td>Week 5</td><td>djmarino615</td>
+            <td>Los Angeles Rams</td>
+            <td class="num">+28.6</td>
+            <td class="num">-</td>
+        </tr></table>
+    
+    </div>
+    
+    <div class="section-card">
+        <h2>FAAB Tracker</h2>
+        
+    <p class="section-caption">Remaining budget by manager</p>
+    <table><tr><th>Manager</th><th>Remaining</th><th></th></tr><tr>
+            <td>Tcdun</td>
+            <td class="num">$69 / $100</td>
+            <td><div class="faab-bar"><div class="faab-bar-fill" style="width:69%"></div></div></td>
+        </tr><tr>
+            <td>djmarino615</td>
+            <td class="num">$65 / $100</td>
+            <td><div class="faab-bar"><div class="faab-bar-fill" style="width:65%"></div></div></td>
+        </tr><tr>
+            <td>Richmccc</td>
+            <td class="num">$55 / $100</td>
+            <td><div class="faab-bar"><div class="faab-bar-fill" style="width:55%"></div></div></td>
+        </tr><tr>
+            <td>Shockley5</td>
+            <td class="num">$50 / $100</td>
+            <td><div class="faab-bar"><div class="faab-bar-fill" style="width:50%"></div></div></td>
+        </tr><tr>
+            <td>papabwall69</td>
+            <td class="num">$45 / $100</td>
+            <td><div class="faab-bar"><div class="faab-bar-fill" style="width:45%"></div></div></td>
+        </tr><tr>
+            <td>CallMeBeanz</td>
+            <td class="num">$38 / $100</td>
+            <td><div class="faab-bar"><div class="faab-bar-fill" style="width:38%"></div></div></td>
+        </tr><tr>
+            <td>CameronMulyk</td>
+            <td class="num">$25 / $100</td>
+            <td><div class="faab-bar"><div class="faab-bar-fill" style="width:25%"></div></div></td>
+        </tr><tr>
+            <td>cmoney2137</td>
+            <td class="num">$7 / $100</td>
+            <td><div class="faab-bar"><div class="faab-bar-fill" style="width:7%"></div></div></td>
+        </tr><tr>
+            <td>joeyscott31</td>
+            <td class="num">$0 / $100</td>
+            <td><div class="faab-bar"><div class="faab-bar-fill" style="width:0%"></div></div></td>
+        </tr><tr>
+            <td>Spillywilly69</td>
+            <td class="num">$0 / $100</td>
+            <td><div class="faab-bar"><div class="faab-bar-fill" style="width:0%"></div></div></td>
+        </tr><tr>
+            <td>coletheman88</td>
+            <td class="num">$0 / $100</td>
+            <td><div class="faab-bar"><div class="faab-bar-fill" style="width:0%"></div></div></td>
+        </tr><tr>
+            <td>jackjohnnsonn26</td>
+            <td class="num">$0 / $100</td>
+            <td><div class="faab-bar"><div class="faab-bar-fill" style="width:0%"></div></div></td>
+        </tr></table>
+    
+    </div>
+    
+</div>
+</body>
+</html>

@@ -5,8 +5,11 @@ Handles ESPN-based player ranking and roster analysis
 """
 
 import statistics
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Dict, List, Optional
+
+ATHLETE_FETCH_WORKERS = 10
 
 
 class FantasyAnalyzer:
@@ -40,11 +43,18 @@ class FantasyAnalyzer:
         self.espn_api = espn_api
         self.position_rankings = {}
         self.nfl_leaders = None
-    
-    def initialize_rankings(self, season="2025"):
-        """Initialize player rankings from ESPN data"""
+        # Memoizes ESPN $ref lookups (position/team refs repeat heavily - ~32 teams and a
+        # handful of positions get looked up once per athlete without this cache).
+        self._ref_cache = {}
+
+    def initialize_rankings(self, season, storage=None):
+        """Initialize player rankings from ESPN data for the given season.
+
+        `storage`, if provided, disk-caches the raw leaders payload for 24h so re-running
+        analysis for the same season repeatedly doesn't re-fetch it every time.
+        """
         print(f"Initializing ESPN player rankings for {season} season...")
-        self.nfl_leaders = self.espn_api.get_nfl_leaders(season)
+        self.nfl_leaders = self.espn_api.get_nfl_leaders(season, storage=storage)
         self._build_position_rankings()
     
     def _build_position_rankings(self):
@@ -75,16 +85,23 @@ class FantasyAnalyzer:
                 # Process WR/TE receiving yards
                 self._process_receiving_leaders(leaders)
     
+    def _fetch_athletes_concurrently(self, leaders):
+        """Prefetch athlete details for a batch of leaders in parallel. Returns (leader,
+        athlete_data) pairs in the original order - this is where most of the ~700+ sequential
+        ESPN calls used to happen one at a time."""
+        with ThreadPoolExecutor(max_workers=ATHLETE_FETCH_WORKERS) as executor:
+            athlete_data_list = list(executor.map(self._fetch_athlete_details, leaders))
+        return list(zip(leaders, athlete_data_list))
+
     def _process_position_leaders(self, leaders, target_position, max_count=50, filter_positions=None):
         """Process position-specific leaders with optional filtering"""
         rank = 0
-        
-        for leader in leaders[:80]:  # Take more than we need to account for filtering
+
+        for leader, athlete_data in self._fetch_athletes_concurrently(leaders[:80]):
             try:
-                athlete_data = self._fetch_athlete_details(leader)
                 if not athlete_data:
                     continue
-                
+
                 name = athlete_data.get('displayName', '')
                 position = athlete_data.get('position_abbrev', '')
                 
@@ -116,13 +133,12 @@ class FantasyAnalyzer:
         """Process receiving yards leaders for WR and TE"""
         wr_rank = 0
         te_rank = 0
-        
-        for leader in leaders[:80]:  # Top 80 receivers
+
+        for leader, athlete_data in self._fetch_athletes_concurrently(leaders[:80]):
             try:
-                athlete_data = self._fetch_athlete_details(leader)
                 if not athlete_data:
                     continue
-                
+
                 name = athlete_data.get('displayName', '')
                 position = athlete_data.get('position_abbrev', '')
                 
@@ -156,47 +172,56 @@ class FantasyAnalyzer:
                 print(f"     Warning: Error processing receiver: {e}")
                 continue
     
+    def _fetch_ref_cached(self, ref_url):
+        """Memoized GET for ESPN $ref URLs. Position/team refs repeat heavily across athletes
+        (~32 teams, a handful of positions), so caching them here avoids re-fetching the same
+        team/position hundreds of times in a single ranking pass."""
+        if ref_url in self._ref_cache:
+            return self._ref_cache[ref_url]
+        try:
+            response = self.espn_api.get(ref_url)
+            data = response.json() if response.status_code == 200 else None
+        except Exception:
+            data = None
+        self._ref_cache[ref_url] = data
+        return data
+
     def _fetch_athlete_details(self, leader):
         """Fetch athlete details from ESPN Core API"""
         try:
             athlete = leader.get('athlete', {})
-            
+
             if '$ref' in athlete:
-                # Fetch detailed athlete data
-                athlete_response = self.espn_api.session.get(athlete['$ref'])
-                if athlete_response.status_code == 200:
-                    athlete_data = athlete_response.json()
-                    
-                    result = {
-                        'id': athlete_data.get('id', ''),
-                        'displayName': athlete_data.get('displayName', ''),
-                        'fullName': athlete_data.get('fullName', '')
-                    }
-                    
-                    # Handle position reference or direct data
-                    if 'position' in athlete_data:
-                        pos = athlete_data['position']
-                        if isinstance(pos, dict) and '$ref' in pos:
-                            pos_response = self.espn_api.session.get(pos['$ref'])
-                            if pos_response.status_code == 200:
-                                pos_data = pos_response.json()
-                                result['position_abbrev'] = pos_data.get('abbreviation', 'Unknown')
-                        elif isinstance(pos, dict):
-                            result['position_abbrev'] = pos.get('abbreviation', 'Unknown')
-                    
-                    # Handle team reference or direct data
-                    if 'team' in athlete_data:
-                        team = athlete_data['team']
-                        if isinstance(team, dict) and '$ref' in team:
-                            team_response = self.espn_api.session.get(team['$ref'])
-                            if team_response.status_code == 200:
-                                team_data = team_response.json()
-                                result['team_abbrev'] = team_data.get('abbreviation', 'Unknown')
-                        elif isinstance(team, dict):
-                            result['team_abbrev'] = team.get('abbreviation', 'Unknown')
-                    
-                    return result
-                    
+                athlete_data = self._fetch_ref_cached(athlete['$ref'])
+                if not athlete_data:
+                    return None
+
+                result = {
+                    'id': athlete_data.get('id', ''),
+                    'displayName': athlete_data.get('displayName', ''),
+                    'fullName': athlete_data.get('fullName', '')
+                }
+
+                # Handle position reference or direct data
+                if 'position' in athlete_data:
+                    pos = athlete_data['position']
+                    if isinstance(pos, dict) and '$ref' in pos:
+                        pos_data = self._fetch_ref_cached(pos['$ref'])
+                        result['position_abbrev'] = (pos_data or {}).get('abbreviation', 'Unknown')
+                    elif isinstance(pos, dict):
+                        result['position_abbrev'] = pos.get('abbreviation', 'Unknown')
+
+                # Handle team reference or direct data
+                if 'team' in athlete_data:
+                    team = athlete_data['team']
+                    if isinstance(team, dict) and '$ref' in team:
+                        team_data = self._fetch_ref_cached(team['$ref'])
+                        result['team_abbrev'] = (team_data or {}).get('abbreviation', 'Unknown')
+                    elif isinstance(team, dict):
+                        result['team_abbrev'] = team.get('abbreviation', 'Unknown')
+
+                return result
+
             else:
                 # Use direct athlete data
                 return {
@@ -205,7 +230,7 @@ class FantasyAnalyzer:
                     'position_abbrev': athlete.get('position', {}).get('abbreviation', 'Unknown'),
                     'team_abbrev': athlete.get('team', {}).get('abbreviation', 'Unknown')
                 }
-                
+
         except Exception as e:
             print(f"       Error fetching athlete details: {e}")
             return None
