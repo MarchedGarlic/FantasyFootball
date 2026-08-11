@@ -262,7 +262,11 @@ Rendering uses the same Bears navy/orange light theme as the rest of the app (§
 - Dead `openai` dependency and `OPENAI_API_KEY` removed (no longer used per §2's AI Overview
   decision) — one less secret to provision.
 - Python version pin reconciled across `netlify.toml` (was 3.9), `render.yaml`/`runtime.txt`
-  (3.11) — standardized on 3.11.
+  (3.11) — standardized on the exact patch `3.11.9` everywhere, not just `3.11`. Netlify's
+  `mise`-based build image (and some other version-manager-driven platforms) can't resolve a
+  bare `X.Y` version — it expands to a glob (`3.11.*`) that `python-build` doesn't understand
+  and the build fails with "definition not found". Always pin the full `X.Y.Z` version in
+  `PYTHON_VERSION`/`runtime.txt` for this reason.
 - `league_config.json` contains real personal data (a real Sleeper username and league ID) and is
   currently tracked in git (the `.gitignore` rule for it is commented out). This is not rewritten
   automatically — flagged for the user to decide whether to scrub history.
