@@ -9,8 +9,11 @@ __pycache__/
 .venv/
 venv/
 
-# Cross-league/season cache (players.json, ESPN rankings) - purely derived, no reason to commit
-fantasy_analysis_output/cache/
+# Generated analysis output (every report/JSON file under here is regenerated fresh by
+# `python main.py` on every Netlify build via netlify.toml's build command - it should never be
+# committed. A stale or placeholder-contaminated commit here has previously ended up served
+# straight to production; don't re-add exceptions for specific report files.)
+fantasy_analysis_output/
 
 # Node.js
 node_modules/
@@ -24,20 +27,6 @@ yarn-error.log*
 # Data folder - only track templates and organized outputs
 data/*.json
 !data/league_config.template.json
-
-# Analysis outputs (keep organized folders, ignore loose files)
-fantasy_analysis_*.json
-detailed_analysis_*.json
-roster_data_*.json
-power_rating_interactive_*.html
-roster_grades_interactive_*.html
-trade_analysis_*.html
-waiver_analysis_*.html
-manager_grades_*.html
-worst_trades_report_*.txt
-
-# Keep only the organized output folders
-# fantasy_analysis_output_*/ folders will be tracked
 
 # Build output
 dist/
