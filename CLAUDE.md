@@ -261,12 +261,25 @@ Rendering uses the same Bears navy/orange light theme as the rest of the app (§
   Settings.
 - Dead `openai` dependency and `OPENAI_API_KEY` removed (no longer used per §2's AI Overview
   decision) — one less secret to provision.
-- Python version pin reconciled across `netlify.toml` (was 3.9), `render.yaml`/`runtime.txt`
-  (3.11) — standardized on the exact patch `3.11.9` everywhere, not just `3.11`. Netlify's
-  `mise`-based build image (and some other version-manager-driven platforms) can't resolve a
-  bare `X.Y` version — it expands to a glob (`3.11.*`) that `python-build` doesn't understand
-  and the build fails with "definition not found". Always pin the full `X.Y.Z` version in
-  `PYTHON_VERSION`/`runtime.txt` for this reason.
+- Python version handling for **Netlify** vs. **Render** is not symmetric - they don't read the
+  same file the same way, and mixing up their formats is exactly what broke both deploys in
+  practice, twice:
+  - **Netlify**: `runtime.txt` takes priority over everything else (over the `PYTHON_VERSION`
+    build environment variable and over `Pipfile`). Its documented format is the **bare `X.Y`
+    version with no `python-` prefix and no trailing newline** (e.g. a 4-byte file containing
+    exactly `3.11`). This repo's `runtime.txt` had the Heroku/pyenv-style format
+    (`python-3.11.*`, later `python-3.11.9`) left over from before this rewrite - Netlify's
+    `mise`-based build image passed that literal string straight to `python-build`, which has no
+    "python-3.11.*" or "python-3.11.9" definition, so the build failed with "definition not
+    found" both times. `netlify.toml`'s `PYTHON_VERSION` was never actually the problem - it was
+    always being silently overridden by the malformed `runtime.txt`.
+  - **Render**: does not read `runtime.txt` at all. It only honors the `PYTHON_VERSION`
+    environment variable (must be fully qualified, e.g. `3.11.9`) or a `.python-version` file.
+    `render.yaml`'s `envVars: PYTHON_VERSION: 3.11.9` is correct as-is and unaffected by whatever
+    `runtime.txt` contains.
+  - Net result: `runtime.txt` = `3.11` (bare, Netlify's format), `render.yaml`'s `PYTHON_VERSION`
+    = `3.11.9` (fully qualified, Render's format) - these look inconsistent side by side but each
+    is correct for the platform that reads it.
 - `league_config.json` contains real personal data (a real Sleeper username and league ID) and is
   currently tracked in git (the `.gitignore` rule for it is commented out). This is not rewritten
   automatically — flagged for the user to decide whether to scrub history.
