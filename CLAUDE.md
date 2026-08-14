@@ -207,9 +207,10 @@ New module `src/ai_overview.py` replaces `server.py`'s `create_ai_team_overview`
 `create_detailed_mock_overview` / `create_mock_ai_overview` and the dead `openai` import entirely.
 Sections, each backed by data that is now actually persisted (previously fetched-then-discarded):
 
-1. **Top players of the week** — every rostered player's points for the most recently completed
-   week (from Sleeper matchups' `players_points`), top 10 league-wide, with the manager who
-   started/owned them.
+1. **Top performers (week-interactive)** — head-to-head matchup winners for a selected week
+   (manager vs. manager, not individual NFL players), ranked by winning score. Replaces the
+   original "top individual NFL players" framing per explicit user feedback ("I don't care abt
+   the highest scoring football players, I care about the head to head matchup winners").
 2. **Biggest upsets** — each week's head-to-head margin compared against the two teams' power
    rank entering that week (from the newly-persisted per-week rank history, §5 data model below);
    a win by the lower-ranked team, weighted by rank gap and margin, is an upset.
@@ -219,10 +220,16 @@ Sections, each backed by data that is now actually persisted (previously fetched
    `power_rank_by_week` structure saved to JSON).
 4. **Matchups to watch** — the next unplayed week's pairings, scored by standings stakes (e.g. two
    teams within the playoff cutoff facing each other, or the current bubble teams — cutoff comes
-   from the league's real `settings.playoff_teams`).
-5. **Projected playoff teams** — "if the season ended today" standings (wins, then points as
-   tiebreak) against the league's real `playoff_teams` count, with games-back-from-the-cutoff for
-   the bubble teams. Explicitly labeled as a snapshot projection, not a playoff-odds simulation.
+   from the league's real `settings.playoff_teams`). Always about the real upcoming week, not
+   week-interactive (see below for why this differs from the other week-based sections).
+5. **Projected playoff bracket & standings (week-interactive)** — a seeded single-elimination
+   bracket ("if the season ended after the selected week") plus the standings table it's seeded
+   from. Supports Sleeper's three documented playoff field sizes (4/6/8 teams) with the correct
+   bye placement (`nextPow2 - N` byes to the top seeds) and standard tournament seeding (e.g. for
+   6 teams: round 1 is 3v6 and 4v5, round 2 is 1-vs-winner(4v5) and 2-vs-winner(3v6), keeping the
+   top two seeds apart until the final). Any other field size falls back to a flat seed list
+   instead of a fabricated bracket tree. Explicitly labeled as a snapshot projection, not a
+   playoff-odds simulation.
 6. **Median standings** — "if a median-scoring rule had been in place all season": each week the
    top half of scorers league-wide get a bonus win against "the median" and the bottom half get
    a bonus loss, on top of the real head-to-head result (2-0 if you beat both your opponent and
@@ -233,6 +240,17 @@ Sections, each backed by data that is now actually persisted (previously fetched
    sourced from `output_data['median_standings']`, built in `main.py`).
 7. **Top waiver pickups** — season-to-date and this-week leaders from the (now de-duplicated,
    FAAB-efficiency-aware) waiver analysis in §4.
+
+**Week-interactive sections and the client-side rendering model:** Top Performers and the
+Playoff Bracket/Standings need a "view this as of week N" picker (explicit user request). Rather
+than round-trip to the server per week (there is no server for the static Netlify build — it's
+just a generated HTML file), every week's match results (`matchup_results`, already collected in
+`main.py`) are embedded as a JSON blob directly in `ai_overview.html`, and a small vanilla-JS layer
+(no framework, no build step) recomputes standings-through-week and re-renders both sections
+in-browser when the `<select>` changes. "Matchups to Watch" deliberately stays server-rendered and
+non-interactive since it's inherently about the real upcoming week, not a historical one — making
+it week-interactive too would need a different question ("what was upcoming as of week N")
+that nobody asked for.
 
 Rendering uses the same Bears navy/orange light theme as the rest of the app (§10).
 
@@ -295,7 +313,21 @@ Rendering uses the same Bears navy/orange light theme as the rest of the app (§
   `src/trade_analysis.py`, `src/power_rankings.py`, `src/visualizations.py`) — only the
   underlying data/scoring feeding those charts changes. The HTML/CSS *chrome* around each chart
   (explanation panels, leaderboards, page background) was re-themed in §10 to match the rest of
-  the app, since that's presentation, not the analysis logic.
+  the app, since that's presentation, not the analysis logic. That same chrome's *mobile*
+  responsiveness was fixed in a later pass — see the note in §9 below, which also covers a real
+  architectural discovery (Bokeh's Shadow DOM) worth knowing before touching this chrome again.
+- **JoeyBot** — a bot "similar to Sleeperbot" that shows up inside the Sleeper app itself. Not
+  feasible as asked: Sleeper's API is explicitly documented as **read-only** ("you cannot modify
+  contents via this API"), and there's no public/documented way for a third party to post into
+  Sleeper's native in-app chat or league feed the way Sleeper's own first-party bot does — that
+  surface simply isn't exposed to outside developers. The realistic version of "JoeyBot" is a
+  **Discord bot** that lives in the league's Discord server (most fantasy leagues already have
+  one) and posts/responds using the same data this app already computes — e.g. `/standings`,
+  `/topperformers <week>`, `/bracket`, a weekly auto-post of the League Overview highlights — built
+  as its own small service (a Discord gateway process, likely `discord.py` or `discord.js`) that
+  calls this app's existing analysis output (JSON under `fantasy_analysis_output/`, or a small
+  read-only API added to `server.py`) rather than recomputing anything. Deferred until the rest of
+  this pass is live in production, per user ("eventually"); not started.
 
 ## 9. Results page UX (index.html / results_template.html)
 
@@ -320,6 +352,75 @@ Analysis, Waiver Analysis, Manager Grades, Worst Trades) is its own standalone H
   anymore — `FUN_LOADING_MESSAGES` in `index.html` maps the same real progress-percent
   checkpoints to football-themed phrases ("Going for it on 4th down...", etc.) per explicit user
   request; the real message is still logged to the console for anyone who wants it.
+- **Mobile scrolling fix:** each embedded report's `<iframe>` used to have a fixed height (820px
+  desktop / 600px mobile). Any report taller than that got its *own* internal scrollbar, and on
+  mobile a finger-swipe that starts over the iframe rectangle scrolls the iframe instead of the
+  outer page — this is what made scrolling through results "look like crap" on a phone. Fixed by
+  `wireIframeAutosize()` in both `index.html` and `results_template.html`: on load (and via
+  `ResizeObserver` afterward, since Bokeh content can reflow asynchronously), it reads the
+  iframe's own `contentDocument.documentElement.scrollHeight` (same-origin, no postMessage needed)
+  and sets `iframe.style.height` to match exactly — so the iframe never has internal vertical
+  overflow to trap a swipe, and the outer page is the only scrollable container. `html, body` also
+  got `overflow-x: hidden` as a safety net against any one wide element (a chart, a table) causing
+  the whole page to scroll sideways; every individual wide element has its own `overflow-x: auto`
+  container so it scrolls in place instead of being clipped by that safety net —
+  `.result-section-frame-wrap` for embedded reports, `.bracket` for the playoff bracket, and
+  `.table-scroll` (wrapping every `<table>` `ai_overview.py` generates, both server-rendered and
+  the week-interactive client-side ones) discovered while verifying real league data on a 375px
+  viewport: a wide table (long player names, a 5-6 column waiver/median-standings table) was
+  measurably wider than its card and got silently clipped by the new page-level
+  `overflow-x: hidden` before `.table-scroll` was added.
+- **The Bokeh chart chrome's mobile fix, and why it's done the way it is.** A background audit
+  found 18 confirmed mobile-responsiveness bugs across `src/trade_analysis.py`,
+  `src/power_rankings.py`, and `src/visualizations.py`'s HTML/CSS chrome (fixed-width `Div`
+  panels, a leaderboard-beside-chart `row()` that never fit a 375-414px phone, button toolbars
+  that overflowed and were under the ~44px touch-target minimum). Fixing this took two rounds,
+  and the second round is the load-bearing lesson:
+  1. **First attempt (didn't work): fix it with a `<style>` block.** The obvious approach —
+     inject CSS targeting `.bk-root`, `.bk-btn`, `.bk-root table`, etc. after the fact (this is
+     what `visualizations.py`'s old private `_make_html_mobile_friendly()` did, and it was never
+     even applied to the other two files). **This doesn't work at all against the Bokeh version
+     actually installed (3.9.2, satisfying the `bokeh>=2.4.0` pin).** Confirmed empirically by
+     walking the real rendered DOM of a generated report: it has **72 shadow roots** — Bokeh 3.x
+     renders every widget (buttons, Divs, layouts) inside Shadow DOM. `document.querySelector('.bk-root')`
+     returns `null`; the only `bk-*` classes present anywhere are `bk-Column`/`bk-Notifications`.
+     A `<style>` tag in the page's light-DOM `<head>` cannot style anything inside a shadow root,
+     so every one of those selectors was a dead rule - not "slightly wrong class name for this
+     Bokeh version", genuinely unreachable by design.
+  2. **What actually works:** set `sizing_mode="stretch_width"` and `height=44` directly on the
+     Bokeh models in Python (`Div`, `Button`, `row`/`column`), and change the
+     chart-beside-leaderboard `row(chart, leaderboard)` to `column(chart, leaderboard)` (always
+     stacked, not just below a breakpoint - Bokeh has no CSS-media-query-driven "become a column
+     under 768px" concept to hook into, and guessing at its internal grid/flex class names to fake
+     one is exactly the dead-end above). These are real Bokeh model properties, rendered by
+     Bokeh's own internal (shadow-scoped) styling — not external CSS trying to reach in — so they
+     work regardless of the shadow DOM boundary. Verified by measuring real rendered output: both
+     toggle buttons at exactly `height: 44`, the outer layout's real computed
+     `display:flex; flex-direction:column` with width matching the viewport exactly.
+  3. **The one remaining wrinkle: leaderboard tables wider than their card.** Even after the
+     above, a table with enough columns/content (e.g. the trade-performance leaderboard) can still
+     be wider than its `Div`. The fix has to live *inside the Div's own HTML string* (the one
+     place a shadow root doesn't block anything, since it's content Bokeh renders as-is) - wrap the
+     table in `<div style="...overflow-x:auto...">` at the point each file builds `leaderboard_html`.
+     The wrapper's width can't be `100%`: its real parent turned out to be Bokeh's own
+     `.bk-clearfix` (also shadow-scoped), which is `display: inline-block` and shrinks to fit its
+     content - so a percentage width has no real containing block to resolve against and silently
+     collapses back to the table's own (too-wide) size. `width: 100vw` sidesteps that circularity
+     entirely (viewport units don't need a containing block) and is a safe proxy here specifically
+     because the column-stacking fix above means this Div always ends up spanning the full
+     available width. Verified: the wrapper now measures `clientWidth` matching the viewport with
+     a genuinely larger `scrollWidth`, i.e. real, working internal horizontal scroll.
+  4. `src/bokeh_mobile.py` is what's left of the CSS-based approach - a shared
+     `make_bokeh_html_mobile_friendly()` (replacing the old duplicated/broken per-file version)
+     that only sets a viewport meta tag and `overflow-x: hidden` on `html`/`body`, since those two
+     elements are one level *above* Bokeh's own root and are genuinely light-DOM.
+  5. `create_worst_trades_html_report()` in `trade_analysis.py` is a fully separate code path -
+     hand-authored static HTML via an f-string, not Bokeh's `output_file()`/`show()` - so it has no
+     shadow DOM at all, and a normal `.table-scroll { overflow-x: auto }` CSS class (plus
+     `.impact-stats { flex-wrap: wrap }` at the existing mobile breakpoint) works exactly as
+     expected there.
+  All of the above was verified against a real full pipeline run (`python main.py` equivalent)
+  against real league data, not synthetic fixtures, rendered at a real 375px viewport.
 
 ## 10. Visual theme
 

@@ -15,11 +15,12 @@ import json
 import requests
 
 EXPECTED_SECTION_TITLES = [
-    "Top Players of the Week",
+    "Top Performers",
     "Biggest Upsets",
     "Power Ranking Movers",
     "Matchups to Watch",
-    "Projected Playoff Picture",
+    "Projected Playoff Bracket",
+    "Median Standings",
     "Top Waiver Pickups",
 ]
 

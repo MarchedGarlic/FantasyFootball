@@ -9,6 +9,8 @@ import os
 from datetime import datetime
 from typing import Dict, List
 
+from src.bokeh_mobile import make_bokeh_html_mobile_friendly
+
 
 def calculate_power_rating(scores, wins, losses, week_num, combined_wins=None, combined_losses=None):
     """Calculate power rating using enhanced formula with optional combined record"""
@@ -357,8 +359,9 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         
         # Set up the figure with tools
         p = figure(
-            width=1100, 
+            width=1100,
             height=700,
+            sizing_mode="stretch_width",
             title="Interactive Fantasy Football Power Rating Progression",
             x_axis_label="Week",
             y_axis_label="Power Rating",
@@ -378,7 +381,7 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         <p style="margin:2px;"><b>Interactive:</b> Click legend to hide/show teams, hover for detailed stats</p>
         """
         
-        explanation_div = Div(text=explanation_text, width=1100, height=100)
+        explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1100, height=100)
         
         # Add hover tool with detailed tooltips
         hover = HoverTool(tooltips=[
@@ -471,8 +474,8 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         p.add_layout(data_legend, 'right')
         
         # Create toggle buttons
-        toggle_data_button = Button(label="All Teams", button_type="success", width=100)
-        toggle_trends_button = Button(label="All Trends", button_type="warning", width=100)
+        toggle_data_button = Button(label="All Teams", button_type="success", sizing_mode="stretch_width", height=44)
+        toggle_trends_button = Button(label="All Trends", button_type="warning", sizing_mode="stretch_width", height=44)
         
         # JavaScript callbacks for toggle buttons
         toggle_data_callback = CustomJS(
@@ -585,24 +588,41 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         leaderboard_html += "Trend = Weekly rating change direction and slope"
         leaderboard_html += "</p>"
         
+        # Wrapped in the leaderboard's own HTML (not an external stylesheet) because Bokeh 3.x
+        # renders every Div inside a shadow root that external CSS can't reach - see
+        # src/bokeh_mobile.py's module docstring for how this was confirmed empirically. Width is
+        # `100vw`, not `100%`: the wrapper's real parent (Bokeh's own `.bk-clearfix`, also inside
+        # the shadow root) is `display: inline-block` and shrinks to fit its content, so a
+        # percentage width has no real containing block to resolve against and just falls back to
+        # the table's own natural (too-wide) size - confirmed by measuring the actual rendered
+        # boxes. Viewport units don't have that circularity, and since this Div always ends up
+        # spanning the full stacked-column width (see the row-to-column fix above), the viewport
+        # width is the right proxy for "however much horizontal room this report actually has".
         leaderboard_div = Div(
-            text=leaderboard_html,
-            width=450, height=500
+            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>',
+            sizing_mode="stretch_width", max_width=450, height=500
         )
 
         # Create layout with controls
         if sklearn_available and trend_legend_items:
-            controls = row(toggle_data_button, toggle_trends_button)
+            controls = row(toggle_data_button, toggle_trends_button, sizing_mode="stretch_width")
         else:
-            controls = row(toggle_data_button)
-        
-        # Create main content row with chart and leaderboard side by side
-        main_row = row(p, leaderboard_div, spacing=20)
-        layout = column(explanation_div, main_row, controls)
-        
+            controls = row(toggle_data_button, sizing_mode="stretch_width")
+
+        # Chart and leaderboard stack vertically rather than sitting side by side - a fixed-width
+        # row of a 1100px chart + 450px leaderboard has no way to fit a 375-414px phone screen,
+        # and Bokeh has no CSS-media-query-driven "become a column below this width" behavior to
+        # lean on instead (confirmed: Bokeh's internal grid/flex layout classes differ across
+        # versions, so overriding them from outside is fragile - stacking unconditionally is the
+        # version-independent fix). See src/bokeh_mobile.py's docstring for the same reasoning
+        # applied to trade_analysis.py/visualizations.py.
+        main_content = column(p, leaderboard_div, sizing_mode="stretch_width")
+        layout = column(explanation_div, main_content, controls, sizing_mode="stretch_width")
+
         # Show the interactive plot
         show(layout)
-        
+        make_bokeh_html_mobile_friendly(plot_filename)
+
         print(f"\nInteractive Power Rating plot saved as: {plot_filename}")
         print("\nInteractive Features:")
         print("   • 'All Teams' button: Show/hide all team power rating lines")

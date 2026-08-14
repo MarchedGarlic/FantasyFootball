@@ -10,6 +10,8 @@ import os
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional
 
+from src.bokeh_mobile import make_bokeh_html_mobile_friendly
+
 
 def get_player_name_from_id(player_id, all_players=None):
     """Convert player ID to actual name using Sleeper player database"""
@@ -854,6 +856,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     p = figure(
         width=1200,
         height=700,
+        sizing_mode="stretch_width",
         title="Trade Impact Analysis: Individual Transaction Performance",
         x_axis_label="Week",
         y_axis_label="Combined Impact Score",
@@ -895,7 +898,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     </div>
     """
     
-    explanation_div = Div(text=explanation_text, width=1200, height=0, visible=False)
+    explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1200, height=0, visible=False)
     
     # Create leaderboard
     leaderboard_html = """
@@ -933,7 +936,20 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         Success Rate = % of trades with positive impact | Trend = Overall performance direction
     </div>
     """
-    leaderboard_div = Div(text=leaderboard_html, width=600, height=300)
+    # Wrapped in the leaderboard's own HTML (not an external stylesheet) because Bokeh 3.x
+    # renders every Div inside a shadow root that external CSS can't reach - see
+    # src/bokeh_mobile.py's module docstring for how this was confirmed empirically. Width is
+    # `100vw`, not `100%`: the wrapper's real parent (Bokeh's own `.bk-clearfix`, also inside
+    # the shadow root) is `display: inline-block` and shrinks to fit its content, so a
+    # percentage width has no real containing block to resolve against and just falls back to
+    # the table's own natural (too-wide) size - confirmed by measuring the actual rendered
+    # boxes. Viewport units don't have that circularity, and since this Div always ends up
+    # spanning the full stacked-column width (see the row-to-column fix above), the viewport
+    # width is the right proxy for "however much horizontal room this report actually has".
+    leaderboard_div = Div(
+        text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>',
+        sizing_mode="stretch_width", max_width=600, height=300
+    )
     
     # Create calculation explanation panel (always visible)
     calc_explanation_html = """
@@ -947,7 +963,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         <p style="margin: 8px 0 5px 0; font-size: 12px; color: #52607A;"><em>Positive values mean the manager received more value than they gave up; negative values mean the opposite</em></p>
     </div>
     """
-    calc_explanation_div = Div(text=calc_explanation_html, width=1200, height=120)
+    calc_explanation_div = Div(text=calc_explanation_html, sizing_mode="stretch_width", max_width=1200, height=120)
     
     # Create data sources and renderers for each manager
     data_legend_items = []
@@ -1010,7 +1026,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     p.add_tools(hover)
     
     # Create control buttons
-    toggle_data_button = Button(label="Toggle All Data", button_type="success", width=150)
+    toggle_data_button = Button(label="Toggle All Data", button_type="success", sizing_mode="stretch_width", height=44)
     toggle_data_button.js_on_event("button_click", CustomJS(args=dict(renderers=data_renderers), code="""
         let any_visible = false;
         for (let i = 0; i < renderers.length; i++) {
@@ -1027,7 +1043,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         cb_obj.label = any_visible ? "Show All Data" : "Hide All Data";
     """))
     
-    show_explanation_button = Button(label="Show Calculation Details", button_type="warning", width=180)
+    show_explanation_button = Button(label="Show Calculation Details", button_type="warning", sizing_mode="stretch_width", height=44)
     show_explanation_button.js_on_event("button_click", CustomJS(args=dict(explanation_div=explanation_div), code="""
         explanation_div.visible = !explanation_div.visible;
         if (explanation_div.visible) {
@@ -1041,7 +1057,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         }
     """))
     
-    reset_button = Button(label="Reset Zoom", button_type="danger", width=100)
+    reset_button = Button(label="Reset Zoom", button_type="danger", sizing_mode="stretch_width", height=44)
     reset_button.js_on_event("button_click", CustomJS(args=dict(plot=p), code="""
         plot.x_range.start = 0.5;
         plot.x_range.end = 15.5;
@@ -1050,12 +1066,16 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     """))
     
     # Create layout
-    top_row = bokeh_row(leaderboard_div, p)
-    button_row = bokeh_row(toggle_data_button, show_explanation_button, reset_button)
+    # Chart and leaderboard stack vertically instead of sitting side by side - see
+    # src/bokeh_mobile.py's module docstring for why this is done unconditionally in Python
+    # rather than via a CSS media query targeting Bokeh's (version-fragile) internal layout
+    # classes.
+    main_content = bokeh_column(leaderboard_div, p, sizing_mode="stretch_width")
+    button_row = bokeh_row(toggle_data_button, show_explanation_button, reset_button, sizing_mode="stretch_width")
     
     # Add spacing between explanation and leaderboard
-    spacer_div = Div(text="<div style='height: 50px;'></div>", width=1200, height=50)
-    layout = bokeh_column(calc_explanation_div, spacer_div, explanation_div, top_row, button_row)
+    spacer_div = Div(text="<div style='height: 50px;'></div>", sizing_mode="stretch_width", max_width=1200, height=50)
+    layout = bokeh_column(calc_explanation_div, spacer_div, explanation_div, main_content, button_row, sizing_mode="stretch_width")
     
     # Style the plot
     p.grid.grid_line_alpha = 0.3
@@ -1063,6 +1083,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     p.title.align = "center"
     
     show(layout)
+    make_bokeh_html_mobile_friendly(plot_filename)
     print(f"\nEnhanced trade analysis plot saved as: {plot_filename}")
     print("Features: Individual transactions, clean hover data, worst trades report")
     print("Interactive: Manager legend, explanation panel, data toggles")
@@ -1216,6 +1237,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     p = figure(
         width=1200,
         height=700,
+        sizing_mode="stretch_width",
         title="Waiver Wire & Free Agent Analysis: Individual Transaction Impact",
         x_axis_label="Week", 
         y_axis_label="Combined Impact Score",
@@ -1258,7 +1280,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     </div>
     """
     
-    explanation_div = Div(text=explanation_text, width=1200, height=0, visible=False)
+    explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1200, height=0, visible=False)
     
     # Create leaderboard
     leaderboard_html = """
@@ -1303,7 +1325,20 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         FAAB Spent/Impact per $ only populate in leagues on FAAB bidding
     </div>
     """
-    leaderboard_div = Div(text=leaderboard_html, width=600, height=350)
+    # Wrapped in the leaderboard's own HTML (not an external stylesheet) because Bokeh 3.x
+    # renders every Div inside a shadow root that external CSS can't reach - see
+    # src/bokeh_mobile.py's module docstring for how this was confirmed empirically. Width is
+    # `100vw`, not `100%`: the wrapper's real parent (Bokeh's own `.bk-clearfix`, also inside
+    # the shadow root) is `display: inline-block` and shrinks to fit its content, so a
+    # percentage width has no real containing block to resolve against and just falls back to
+    # the table's own natural (too-wide) size - confirmed by measuring the actual rendered
+    # boxes. Viewport units don't have that circularity, and since this Div always ends up
+    # spanning the full stacked-column width (see the row-to-column fix above), the viewport
+    # width is the right proxy for "however much horizontal room this report actually has".
+    leaderboard_div = Div(
+        text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>',
+        sizing_mode="stretch_width", max_width=600, height=350
+    )
     
     # Create calculation explanation panel (always visible)
     calc_explanation_html = """
@@ -1318,7 +1353,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         <p style="margin: 8px 0 5px 0; font-size: 12px; color: #52607A;"><em>Positive values mean the pickup helped your team, negative values mean it hurt or had no benefit</em></p>
     </div>
     """
-    calc_explanation_div = Div(text=calc_explanation_html, width=1200, height=120)
+    calc_explanation_div = Div(text=calc_explanation_html, sizing_mode="stretch_width", max_width=1200, height=120)
     
     # Create data sources and renderers for each manager
     data_legend_items = []
@@ -1382,7 +1417,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     p.add_tools(hover)
     
     # Create control buttons
-    toggle_data_button = Button(label="Toggle All Data", button_type="success", width=150)
+    toggle_data_button = Button(label="Toggle All Data", button_type="success", sizing_mode="stretch_width", height=44)
     toggle_data_button.js_on_event("button_click", CustomJS(args=dict(renderers=data_renderers), code="""
         let any_visible = false;
         for (let i = 0; i < renderers.length; i++) {
@@ -1399,7 +1434,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         cb_obj.label = any_visible ? "Show All Data" : "Hide All Data";
     """))
     
-    show_explanation_button = Button(label="Show Calculation Details", button_type="warning", width=180)
+    show_explanation_button = Button(label="Show Calculation Details", button_type="warning", sizing_mode="stretch_width", height=44)
     show_explanation_button.js_on_event("button_click", CustomJS(args=dict(explanation_div=explanation_div), code="""
         explanation_div.visible = !explanation_div.visible;
         if (explanation_div.visible) {
@@ -1413,7 +1448,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         }
     """))
     
-    reset_button = Button(label="Reset Zoom", button_type="danger", width=100)
+    reset_button = Button(label="Reset Zoom", button_type="danger", sizing_mode="stretch_width", height=44)
     reset_button.js_on_event("button_click", CustomJS(args=dict(plot=p), code="""
         plot.x_range.start = 0.5;
         plot.x_range.end = 15.5;
@@ -1422,12 +1457,16 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     """))
     
     # Create layout
-    top_row = bokeh_row(leaderboard_div, p)
-    button_row = bokeh_row(toggle_data_button, show_explanation_button, reset_button)
+    # Chart and leaderboard stack vertically instead of sitting side by side - see
+    # src/bokeh_mobile.py's module docstring for why this is done unconditionally in Python
+    # rather than via a CSS media query targeting Bokeh's (version-fragile) internal layout
+    # classes.
+    main_content = bokeh_column(leaderboard_div, p, sizing_mode="stretch_width")
+    button_row = bokeh_row(toggle_data_button, show_explanation_button, reset_button, sizing_mode="stretch_width")
     
     # Add spacing between explanation and leaderboard
-    spacer_div = Div(text="<div style='height: 50px;'></div>", width=1200, height=50)
-    layout = bokeh_column(calc_explanation_div, spacer_div, explanation_div, top_row, button_row)
+    spacer_div = Div(text="<div style='height: 50px;'></div>", sizing_mode="stretch_width", max_width=1200, height=50)
+    layout = bokeh_column(calc_explanation_div, spacer_div, explanation_div, main_content, button_row, sizing_mode="stretch_width")
     
     # Style the plot
     p.grid.grid_line_alpha = 0.3
@@ -1435,6 +1474,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     p.title.align = "center"
     
     show(layout)
+    make_bokeh_html_mobile_friendly(plot_filename)
     print(f"\nWaiver analysis plot saved as: {plot_filename}")
     print("Features: Individual transactions, clean hover data, best pickups leaderboard")
     print("Interactive: Manager legend, explanation panel, data toggles")
@@ -1616,6 +1656,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     p = figure(
         width=1200,
         height=700,
+        sizing_mode="stretch_width",
         title="Manager Performance Grades: Enhanced Weekly Analysis",
         x_axis_label="Week",
         y_axis_label="Manager Grade (0-10 Scale)",
@@ -1729,7 +1770,20 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         </tr>"""
     
     leaderboard_html += "</table>"
-    leaderboard_div = Div(text=leaderboard_html, width=500, height=300)
+    # Wrapped in the leaderboard's own HTML (not an external stylesheet) because Bokeh 3.x
+    # renders every Div inside a shadow root that external CSS can't reach - see
+    # src/bokeh_mobile.py's module docstring for how this was confirmed empirically. Width is
+    # `100vw`, not `100%`: the wrapper's real parent (Bokeh's own `.bk-clearfix`, also inside
+    # the shadow root) is `display: inline-block` and shrinks to fit its content, so a
+    # percentage width has no real containing block to resolve against and just falls back to
+    # the table's own natural (too-wide) size - confirmed by measuring the actual rendered
+    # boxes. Viewport units don't have that circularity, and since this Div always ends up
+    # spanning the full stacked-column width (see the row-to-column fix above), the viewport
+    # width is the right proxy for "however much horizontal room this report actually has".
+    leaderboard_div = Div(
+        text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>',
+        sizing_mode="stretch_width", max_width=500, height=300
+    )
     
     # Create explanation panel (toggleable)
     explanation_text = """
@@ -1747,13 +1801,13 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     <p style="margin:2px;"><b>Records:</b> Simulated based on weekly performance relative to league average</p>
     """
     
-    explanation_div = Div(text=explanation_text, width=1200, height=180)
+    explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1200, height=180)
     
     # Enhanced toggle controls at bottom
-    show_explanation_button = Button(label="Show/Hide Explanation", button_type="light", width=180)
-    toggle_managers_button = Button(label="Toggle All Data", button_type="success", width=120)
-    toggle_trends_button = Button(label="Toggle All Trends", button_type="primary", width=120)
-    reset_zoom_button = Button(label="Reset Zoom", button_type="warning", width=100)
+    show_explanation_button = Button(label="Show/Hide Explanation", button_type="light", sizing_mode="stretch_width", height=44)
+    toggle_managers_button = Button(label="Toggle All Data", button_type="success", sizing_mode="stretch_width", height=44)
+    toggle_trends_button = Button(label="Toggle All Trends", button_type="primary", sizing_mode="stretch_width", height=44)
+    reset_zoom_button = Button(label="Reset Zoom", button_type="warning", sizing_mode="stretch_width", height=44)
     
     # JavaScript callbacks
     explanation_callback = CustomJS(args=dict(explanation=explanation_div), code="""
@@ -1788,17 +1842,21 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     toggle_trends_button.js_on_click(trends_callback)
     reset_zoom_button.js_on_click(reset_callback)
     
-    # Layout: leaderboard on left, plot on right, controls at bottom
-    top_row = bokeh_row(leaderboard_div, p, spacing=10)
-    control_row = bokeh_row(show_explanation_button, toggle_managers_button, toggle_trends_button, reset_zoom_button)
-    
+    # Leaderboard stacks above the plot instead of sitting side by side - see
+    # src/bokeh_mobile.py's module docstring for why this is done unconditionally in Python
+    # rather than via a CSS media query targeting Bokeh's (version-fragile) internal layout
+    # classes.
+    main_content = bokeh_column(leaderboard_div, p, spacing=10, sizing_mode="stretch_width")
+    control_row = bokeh_row(show_explanation_button, toggle_managers_button, toggle_trends_button, reset_zoom_button, sizing_mode="stretch_width")
+
     # Start with explanation hidden
     explanation_div.visible = False
-    
-    layout = bokeh_column(explanation_div, top_row, control_row, spacing=5)
-    
+
+    layout = bokeh_column(explanation_div, main_content, control_row, spacing=5, sizing_mode="stretch_width")
+
     show(layout)
-    
+    make_bokeh_html_mobile_friendly(plot_filename)
+
     print(f"\nManager grades analysis saved as: {plot_filename}")
     print(f"   Features: Enhanced calculations, leaderboard, toggleable explanation")
     print(f"   Interactive: Working toggles, proper hover data, trend analysis") 
@@ -1818,6 +1876,9 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
     <style>
         /* Chicago Bears palette (navy + orange) - kept in sync with index.html and
            src/ai_overview.py's generated CSS, so every report page matches the homepage. */
+        html {{
+            overflow-x: hidden;
+        }}
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
@@ -1826,6 +1887,14 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
             background: #F2F4F8;
             color: #0B162A;
             min-height: 100vh;
+            overflow-x: hidden;
+        }}
+        /* A trades-table wider than its card (long comma-joined player-name cells) scrolls in
+           place within this wrapper instead of forcing the whole page to scroll sideways. */
+        .table-scroll {{
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }}
         .container {{
             max-width: 1200px;
@@ -1981,6 +2050,13 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
             .trade-details {{
                 grid-template-columns: 1fr;
             }}
+            .impact-stats {{
+                flex-wrap: wrap;
+            }}
+            .stat {{
+                flex: 1 1 40%;
+                margin: 5px;
+            }}
         }}
     </style>
 </head>
@@ -2004,6 +2080,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
         </div>
 
         <h2>🏆 Top 10 Worst Trades (Net Player Value)</h2>
+        <div class="table-scroll">
         <table class="trades-table">
             <thead>
                 <tr>
@@ -2038,6 +2115,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
     html_content += """
             </tbody>
         </table>
+        </div>
 
         <div class="detailed-section">
             <h2>🔍 Detailed Breakdown</h2>
@@ -2096,6 +2174,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
             <p style="text-align: center; color: #52607A; margin-bottom: 20px;">
                 Trades ranked by most negative impact on weekly scoring potential
             </p>
+            <div class="table-scroll">
             <table class="trades-table">
                 <thead>
                     <tr>
@@ -2130,6 +2209,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
     html_content += f"""
                 </tbody>
             </table>
+            </div>
         </div>
 
         <div class="detailed-section">
@@ -2137,6 +2217,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
             <p style="text-align: center; color: #52607A; margin-bottom: 20px;">
                 Trades ranked by most negative impact on roster construction quality
             </p>
+            <div class="table-scroll">
             <table class="trades-table">
                 <thead>
                     <tr>
@@ -2169,6 +2250,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
     html_content += """
                 </tbody>
             </table>
+            </div>
         </div>"""
 
     html_content += f"""

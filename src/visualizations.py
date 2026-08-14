@@ -9,6 +9,8 @@ import os
 from datetime import datetime
 from typing import Dict, List
 
+from src.bokeh_mobile import make_bokeh_html_mobile_friendly
+
 
 def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_data=None):
     """Create enhanced interactive Roster Grade progression plot with leaderboard and working toggles"""
@@ -200,7 +202,12 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         </div>
         """
         
-        explanation_div = Div(text=explanation_text, width=1200, height=0, visible=False, sizing_mode="scale_width", max_width=1200)
+        # stretch_width (not scale_width) matters here: scale_width recomputes height on every
+        # resize as width * (original_height/original_width) - with an original height=0 that's
+        # width*0=0 forever, which would silently fight the "Show Calculation Details" button's
+        # own `explanation_div.height = 400` JS assignment below. stretch_width takes whatever
+        # height is set at any given moment instead of re-deriving it from width.
+        explanation_div = Div(text=explanation_text, height=0, visible=False, sizing_mode="stretch_width", max_width=1200)
         
         # Create leaderboard
         leaderboard_html = """
@@ -230,7 +237,20 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             </tr>"""
         
         leaderboard_html += "</table>"
-        leaderboard_div = Div(text=leaderboard_html, width=500, height=200, sizing_mode="scale_width", max_width=500)
+        # Wrapped in the leaderboard's own HTML (not an external stylesheet) because Bokeh 3.x
+        # renders every Div inside a shadow root that external CSS can't reach - see
+        # src/bokeh_mobile.py's module docstring for how this was confirmed empirically. Width is
+        # `100vw`, not `100%`: the wrapper's real parent (Bokeh's own `.bk-clearfix`, also inside
+        # the shadow root) is `display: inline-block` and shrinks to fit its content, so a
+        # percentage width has no real containing block to resolve against and just falls back to
+        # the table's own natural (too-wide) size - confirmed by measuring the actual rendered
+        # boxes. Viewport units don't have that circularity, and since this Div always ends up
+        # spanning the full stacked-column width (see the row-to-column fix above), the viewport
+        # width is the right proxy for "however much horizontal room this report actually has".
+        leaderboard_div = Div(
+            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>',
+            height=200, sizing_mode="stretch_width", max_width=500
+        )
         
         # Add hover tool with detailed tooltips including combined record
         hover = HoverTool(tooltips=[
@@ -326,10 +346,10 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             p.add_layout(trend_legend, 'left')
         
         # Create working toggle buttons
-        toggle_data_button = Button(label="Toggle All Teams", button_type="success", width=120)
-        toggle_trends_button = Button(label="Toggle All Trends", button_type="primary", width=120) if sklearn_available else None
-        show_explanation_button = Button(label="Show Calculation Details", button_type="warning", width=180)
-        reset_button = Button(label="Reset Zoom", button_type="danger", width=100)
+        toggle_data_button = Button(label="Toggle All Teams", button_type="success", sizing_mode="stretch_width", height=44)
+        toggle_trends_button = Button(label="Toggle All Trends", button_type="primary", sizing_mode="stretch_width", height=44) if sklearn_available else None
+        show_explanation_button = Button(label="Show Calculation Details", button_type="warning", sizing_mode="stretch_width", height=44)
+        reset_button = Button(label="Reset Zoom", button_type="danger", sizing_mode="stretch_width", height=44)
         
         # JavaScript callback for data toggle
         toggle_data_callback = CustomJS(args=dict(renderers=data_renderers), code="""
@@ -398,18 +418,22 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         
         # Create layout with controls and leaderboard
         if toggle_trends_button:
-            controls = bokeh_row(toggle_data_button, toggle_trends_button, show_explanation_button, reset_button)
+            controls = bokeh_row(toggle_data_button, toggle_trends_button, show_explanation_button, reset_button, sizing_mode="stretch_width")
         else:
-            controls = bokeh_row(toggle_data_button, show_explanation_button, reset_button)
-        
-        top_row = bokeh_row(leaderboard_div, p)
-        layout = bokeh_column(explanation_div, top_row, controls)
-        
+            controls = bokeh_row(toggle_data_button, show_explanation_button, reset_button, sizing_mode="stretch_width")
+
+        # Chart and leaderboard stack vertically instead of sitting side by side - see
+        # src/bokeh_mobile.py's module docstring for why this is done unconditionally in Python
+        # rather than via a CSS media query targeting Bokeh's (version-fragile) internal layout
+        # classes.
+        main_content = bokeh_column(leaderboard_div, p, sizing_mode="stretch_width")
+        layout = bokeh_column(explanation_div, main_content, controls, sizing_mode="stretch_width")
+
         # Show the interactive plot
         show(layout)
         
         # Make the generated HTML mobile-friendly
-        _make_html_mobile_friendly(plot_filename)
+        make_bokeh_html_mobile_friendly(plot_filename)
         
         print(f"\nInteractive Roster Grade plot saved as: {plot_filename}")
         print("\nInteractive Features:")
@@ -774,7 +798,7 @@ def create_combined_analysis_plot(team_power_data, roster_grade_data, output_dir
         show(layout)
         
         # Make the generated HTML mobile-friendly
-        _make_html_mobile_friendly(plot_filename)
+        make_bokeh_html_mobile_friendly(plot_filename)
         
         print(f"\nCombined analysis plot saved as: {plot_filename}")
         print("\nInteractive Features:")
@@ -973,7 +997,7 @@ def create_trade_impact_visualization(combined_impacts, transactions_data=None, 
         show(p)
         
         # Make the generated HTML mobile-friendly
-        _make_html_mobile_friendly(plot_filename)
+        make_bokeh_html_mobile_friendly(plot_filename)
         
         print(f"\nEnhanced Trade Impact plot saved as: {plot_filename}")
         print("Interactive Features:")
@@ -1144,9 +1168,9 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
             <p style="margin:2px;"><b>Color Coding:</b> Green (Lucky), Blue (Fair), Orange (Unlucky), Red (Very Unlucky)</p>
             <p style="margin:10px 0px 2px 0px; font-style: italic; color: #52607A;"><b>Note:</b> This analysis focuses on luck related to matchups and scheduling. It does not factor in injuries or other external circumstances that may affect team performance.</p>
             """,
-            width=900, height=170,
+            height=170,
             visible=False,
-            sizing_mode="scale_width",
+            sizing_mode="stretch_width",
             max_width=900
         )
         
@@ -1175,21 +1199,31 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         
         leaderboard_html += "</table>"
         
+        # Wrapped in the leaderboard's own HTML (not an external stylesheet) because Bokeh 3.x
+        # renders every Div inside a shadow root that external CSS can't reach - see
+        # src/bokeh_mobile.py's module docstring for how this was confirmed empirically. Width is
+        # `100vw`, not `100%`: the wrapper's real parent (Bokeh's own `.bk-clearfix`, also inside
+        # the shadow root) is `display: inline-block` and shrinks to fit its content, so a
+        # percentage width has no real containing block to resolve against and just falls back to
+        # the table's own natural (too-wide) size - confirmed by measuring the actual rendered
+        # boxes. Viewport units don't have that circularity, and since this Div always ends up
+        # spanning the full stacked-column width (see the row-to-column fix above), the viewport
+        # width is the right proxy for "however much horizontal room this report actually has".
         leaderboard_div = Div(
-            text=leaderboard_html,
-            width=450, height=400,
-            sizing_mode="scale_width",
+            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>',
+            height=400,
+            sizing_mode="stretch_width",
             max_width=450
         )
-        
+
         # Create buttons
-        explanation_button = Button(label="Show/Hide Explanation", button_type="light", width=200)
+        explanation_button = Button(label="Show/Hide Explanation", button_type="light", sizing_mode="stretch_width", height=44)
         explanation_button.js_on_event("button_click", CustomJS(
             args=dict(explanation=explanation_div),
             code="explanation.visible = !explanation.visible;"
         ))
-        
-        reset_button = Button(label="Reset Zoom", button_type="warning", width=120)
+
+        reset_button = Button(label="Reset Zoom", button_type="warning", sizing_mode="stretch_width", height=44)
         reset_button.js_on_event("button_click", CustomJS(
             args=dict(plot=p),
             code=f"""
@@ -1199,21 +1233,25 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
             plot.y_range.end = {axis_max};
             """
         ))
-        
-        # Layout
-        buttons_row = bokeh_row(explanation_button, reset_button, spacing=10)
-        main_row = bokeh_row(p, leaderboard_div, spacing=20)
+
+        # Layout: chart and leaderboard stack vertically instead of sitting side by side - see
+        # src/bokeh_mobile.py's module docstring for why this is done unconditionally in Python
+        # rather than via a CSS media query targeting Bokeh's (version-fragile) internal layout
+        # classes.
+        buttons_row = bokeh_row(explanation_button, reset_button, spacing=10, sizing_mode="stretch_width")
+        main_content = bokeh_column(p, leaderboard_div, spacing=20, sizing_mode="stretch_width")
         layout = bokeh_column(
             buttons_row,
             explanation_div,
-            main_row,
-            spacing=10
+            main_content,
+            spacing=10,
+            sizing_mode="stretch_width"
         )
         
         show(layout)
         
         # Make the generated HTML mobile-friendly
-        _make_html_mobile_friendly(plot_filename)
+        make_bokeh_html_mobile_friendly(plot_filename)
         
         print(f"\nLuck Analysis plot saved as: {plot_filename}")
         print("Interactive Features:")
@@ -1369,21 +1407,32 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         """
         
         # Create main content div
+        # stretch_width (not scale_width): scale_width recomputes this Div's height as
+        # width * (700/1000) on every resize, so at a 375px phone width it would allocate
+        # ~260px for a 7-column table + prose that actually needs more room once it reflows
+        # narrower, not less - see src/bokeh_mobile.py's module docstring.
+        # The table (not the prose explanation) gets wrapped in its own HTML - not an external
+        # stylesheet, because Bokeh 3.x renders every Div inside a shadow root that external CSS
+        # can't reach; see src/bokeh_mobile.py's module docstring for how this was confirmed
+        # empirically. Width is `100vw`, not `100%`: the wrapper's real parent (Bokeh's own
+        # `.bk-clearfix`, also inside the shadow root) is `display: inline-block` and shrinks to
+        # fit its content, so a percentage width has no real containing block to resolve against
+        # and just falls back to the table's own natural (too-wide) size - confirmed by measuring
+        # the actual rendered boxes. Viewport units don't have that circularity.
         main_content = Div(
-            text=leaderboard_html + explanation_html,
-            width=1000,
+            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>' + explanation_html,
             height=700,
-            sizing_mode="scale_width",
+            sizing_mode="stretch_width",
             max_width=1000
         )
-        
+
         # Layout
-        layout = bokeh_column(main_content, spacing=20)
+        layout = bokeh_column(main_content, spacing=20, sizing_mode="stretch_width")
         
         show(layout)
         
         # Make the generated HTML mobile-friendly
-        _make_html_mobile_friendly(plot_filename)
+        make_bokeh_html_mobile_friendly(plot_filename)
         
         print(f"\nPower Ranking Leaderboard saved as: {plot_filename}")
         print("Features:")
@@ -1397,162 +1446,4 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         
     except Exception as e:
         print(f"\n❌ Error creating power ranking leaderboard: {e}")
-
-
-def _make_html_mobile_friendly(filename):
-    """Add mobile viewport and responsive CSS to Bokeh-generated HTML files"""
-    try:
-        with open(filename, 'r', encoding='utf-8') as file:
-            content = file.read()
-        
-        # Check if viewport is already present
-        if 'name="viewport"' in content:
-            return
-            
-        # Add viewport meta tag after charset
-        content = content.replace(
-            '<meta charset="utf-8">',
-            '<meta charset="utf-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">'
-        )
-        
-        # Add mobile-friendly CSS
-        mobile_css = """
-    <style>
-        /* Mobile responsive improvements */
-        @media (max-width: 768px) {
-            .bk-root .bk {
-                font-size: 12px !important;
-            }
-            
-            .bk-root .bk-toolbar {
-                display: flex !important;
-                flex-wrap: wrap !important;
-                justify-content: center !important;
-            }
-            
-            .bk-root .bk-toolbar-button {
-                margin: 2px !important;
-                padding: 4px !important;
-            }
-            
-            /* Make legends more compact on mobile */
-            .bk-root .bk-legend {
-                font-size: 10px !important;
-            }
-            
-            /* Ensure plots scale properly */
-            .bk-root .bk-canvas-wrapper {
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-            
-            /* Make buttons responsive */
-            .bk-root .bk-btn {
-                font-size: 11px !important;
-                padding: 6px 10px !important;
-                margin: 2px !important;
-                min-width: auto !important;
-                width: auto !important;
-                max-width: 140px !important;
-            }
-            
-            /* Button containers */
-            .bk-root .bk-layout-grid-item {
-                margin: 2px !important;
-            }
-            
-            /* Make tables responsive */
-            .bk-root table {
-                font-size: 10px !important;
-                width: 100% !important;
-            }
-            
-            .bk-root th, .bk-root td {
-                padding: 4px !important;
-                font-size: 10px !important;
-            }
-            
-            /* Div content responsive */
-            .bk-root .bk-markup {
-                width: 100% !important;
-                max-width: 100% !important;
-                overflow-x: auto !important;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .bk-root .bk {
-                font-size: 10px !important;
-            }
-            
-            .bk-root .bk-legend {
-                font-size: 8px !important;
-                max-width: 150px !important;
-                overflow: hidden !important;
-            }
-            
-            .bk-root .bk-btn {
-                font-size: 9px !important;
-                padding: 4px 6px !important;
-                margin: 1px !important;
-                max-width: 100px !important;
-            }
-            
-            .bk-root table {
-                font-size: 8px !important;
-            }
-            
-            .bk-root th, .bk-root td {
-                padding: 2px !important;
-                font-size: 8px !important;
-            }
-            
-            /* Hide some elements that take too much space */
-            .bk-root .bk-toolbar .bk-button-bar {
-                flex-wrap: wrap !important;
-            }
-        }
-        
-        /* Improve touch targets */
-        .bk-root .bk-toolbar-button {
-            min-height: 44px !important;
-            min-width: 44px !important;
-        }
-        
-        .bk-root .bk-btn {
-            min-height: 44px !important;
-            min-width: 44px !important;
-        }
-        
-        /* Better spacing for mobile */
-        .bk-root {
-            padding: 5px !important;
-        }
-        
-        /* Ensure content fits */
-        html, body {
-            overflow-x: auto !important;
-            width: 100% !important;
-        }
-        
-        /* Responsive tables */
-        .bk-root table {
-            table-layout: auto !important;
-            word-wrap: break-word !important;
-        }
-    </style>"""
-        
-        # Insert CSS before closing head tag
-        content = content.replace('</head>', mobile_css + '\n</head>')
-        
-        # Save the modified content
-        with open(filename, 'w', encoding='utf-8') as file:
-            file.write(content)
-            
-        print(f"   ✓ Added mobile responsiveness to {filename}")
-        
-    except Exception as e:
-        print(f"   ⚠️  Warning: Could not add mobile responsiveness to {filename}: {e}")
-        import traceback
-        traceback.print_exc()
         return None
