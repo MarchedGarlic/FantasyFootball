@@ -7,25 +7,19 @@ a mock generator instead of ever actually calling OpenAI. This module replaces t
 every section below is computed from real per-week data that main.py now persists (previously
 fetched from Sleeper and discarded before it reached a JSON file).
 
-Six sections: top players of the week, biggest upsets, power ranking movers (last week vs this
-week), matchups to watch, projected playoff teams, and top waiver pickups.
+Sections: top performers (head-to-head matchup winners, any week), biggest upsets, power ranking
+movers (last week vs this week), matchups to watch, a projected playoff bracket (any week),
+median standings, and top waiver pickups.
+
+Top Performers and the playoff bracket/standings are week-interactive: rather than round-trip to
+the server for every week change, every week's matchup data is embedded as JSON in the page and
+a small vanilla-JS layer re-renders those two sections client-side when the week picker changes.
+This keeps the page a single static HTML file (same as every other report) while still being
+interactive.
 """
 
+import json
 from datetime import datetime
-
-
-def top_players_of_week(weekly_top_players, week=None, limit=10):
-    """Highest-scoring rostered players for a given week (defaults to the most recent week
-    with data). Sourced from Sleeper matchups' players_points, which used to be discarded."""
-    if not weekly_top_players:
-        return {'week': None, 'players': []}
-
-    weeks = sorted(int(w) for w in weekly_top_players.keys())
-    if week is None:
-        week = weeks[-1]
-
-    players = weekly_top_players.get(week, weekly_top_players.get(str(week), []))
-    return {'week': week, 'players': players[:limit]}
 
 
 def biggest_upsets(matchup_results, power_rank_history, manager_names, limit=5):
@@ -115,8 +109,10 @@ def power_rank_movers(power_rank_history, manager_names, limit=None):
 
 
 def standings_from_rosters(rosters, roster_to_manager, manager_names):
-    """Real standings (wins, then points-for as tiebreak) from Sleeper's own roster settings -
-    not power rating, which is a talent/performance metric, not the official standings."""
+    """Real *current* standings (wins, then points-for as tiebreak) from Sleeper's own roster
+    settings - used only for 'Matchups to Watch' (which is inherently about the upcoming week,
+    not a historical one). Top Performers and the playoff bracket use the week-interactive
+    client-side standings reconstruction instead (see MATCHUP_DATA in the rendered page)."""
     standings = []
     for roster in rosters:
         settings = roster.get('settings') or {}
@@ -139,24 +135,6 @@ def standings_from_rosters(rosters, roster_to_manager, manager_names):
         team['rank'] = i + 1
 
     return standings
-
-
-def projected_playoff_teams(standings, playoff_teams_count):
-    """'If the season ended today' standings snapshot against the league's real playoff_teams
-    count - explicitly a snapshot, not a playoff-odds simulation."""
-    playoff_teams_count = playoff_teams_count or 6
-    in_teams = standings[:playoff_teams_count]
-    bubble = standings[playoff_teams_count:playoff_teams_count + 2]
-    out_teams = standings[playoff_teams_count + 2:]
-
-    cutoff_wins = in_teams[-1]['wins'] if in_teams else 0
-    for team in bubble:
-        team['games_back'] = round(cutoff_wins - team['wins'], 1)
-
-    return {
-        'in': in_teams, 'bubble': bubble, 'out': out_teams,
-        'playoff_teams_count': playoff_teams_count,
-    }
 
 
 def matchups_to_watch(next_week_matchups, standings, playoff_teams_count, limit=3):
@@ -274,7 +252,7 @@ def _next_scheduled_week(matchup_results, after_week):
 
 
 def build_ai_overview(output_data, detailed_data, roster_data, league_settings, faab_ledger=None):
-    """Compute all six sections and render them as one HTML page."""
+    """Compute every section and render them as one HTML page."""
     manager_names = {
         uid: data.get('manager_name', 'Unknown')
         for uid, data in (output_data.get('power_ratings') or {}).items()
@@ -282,7 +260,6 @@ def build_ai_overview(output_data, detailed_data, roster_data, league_settings, 
     power_rank_history = output_data.get('power_rank_history') or {}
     power_rank_history = {int(k): v for k, v in power_rank_history.items()}
 
-    weekly_top_players = detailed_data.get('weekly_top_players') or {}
     matchup_results = detailed_data.get('matchup_results') or {}
     matchup_results = {int(k): v for k, v in matchup_results.items()}
 
@@ -299,53 +276,37 @@ def build_ai_overview(output_data, detailed_data, roster_data, league_settings, 
     current_week = _most_recent_completed_week(matchup_results)
     next_week_matchups = _next_scheduled_week(matchup_results, current_week)
 
-    standings = standings_from_rosters(rosters, roster_to_manager, manager_names)
+    # Only used for "Matchups to Watch" (inherently about the real upcoming week - see the
+    # docstring on standings_from_rosters for why this doesn't feed the week-picker sections).
+    real_standings = standings_from_rosters(rosters, roster_to_manager, manager_names)
 
     sections = {
-        'top_players': top_players_of_week(weekly_top_players, week=current_week),
         'upsets': biggest_upsets(matchup_results, power_rank_history, manager_names),
         'power_movers': power_rank_movers(power_rank_history, manager_names),
-        'matchups_to_watch': matchups_to_watch(next_week_matchups, standings, playoff_teams_count),
-        'playoff_picture': projected_playoff_teams(standings, playoff_teams_count),
+        'matchups_to_watch': matchups_to_watch(next_week_matchups, real_standings, playoff_teams_count),
         'median_standings': median_standings_table(output_data.get('median_standings') or {}),
         'waiver_pickups': top_waiver_pickups(
             (output_data.get('trade_analysis') or {}).get('waiver_impacts') or [], faab_enabled
         ),
     }
 
-    return render_ai_overview_html(analysis_info, sections, faab_ledger, roster_to_manager, manager_names)
+    weeks_available = sorted(matchup_results.keys())
+
+    return render_ai_overview_html(
+        analysis_info, sections, faab_ledger, roster_to_manager, manager_names,
+        matchup_results=matchup_results, weeks_available=weeks_available,
+        current_week=current_week, playoff_teams_count=playoff_teams_count,
+    )
 
 
-# ---- rendering ----
+# ---- rendering (server-rendered sections) ----
 
-def _card(title, body_html):
+def _card(title, body_html, extra_attrs=""):
     return f"""
-    <div class="section-card">
+    <div class="section-card" {extra_attrs}>
         <h2>{title}</h2>
         {body_html}
     </div>
-    """
-
-
-def _render_top_players(section):
-    if not section['players']:
-        return "<p class='empty'>No player scoring data available yet.</p>"
-    rows = "".join(
-        f"""<tr>
-            <td>{i + 1}</td>
-            <td>{p['name']}</td>
-            <td>{p['position']} - {p['team']}</td>
-            <td>{p['manager_name']}</td>
-            <td class="num">{p['points']:.1f}</td>
-        </tr>"""
-        for i, p in enumerate(section['players'][:10])
-    )
-    return f"""
-    <p class="section-caption">Week {section['week']}</p>
-    <table>
-        <tr><th>#</th><th>Player</th><th>Pos / Team</th><th>Manager</th><th>Points</th></tr>
-        {rows}
-    </table>
     """
 
 
@@ -379,10 +340,10 @@ def _render_power_movers(section):
     )
     return f"""
     <p class="section-caption">Week {section['last_week']} to Week {section['this_week']}</p>
-    <table>
+    <div class="table-scroll"><table>
         <tr><th>Manager</th><th>Last Week</th><th>This Week</th><th>Change</th></tr>
         {rows}
-    </table>
+    </table></div>
     """
 
 
@@ -398,28 +359,6 @@ def _render_matchups_to_watch(matchups):
         for m in matchups
     )
     return f"<ul class='matchup-list'>{items}</ul>"
-
-
-def _render_playoff_picture(picture):
-    def team_row(t, extra=""):
-        return f"""<tr>
-            <td>#{t['rank']}</td><td>{t['manager_name']}</td>
-            <td class="num">{t['wins']}-{t['losses']}{'-' + str(t['ties']) if t['ties'] else ''}</td>
-            <td class="num">{t['points_for']:.1f}</td>
-            <td>{extra}</td>
-        </tr>"""
-
-    in_rows = "".join(team_row(t) for t in picture['in'])
-    bubble_rows = "".join(team_row(t, f"{t.get('games_back', 0):.1f} GB") for t in picture['bubble'])
-
-    return f"""
-    <p class="section-caption">If the season ended today - top {picture['playoff_teams_count']} make the playoffs</p>
-    <table>
-        <tr><th>Rank</th><th>Manager</th><th>Record</th><th>Points For</th><th></th></tr>
-        {in_rows}
-        {bubble_rows}
-    </table>
-    """
 
 
 def _render_median_standings(rows):
@@ -440,13 +379,13 @@ def _render_median_standings(rows):
 
     return f"""
     <p class="section-caption">If every week also counted as a win/loss against the league median score</p>
-    <table>
+    <div class="table-scroll"><table>
         <tr>
             <th>Rank</th><th>Manager</th><th>Real Record</th><th>vs. Median</th>
             <th>Combined</th><th>Combined %</th>
         </tr>
         {table_rows}
-    </table>
+    </table></div>
     <p class="notes" style="margin-top: 10px;">
         Each week, the top half of scorers league-wide also get a bonus win against "the median" and the
         bottom half get a bonus loss - regardless of who they actually played. Beat both your real
@@ -477,13 +416,13 @@ def _render_waiver_pickups(section):
         this_week_rows = "".join(pickup_row(w) for w in section['this_week'])
         this_week_html = f"""
         <p class="section-caption">This week's best pickups (Week {section['this_week_num']})</p>
-        <table>{header}{this_week_rows}</table>
+        <div class="table-scroll"><table>{header}{this_week_rows}</table></div>
         """
 
     return f"""
     {this_week_html}
     <p class="section-caption">Season-best pickups</p>
-    <table>{header}{season_rows}</table>
+    <div class="table-scroll"><table>{header}{season_rows}</table></div>
     """
 
 
@@ -491,9 +430,15 @@ def _render_faab_tracker(faab_ledger, roster_to_manager, manager_names):
     if not faab_ledger or not faab_ledger.get('enabled'):
         return ""
 
+    # roster_to_manager's keys come straight from an in-memory rosters list (always int); a
+    # faab_ledger reloaded from JSON (rather than passed straight from the same analysis run)
+    # comes back with string dict keys, since JSON object keys are always strings - normalize
+    # so a lookup miss doesn't silently fall back to "Roster {id}" instead of the real name.
+    lookup_by_str = {str(k): v for k, v in roster_to_manager.items()}
+
     rows = []
     for roster_id, balance in sorted(faab_ledger['balances'].items(), key=lambda kv: kv[1], reverse=True):
-        user_id = roster_to_manager.get(roster_id)
+        user_id = roster_to_manager.get(roster_id, lookup_by_str.get(str(roster_id)))
         name = manager_names.get(user_id, f'Roster {roster_id}')
         total = faab_ledger['total_budget']
         pct = (balance / total * 100) if total else 0
@@ -505,24 +450,250 @@ def _render_faab_tracker(faab_ledger, roster_to_manager, manager_names):
 
     return _card("FAAB Tracker", f"""
     <p class="section-caption">Remaining budget by manager</p>
-    <table><tr><th>Manager</th><th>Remaining</th><th></th></tr>{''.join(rows)}</table>
+    <div class="table-scroll"><table><tr><th>Manager</th><th>Remaining</th><th></th></tr>{''.join(rows)}</table></div>
     """)
 
 
-def render_ai_overview_html(analysis_info, sections, faab_ledger, roster_to_manager, manager_names):
+# ---- client-side week-interactive sections (Top Performers + Playoff Bracket/Standings) ----
+# See the big <script> block below - BRACKET_TEMPLATES describes the seeded matchup tree for
+# Sleeper's three supported playoff field sizes (4/6/8 teams, per their own API docs); anything
+# else falls back to a flat seed list with no bracket tree.
+
+_WEEK_INTERACTIVE_JS = r"""
+const MATCHUP_DATA = __MATCHUP_DATA__;
+const MANAGER_NAMES = __MANAGER_NAMES__;
+const WEEKS_AVAILABLE = __WEEKS_AVAILABLE__;
+const PLAYOFF_TEAMS_COUNT = __PLAYOFF_TEAMS_COUNT__;
+const CURRENT_WEEK = __CURRENT_WEEK__;
+
+const BRACKET_TEMPLATES = {
+    4: [
+        [ {a:{seed:1}, b:{seed:4}}, {a:{seed:2}, b:{seed:3}} ],
+        [ {a:{winnerOf:[0,0]}, b:{winnerOf:[0,1]}} ],
+    ],
+    6: [
+        [ {a:{seed:3}, b:{seed:6}}, {a:{seed:4}, b:{seed:5}} ],
+        [ {a:{seed:1}, b:{winnerOf:[0,1]}}, {a:{seed:2}, b:{winnerOf:[0,0]}} ],
+        [ {a:{winnerOf:[1,0]}, b:{winnerOf:[1,1]}} ],
+    ],
+    8: [
+        [ {a:{seed:1},b:{seed:8}}, {a:{seed:4},b:{seed:5}}, {a:{seed:3},b:{seed:6}}, {a:{seed:2},b:{seed:7}} ],
+        [ {a:{winnerOf:[0,0]}, b:{winnerOf:[0,1]}}, {a:{winnerOf:[0,2]}, b:{winnerOf:[0,3]}} ],
+        [ {a:{winnerOf:[1,0]}, b:{winnerOf:[1,1]}} ],
+    ],
+};
+
+function computeStandingsThroughWeek(week) {
+    const standings = {};
+    for (const w of WEEKS_AVAILABLE) {
+        if (w > week) break;
+        for (const m of (MATCHUP_DATA[w] || [])) {
+            const [u1, u2] = m.user_ids;
+            const [s1, s2] = m.scores;
+            if (u1 == null || u2 == null) continue;
+            if (!standings[u1]) standings[u1] = {wins: 0, losses: 0, ties: 0, points_for: 0};
+            if (!standings[u2]) standings[u2] = {wins: 0, losses: 0, ties: 0, points_for: 0};
+            standings[u1].points_for += s1 || 0;
+            standings[u2].points_for += s2 || 0;
+            if (s1 > s2) { standings[u1].wins++; standings[u2].losses++; }
+            else if (s2 > s1) { standings[u2].wins++; standings[u1].losses++; }
+            else { standings[u1].ties++; standings[u2].ties++; }
+        }
+    }
+    const rows = Object.entries(standings).map(([uid, s]) => ({
+        user_id: uid, manager_name: MANAGER_NAMES[uid] || 'Unknown',
+        wins: s.wins, losses: s.losses, ties: s.ties, points_for: Math.round(s.points_for * 10) / 10,
+    }));
+    rows.sort((a, b) => (b.wins - a.wins) || (b.points_for - a.points_for));
+    rows.forEach((r, i) => { r.rank = i + 1; });
+    return rows;
+}
+
+function renderTopPerformers(week) {
+    const container = document.getElementById('topPerformersBody');
+    const matchups = (MATCHUP_DATA[week] || []).filter(m => m.winner_user_id != null);
+    if (!matchups.length) {
+        container.innerHTML = "<p class='empty'>No completed matchups for this week.</p>";
+        return;
+    }
+    const rows = matchups.map(m => {
+        const winnerIdx = m.user_ids[0] === m.winner_user_id ? 0 : 1;
+        const loserIdx = 1 - winnerIdx;
+        return {
+            winner: MANAGER_NAMES[m.user_ids[winnerIdx]] || m.manager_names[winnerIdx],
+            loser: MANAGER_NAMES[m.user_ids[loserIdx]] || m.manager_names[loserIdx],
+            winnerScore: m.scores[winnerIdx], loserScore: m.scores[loserIdx], margin: m.margin,
+        };
+    }).sort((a, b) => b.winnerScore - a.winnerScore);
+
+    const body = rows.map((r, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td><strong>${r.winner}</strong></td>
+            <td class="num">${r.winnerScore.toFixed(1)}</td>
+            <td>${r.loser}</td>
+            <td class="num">${r.loserScore.toFixed(1)}</td>
+            <td class="num">${r.margin.toFixed(1)}</td>
+        </tr>
+    `).join('');
+    container.innerHTML = `
+        <div class="table-scroll"><table>
+            <tr><th>#</th><th>Winner</th><th>Score</th><th>Lost To</th><th>Score</th><th>Margin</th></tr>
+            ${body}
+        </table></div>
+    `;
+}
+
+function renderStandingsTable(week, standings) {
+    const container = document.getElementById('standingsBody');
+    const inTeams = standings.slice(0, PLAYOFF_TEAMS_COUNT);
+    const bubble = standings.slice(PLAYOFF_TEAMS_COUNT, PLAYOFF_TEAMS_COUNT + 2);
+    const cutoffWins = inTeams.length ? inTeams[inTeams.length - 1].wins : 0;
+
+    const row = (t, extra) => `
+        <tr>
+            <td>#${t.rank}</td><td>${t.manager_name}</td>
+            <td class="num">${t.wins}-${t.losses}${t.ties ? '-' + t.ties : ''}</td>
+            <td class="num">${t.points_for.toFixed(1)}</td>
+            <td>${extra || ''}</td>
+        </tr>
+    `;
+    const bubbleRows = bubble.map(t => row(t, `${(cutoffWins - t.wins).toFixed(1)} GB`)).join('');
+
+    container.innerHTML = `
+        <p class="section-caption">Standings through week ${week} - top ${PLAYOFF_TEAMS_COUNT} make the playoffs</p>
+        <div class="table-scroll"><table>
+            <tr><th>Rank</th><th>Manager</th><th>Record</th><th>Points For</th><th></th></tr>
+            ${inTeams.map(t => row(t)).join('')}
+            ${bubbleRows}
+        </table></div>
+    `;
+}
+
+function resolveBracketSlot(slot, seeds, results) {
+    if (slot.seed !== undefined) {
+        const team = seeds[slot.seed - 1];
+        return team ? { label: `#${slot.seed} ${team.manager_name}`, team } : { label: `#${slot.seed} TBD`, team: null };
+    }
+    const [r, m] = slot.winnerOf;
+    return { label: `Winner of R${r + 1}G${m + 1}`, team: null };
+}
+
+function renderBracket(week, standings) {
+    const container = document.getElementById('bracketBody');
+    const template = BRACKET_TEMPLATES[PLAYOFF_TEAMS_COUNT];
+    const seeds = standings.slice(0, PLAYOFF_TEAMS_COUNT);
+
+    if (!template) {
+        container.innerHTML = `<p class="empty">No bracket template for a ${PLAYOFF_TEAMS_COUNT}-team playoff field yet - showing seeds instead.</p>` +
+            `<ol>${seeds.map(t => `<li>${t.manager_name} (${t.wins}-${t.losses})</li>`).join('')}</ol>`;
+        return;
+    }
+
+    const roundsHtml = template.map((round, ri) => {
+        const matchesHtml = round.map(match => {
+            const a = resolveBracketSlot(match.a, seeds, null);
+            const b = resolveBracketSlot(match.b, seeds, null);
+            return `
+                <div class="bracket-match">
+                    <div class="bracket-team">${a.label}</div>
+                    <div class="bracket-team">${b.label}</div>
+                </div>
+            `;
+        }).join('');
+        const roundTitle = ri === template.length - 1 ? 'Final' : `Round ${ri + 1}`;
+        return `<div class="bracket-round"><div class="bracket-round-title">${roundTitle}</div>${matchesHtml}</div>`;
+    }).join('');
+
+    container.innerHTML = `
+        <p class="section-caption">Seeded from standings through week ${week} - if the season ended today</p>
+        <div class="bracket">${roundsHtml}</div>
+    `;
+}
+
+function renderWeekInteractiveSections(week) {
+    week = parseInt(week, 10);
+    const standings = computeStandingsThroughWeek(week);
+    renderTopPerformers(week);
+    renderStandingsTable(week, standings);
+    renderBracket(week, standings);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const picker = document.getElementById('weekPicker');
+    WEEKS_AVAILABLE.forEach(w => {
+        const opt = document.createElement('option');
+        opt.value = w;
+        opt.textContent = `Week ${w}`;
+        picker.appendChild(opt);
+    });
+    // Default to the most recently *completed* week, not just the highest week number present
+    // in the data - a league's matchup data can include a future/unplayed week (0-0, no
+    // winner_user_id yet), and landing there by default showed "no completed matchups" instead
+    // of anything useful.
+    const defaultWeek = (CURRENT_WEEK !== null && WEEKS_AVAILABLE.includes(CURRENT_WEEK))
+        ? CURRENT_WEEK
+        : (WEEKS_AVAILABLE.length ? WEEKS_AVAILABLE[WEEKS_AVAILABLE.length - 1] : null);
+    if (defaultWeek !== null) {
+        picker.value = defaultWeek;
+        renderWeekInteractiveSections(defaultWeek);
+    }
+    picker.addEventListener('change', (e) => renderWeekInteractiveSections(e.target.value));
+});
+"""
+
+
+def _render_week_interactive_script(matchup_results, manager_names, weeks_available, playoff_teams_count,
+                                     current_week=None):
+    js = _WEEK_INTERACTIVE_JS
+    js = js.replace('__MATCHUP_DATA__', json.dumps(matchup_results))
+    js = js.replace('__MANAGER_NAMES__', json.dumps(manager_names))
+    js = js.replace('__WEEKS_AVAILABLE__', json.dumps(weeks_available))
+    js = js.replace('__PLAYOFF_TEAMS_COUNT__', json.dumps(playoff_teams_count))
+    js = js.replace('__CURRENT_WEEK__', json.dumps(current_week))
+    return f"<script>{js}</script>"
+
+
+def render_ai_overview_html(analysis_info, sections, faab_ledger, roster_to_manager, manager_names,
+                             matchup_results=None, weeks_available=None, current_week=None,
+                             playoff_teams_count=6):
     league_name = analysis_info.get('league_name', 'Fantasy League')
     season = analysis_info.get('season', '')
     generated_at = datetime.now().strftime('%B %d, %Y at %I:%M %p')
 
+    week_picker_html = """
+    <div class="week-picker-row">
+        <label for="weekPicker">Week:</label>
+        <select id="weekPicker"></select>
+    </div>
+    """
+
+    top_performers_card = _card(
+        "Top Performers",
+        week_picker_html + '<p class="section-caption">Head-to-head matchup winners, ranked by winning score</p>'
+        + '<div id="topPerformersBody"><p class="empty">Loading...</p></div>'
+    )
+
+    bracket_card = _card(
+        "Projected Playoff Bracket &amp; Standings",
+        '<div id="standingsBody"><p class="empty">Loading...</p></div>'
+        + '<div id="bracketBody" style="margin-top: 18px;"><p class="empty">Loading...</p></div>'
+    )
+
     body = (
-        _card("Top Players of the Week", _render_top_players(sections['top_players']))
+        top_performers_card
         + _card("Biggest Upsets", _render_upsets(sections['upsets']))
         + _card("Power Ranking Movers: Last Week vs This Week", _render_power_movers(sections['power_movers']))
         + _card("Matchups to Watch", _render_matchups_to_watch(sections['matchups_to_watch']))
-        + _card("Projected Playoff Picture", _render_playoff_picture(sections['playoff_picture']))
+        + bracket_card
         + _card("Median Standings", _render_median_standings(sections['median_standings']))
         + _card("Top Waiver Pickups", _render_waiver_pickups(sections['waiver_pickups']))
         + _render_faab_tracker(faab_ledger, roster_to_manager, manager_names)
+    )
+
+    script = _render_week_interactive_script(
+        matchup_results or {}, manager_names, weeks_available or [], playoff_teams_count or 6,
+        current_week=current_week,
     )
 
     return f"""<!DOCTYPE html>
@@ -546,6 +717,7 @@ def render_ai_overview_html(analysis_info, sections, faab_ledger, roster_to_mana
         --color-success: #1B8A5A;
         --color-danger: #C0392B;
     }}
+    * {{ box-sizing: border-box; }}
     body {{
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Tahoma, Geneva, Verdana, sans-serif;
         background: var(--color-canvas);
@@ -575,6 +747,10 @@ def render_ai_overview_html(analysis_info, sections, faab_ledger, roster_to_mana
     .section-card h2 {{ margin: 0 0 12px; color: var(--color-accent); font-size: 1.25rem; font-weight: 600; }}
     .section-caption {{ color: var(--color-ink-secondary); font-size: 0.9rem; margin: 0 0 10px; }}
     table {{ width: 100%; border-collapse: collapse; font-size: 0.92rem; }}
+    /* Every generated table is wrapped in .table-scroll (see _render_* functions and the
+       week-interactive JS) so a table wider than its card scrolls horizontally within its own
+       card instead of being clipped by the page-level overflow-x: hidden safety net below. */
+    .table-scroll {{ overflow-x: auto; -webkit-overflow-scrolling: touch; }}
     th, td {{ text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--color-hairline); color: var(--color-ink); }}
     th {{ color: var(--color-ink-secondary); font-weight: 600; }}
     td.num, th.num {{ text-align: right; }}
@@ -592,6 +768,33 @@ def render_ai_overview_html(analysis_info, sections, faab_ledger, roster_to_mana
     .notes {{ color: var(--color-ink-secondary); font-size: 0.85rem; margin-top: 4px; }}
     .faab-bar {{ background: var(--color-hairline); border-radius: 6px; height: 10px; width: 140px; }}
     .faab-bar-fill {{ background: var(--color-accent); height: 100%; border-radius: 6px; }}
+
+    .week-picker-row {{ display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }}
+    .week-picker-row label {{ font-weight: 600; font-size: 0.9rem; }}
+    .week-picker-row select {{
+        padding: 8px 12px; border-radius: 999px; border: 1px solid var(--color-hairline);
+        background: var(--color-paper); color: var(--color-ink); font-size: 0.9rem;
+    }}
+
+    .bracket {{
+        display: flex; gap: 22px; overflow-x: auto; padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+    }}
+    .bracket-round {{ display: flex; flex-direction: column; justify-content: space-around; min-width: 190px; flex: 0 0 auto; }}
+    .bracket-round-title {{ text-align: center; font-weight: 600; color: var(--color-ink-secondary); font-size: 0.8rem; margin-bottom: 10px; }}
+    .bracket-match {{
+        background: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: 10px;
+        padding: 8px 10px; margin-bottom: 24px; font-size: 0.85rem;
+    }}
+    .bracket-team {{ padding: 4px 0; }}
+    .bracket-team:first-child {{ border-bottom: 1px solid var(--color-hairline); }}
+
+    @media (max-width: 640px) {{
+        .section-card {{ padding: 16px 18px; }}
+        table {{ font-size: 0.82rem; }}
+        th, td {{ padding: 5px 5px; }}
+        .faab-bar {{ width: 70px; }}
+    }}
 </style>
 </head>
 <body>
@@ -602,5 +805,6 @@ def render_ai_overview_html(analysis_info, sections, faab_ledger, roster_to_mana
     </div>
     {body}
 </div>
+{script}
 </body>
 </html>"""
