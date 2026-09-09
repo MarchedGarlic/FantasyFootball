@@ -254,28 +254,52 @@
             window.scrollTo({ top: 0, behavior: 'auto' });
         }
 
-        function autosizeIframe(iframe) {
+        function autosizeIframe(iframe, force) {
             try {
                 const doc = iframe.contentDocument || iframe.contentWindow.document;
                 const height = Math.max(
                     doc.documentElement ? doc.documentElement.scrollHeight : 0,
                     doc.body ? doc.body.scrollHeight : 0
                 );
-                if (height > 0) iframe.style.height = (height + 24) + 'px';
+                if (height <= 0) return;
+                const newHeight = height + 24;
+                const current = parseFloat(iframe.style.height) || 0;
+                // Ignore sub-8px deltas - see index.html's wireIframeAutosize for the reproduced
+                // bug this guards against: growing the iframe can nudge a stretch_width Bokeh
+                // figure's own layout by a few px, re-triggering the observer below forever
+                // without this (a real "I can scroll endlessly on mobile" report, not
+                // hypothetical). Real content changes are far bigger than 8px.
+                if (!force && Math.abs(newHeight - current) < 8) return;
+                iframe.style.height = newHeight + 'px';
             } catch (e) { console.warn('Could not autosize iframe:', e); }
         }
 
         function wireIframeAutosize(iframe) {
             iframe.addEventListener('load', () => {
-                autosizeIframe(iframe);
+                autosizeIframe(iframe, true);
                 try {
                     const doc = iframe.contentDocument;
                     if (doc && doc.body && 'ResizeObserver' in window) {
-                        new ResizeObserver(() => autosizeIframe(iframe)).observe(doc.body);
+                        let debounceTimer = null;
+                        let resizeCount = 0;
+                        const startedAt = Date.now();
+                        const observer = new ResizeObserver(() => {
+                            // Circuit breaker: stop watching after a generous settle window so a
+                            // feedback loop can't run forever - see index.html for the full
+                            // reasoning.
+                            resizeCount++;
+                            if (resizeCount > 20 || Date.now() - startedAt > 8000) {
+                                observer.disconnect();
+                                return;
+                            }
+                            clearTimeout(debounceTimer);
+                            debounceTimer = setTimeout(() => autosizeIframe(iframe), 150);
+                        });
+                        observer.observe(doc.body);
                     }
                 } catch (e) { /* best effort */ }
             });
-            window.addEventListener('resize', () => autosizeIframe(iframe));
+            window.addEventListener('resize', () => autosizeIframe(iframe, true));
         }
 
         async function buildNavAndPanels() {

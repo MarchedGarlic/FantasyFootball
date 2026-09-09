@@ -14,7 +14,7 @@ properties, not CSS, and always worked - they just hadn't been set to anything b
 default before.
 """
 
-from bokeh.models import InlineStyleSheet
+from bokeh.models import InlineStyleSheet, Button, CustomJS
 
 VOID = "#070D18"
 SURFACE = "#101B2D"
@@ -86,6 +86,32 @@ def style_legend(legend):
     legend.label_text_color = INK
     legend.title_text_color = INK_MUTED
     return legend
+
+
+def legend_toggle_button(*legends):
+    """A small button that shows/hides one or more Legend annotations, hidden by default.
+
+    Legends render *inside* the plot frame (see style_figure's docstring on figures, and the
+    per-chart comments on why side panels were dropped: an outside 'right'/'left' panel adds its
+    own fixed pixel width that sizing_mode can't compensate for, pushing the whole figure wider
+    than a phone viewport). That fixed the width-overflow bug, but left a new one: on a narrow
+    phone screen an always-visible inside-frame legend can sit directly on top of the chart data
+    it's describing - real user report: "the legends overlay too much on mobile so i can't see
+    the graph." Defaulting every legend to hidden and making it an explicit tap-to-reveal action
+    fixes that without losing the click-a-legend-item-to-isolate-a-series interaction entirely -
+    it's just opt-in instead of a permanent overlay.
+    """
+    for legend in legends:
+        legend.visible = False
+
+    button = Button(label="Show Legend", sizing_mode="stretch_width", height=44,
+                     stylesheets=[button_stylesheet("muted")])
+    button.js_on_event("button_click", CustomJS(args=dict(legends=list(legends)), code="""
+        const newVisible = !legends[0].visible;
+        for (const legend of legends) { legend.visible = newVisible; }
+        cb_obj.label = newVisible ? "Hide Legend" : "Show Legend";
+    """))
+    return button
 
 
 # ---- widget stylesheets (the real shadow-DOM-reaching mechanism, see module docstring) ----

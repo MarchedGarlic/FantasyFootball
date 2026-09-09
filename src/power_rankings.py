@@ -205,7 +205,7 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         from bokeh.layouts import column, row
         import numpy as np
         from src.bokeh_theme import (
-            style_figure, style_legend, button_stylesheet, dark_palette,
+            style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE,
         )
@@ -487,7 +487,10 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
             trend_legend.label_text_font_size = "9pt"
             style_legend(trend_legend)
             p.add_layout(trend_legend)
-        
+            show_legend_button = legend_toggle_button(data_legend, trend_legend)
+        else:
+            show_legend_button = legend_toggle_button(data_legend)
+
         # Create toggle buttons
         toggle_data_button = Button(label="Toggle All Teams", sizing_mode="stretch_width", height=44,
                                      stylesheets=[button_stylesheet("primary")])
@@ -610,11 +613,17 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
             sizing_mode="stretch_width", max_width=450, height=500
         )
 
-        # Create layout with controls
+        # Create layout with controls. 2-per-row grid, not one long row - Bokeh's row() has no
+        # flex-wrap, so 3 buttons in one stretch_width row overlap rather than wrap on a narrow
+        # phone screen (see the button-overlap fix elsewhere in this codebase for the same issue).
         if sklearn_available and trend_legend_items:
-            controls = row(toggle_data_button, toggle_trends_button, sizing_mode="stretch_width")
+            controls = column(
+                row(toggle_data_button, toggle_trends_button, sizing_mode="stretch_width"),
+                row(show_legend_button, sizing_mode="stretch_width"),
+                sizing_mode="stretch_width",
+            )
         else:
-            controls = row(toggle_data_button, sizing_mode="stretch_width")
+            controls = row(toggle_data_button, show_legend_button, sizing_mode="stretch_width")
 
         # Chart and leaderboard stack vertically rather than sitting side by side - a fixed-width
         # row of a 1100px chart + 450px leaderboard has no way to fit a 375-414px phone screen,
