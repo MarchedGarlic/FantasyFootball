@@ -707,7 +707,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         from sklearn.linear_model import LinearRegression
         import numpy as np
         from src.bokeh_theme import (
-            style_figure, style_legend, button_stylesheet, dark_palette,
+            style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
         )
@@ -1112,6 +1112,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     data_legend.label_text_font_size = "10pt"
     style_legend(data_legend)
     p.add_layout(data_legend)
+    show_legend_button = legend_toggle_button(data_legend)
 
     # Clean hover tool - simplified
     hover = HoverTool(tooltips=[
@@ -1180,7 +1181,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     # used for chart-vs-leaderboard layout (see src/bokeh_mobile.py).
     button_row = bokeh_column(
         bokeh_row(toggle_data_button, show_explanation_button, sizing_mode="stretch_width"),
-        bokeh_row(reset_button, sizing_mode="stretch_width"),
+        bokeh_row(reset_button, show_legend_button, sizing_mode="stretch_width"),
         sizing_mode="stretch_width",
     )
 
@@ -1209,7 +1210,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
         import numpy as np
         from src.bokeh_theme import (
-            style_figure, style_legend, button_stylesheet, dark_palette,
+            style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
         )
@@ -1523,6 +1524,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     data_legend.label_text_font_size = "10pt"
     style_legend(data_legend)
     p.add_layout(data_legend)
+    show_legend_button = legend_toggle_button(data_legend)
     
     # Clean hover tool
     hover = HoverTool(tooltips=[
@@ -1591,7 +1593,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     # used for chart-vs-leaderboard layout (see src/bokeh_mobile.py).
     button_row = bokeh_column(
         bokeh_row(toggle_data_button, show_explanation_button, sizing_mode="stretch_width"),
-        bokeh_row(reset_button, sizing_mode="stretch_width"),
+        bokeh_row(reset_button, show_legend_button, sizing_mode="stretch_width"),
         sizing_mode="stretch_width",
     )
 
@@ -1620,7 +1622,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         from sklearn.linear_model import LinearRegression
         import numpy as np
         from src.bokeh_theme import (
-            style_figure, style_legend, button_stylesheet, dark_palette,
+            style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
         )
@@ -1881,6 +1883,9 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         trend_legend = Legend(items=trend_legend_items, location="bottom_right", title="Trends", click_policy="hide")
         style_legend(trend_legend)
         p.add_layout(trend_legend)
+        show_legend_button = legend_toggle_button(data_legend, trend_legend)
+    else:
+        show_legend_button = legend_toggle_button(data_legend)
     
     # Create leaderboard table
     leaderboard_html = f"""
@@ -1989,7 +1994,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     # this grids them 2-per-row instead.
     control_row = bokeh_column(
         bokeh_row(toggle_managers_button, toggle_trends_button, sizing_mode="stretch_width"),
-        bokeh_row(reset_zoom_button, sizing_mode="stretch_width"),
+        bokeh_row(reset_zoom_button, show_legend_button, sizing_mode="stretch_width"),
         sizing_mode="stretch_width",
     )
 

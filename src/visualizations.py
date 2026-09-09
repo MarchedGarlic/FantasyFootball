@@ -21,7 +21,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         from bokeh.models import Div
         import numpy as np
         from src.bokeh_theme import (
-            style_figure, style_legend, button_stylesheet, dark_palette,
+            style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
         )
@@ -372,6 +372,9 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             trend_legend.label_text_font_size = "9pt"
             style_legend(trend_legend)
             p.add_layout(trend_legend)
+            show_legend_button = legend_toggle_button(data_legend, trend_legend)
+        else:
+            show_legend_button = legend_toggle_button(data_legend)
 
         # Create working toggle buttons
         toggle_data_button = Button(label="Toggle All Teams", sizing_mode="stretch_width", height=44,
@@ -456,12 +459,13 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             controls = bokeh_column(
                 bokeh_row(toggle_data_button, toggle_trends_button, sizing_mode="stretch_width"),
                 bokeh_row(show_explanation_button, reset_button, sizing_mode="stretch_width"),
+                bokeh_row(show_legend_button, sizing_mode="stretch_width"),
                 sizing_mode="stretch_width",
             )
         else:
             controls = bokeh_column(
                 bokeh_row(toggle_data_button, show_explanation_button, sizing_mode="stretch_width"),
-                bokeh_row(reset_button, sizing_mode="stretch_width"),
+                bokeh_row(reset_button, show_legend_button, sizing_mode="stretch_width"),
                 sizing_mode="stretch_width",
             )
 
@@ -1069,7 +1073,7 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         from bokeh.models import Div, Line, Slope
         import numpy as np
         from src.bokeh_theme import (
-            style_figure, style_legend, button_stylesheet,
+            style_figure, style_legend, legend_toggle_button, button_stylesheet,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE,
         )
@@ -1204,9 +1208,11 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
             ("Expected Win %", "@expected_win_pct{0.1f}%")
         ])
         p.add_tools(hover)
+        show_legend_button = None
         if p.legend:
             p.legend.click_policy = "hide"
             style_legend(p.legend[0])
+            show_legend_button = legend_toggle_button(p.legend[0])
 
         # Create explanation div - larger, higher-contrast description text (explicit user
         # request), auto-height so a toggle can never overlap the layout below it.
@@ -1300,7 +1306,16 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         # src/bokeh_mobile.py's module docstring for why this is done unconditionally in Python
         # rather than via a CSS media query targeting Bokeh's (version-fragile) internal layout
         # classes.
-        buttons_row = bokeh_row(explanation_button, reset_button, spacing=10, sizing_mode="stretch_width")
+        # 2-per-row grid, not one long row - Bokeh's row() has no flex-wrap, so 3 buttons in one
+        # stretch_width row overlap rather than wrap on a narrow phone screen.
+        if show_legend_button:
+            buttons_row = bokeh_column(
+                bokeh_row(explanation_button, reset_button, spacing=10, sizing_mode="stretch_width"),
+                bokeh_row(show_legend_button, sizing_mode="stretch_width"),
+                sizing_mode="stretch_width",
+            )
+        else:
+            buttons_row = bokeh_row(explanation_button, reset_button, spacing=10, sizing_mode="stretch_width")
         main_content = bokeh_column(p, leaderboard_div, spacing=20, sizing_mode="stretch_width")
         layout = bokeh_column(
             buttons_row,
