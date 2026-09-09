@@ -10,6 +10,7 @@ Bulk fetch helpers (weekly matchups/transactions, ESPN athlete details) use a th
 full-season analysis previously made these calls one at a time, sequentially.
 """
 
+import json
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.adapters import HTTPAdapter
@@ -68,6 +69,57 @@ class ESPNAPI:
 
         return data
 
+    def get_preseason_draft_ranks(self, season, storage=None, cache_max_age=604800):
+        """Every player's ESPN preseason expert-consensus draft rank for a season (both
+        STANDARD and PPR rank types), used as the 'where the market expected this player to go'
+        baseline for the Biggest Steals / Draft Rating sections.
+
+        This is ESPN's own preseason ranking, not crowd-sourced ADP - ESPN's
+        `ownership.averageDraftPosition` field was checked and confirmed broken (returns a flat
+        170.0 placeholder for every player, elite or not, as of 2026-09), so `draftRanksByRankType`
+        is used instead; it was verified to return correctly-ordered, season-accurate ranks.
+        Cached for 7 days by default (longer than other ESPN data) since a season's preseason
+        ranks don't change once the season is under way.
+        """
+        cache_key = f"espn_draft_ranks_{season}"
+        if storage is not None:
+            cached = storage.cache_get(cache_key, cache_max_age)
+            if cached is not None:
+                return cached
+
+        url = f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/{season}/segments/0/leaguedefaults/3"
+        headers = {
+            'X-Fantasy-Filter': json.dumps({
+                'players': {
+                    'limit': 3000,
+                    'sortDraftRanks': {'sortPriority': 100, 'sortAsc': True, 'value': 'STANDARD'},
+                    'filterRanksForRankTypes': {'value': ['STANDARD', 'PPR']},
+                }
+            }),
+            'X-Fantasy-Source-Type': '1',
+        }
+        response = self.session.get(url, params={'view': 'kona_player_info'}, headers=headers, timeout=DEFAULT_TIMEOUT)
+        raw = response.json() if response.status_code == 200 else None
+
+        ranks = None
+        if raw and isinstance(raw, dict) and raw.get('players'):
+            ranks = {}
+            for entry in raw['players']:
+                player = entry.get('player') or {}
+                name = player.get('fullName')
+                rank_types = player.get('draftRanksByRankType') or {}
+                if not name or not rank_types:
+                    continue
+                ranks[name.lower()] = {
+                    'standard_rank': (rank_types.get('STANDARD') or {}).get('rank'),
+                    'ppr_rank': (rank_types.get('PPR') or {}).get('rank'),
+                }
+
+        if ranks is not None and storage is not None:
+            storage.cache_set(cache_key, ranks)
+
+        return ranks or {}
+
 
 class SleeperAPI:
     """Sleeper API wrapper for fantasy football league/roster/transaction data."""
@@ -113,6 +165,15 @@ class SleeperAPI:
     def get_traded_picks(self, league_id):
         """Get all traded draft picks in a league"""
         return self._get(f"/league/{league_id}/traded_picks", default=[])
+
+    def get_league_drafts(self, league_id):
+        """Get every draft associated with a league (a normal redraft league has exactly one)."""
+        return self._get(f"/league/{league_id}/drafts", default=[])
+
+    def get_draft_picks(self, draft_id):
+        """Get every pick made in a draft: round, overall pick number, player, and the roster
+        that made the pick."""
+        return self._get(f"/draft/{draft_id}/picks", default=[])
 
     def get_nfl_state(self):
         """Get current NFL week/season state - used to default the season picker to the

@@ -395,6 +395,53 @@ def _render_median_standings(rows):
     """
 
 
+def _render_draft_ratings(ratings):
+    if not ratings:
+        return "<p class='empty'>No draft data available (the league may not have used Sleeper's own draft tool, or ESPN's preseason rankings weren't available for this season).</p>"
+
+    rows = "".join(
+        f"""<tr>
+            <td>#{r['rank']}</td>
+            <td>{r['manager_name']}</td>
+            <td class="num"><strong>{r['draft_rating']:.1f}</strong></td>
+            <td class="num">{r['quality_score']:.1f}</td>
+            <td class="num">{r['value_score']:.1f}</td>
+            <td class="num">{r['num_picks']}</td>
+        </tr>"""
+        for r in ratings
+    )
+    return f"""
+    <p class="section-caption">70% player quality (ESPN-tier grade of every player drafted) + 30% draft value (how much better than ESPN's preseason rank they drafted, relative to the rest of the league) - both on a 0-10 scale</p>
+    <div class="table-scroll"><table>
+        <tr><th>Rank</th><th>Manager</th><th>Draft Rating</th><th>Quality</th><th>Value</th><th>Picks</th></tr>
+        {rows}
+    </table></div>
+    """
+
+
+def _render_biggest_steals(steals):
+    if not steals:
+        return "<p class='empty'>No steals to show yet (need draft results plus ESPN preseason rankings for this season).</p>"
+
+    rows = "".join(
+        f"""<tr>
+            <td>{s['player_name']} <span class="notes">({s['position']})</span></td>
+            <td>{s['manager_name']}</td>
+            <td class="num">Pick {s['pick_no']}</td>
+            <td class="num">#{s['expected_rank']}</td>
+            <td class="num positive">+{s['discrepancy']}</td>
+        </tr>"""
+        for s in steals
+    )
+    return f"""
+    <p class="section-caption">Biggest gaps between a player's actual draft pick and ESPN's preseason expert-consensus rank (not crowd-sourced ADP - see CLAUDE.md) - a bigger number means they were still on the board long after experts expected them gone. Currently-injured players are excluded.</p>
+    <div class="table-scroll"><table>
+        <tr><th>Player</th><th>Manager</th><th>Actual Pick</th><th>Expected Rank</th><th>Beat Rank By</th></tr>
+        {rows}
+    </table></div>
+    """
+
+
 def _render_waiver_pickups(section):
     if not section['season']:
         return "<p class='empty'>No waiver/free-agent activity analyzed yet.</p>"
@@ -696,115 +743,168 @@ def render_ai_overview_html(analysis_info, sections, faab_ledger, roster_to_mana
         current_week=current_week,
     )
 
+    return _page_shell(
+        title=f"Overview - {league_name} ({season})",
+        header_title=f"{league_name} &mdash; Overview",
+        header_subtitle=f"Season {season} &middot; Generated {generated_at}",
+        body_html=body,
+        extra_script=script,
+    )
+
+
+def render_draft_info_html(analysis_info, draft_ratings, biggest_steals):
+    """Draft Rating + Biggest Steals as their own standalone report page - split out of the AI
+    Overview into a dedicated 'Draft Info' tab per explicit user request (2026-09 nav rework)."""
+    league_name = analysis_info.get('league_name', 'Fantasy League')
+    season = analysis_info.get('season', '')
+    generated_at = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+
+    body = (
+        _card("Draft Rating", _render_draft_ratings(draft_ratings))
+        + _card("Biggest Steals", _render_biggest_steals(biggest_steals))
+    )
+
+    return _page_shell(
+        title=f"Draft Info - {league_name} ({season})",
+        header_title=f"{league_name} &mdash; Draft Info",
+        header_subtitle=f"Season {season} &middot; Generated {generated_at}",
+        body_html=body,
+    )
+
+
+def build_draft_info(output_data):
+    """Entry point mirroring build_ai_overview() - called from main.py to render draft_info.html."""
+    analysis_info = output_data.get('analysis_info') or {}
+    return render_draft_info_html(
+        analysis_info,
+        output_data.get('draft_ratings') or [],
+        output_data.get('biggest_steals') or [],
+    )
+
+
+_SHARED_STYLE = """<style>
+    /* Dark "broadcast scoreboard" theme (2026-09) - kept in sync by hand with index.html and
+       results_template.html's token set, since this HTML is generated server-side. Oswald for
+       headlines/nav-scale text, Inter for body/tables. */
+    :root {
+        --void: #070D18;
+        --surface: #101B2D;
+        --surface-raised: #18283F;
+        --ink: #F4F6FA;
+        --ink-muted: #8DA0BC;
+        --ink-faint: #5A6E8C;
+        --accent: #FF6A2B;
+        --accent-deep: #C83803;
+        --accent-soft: rgba(255, 106, 43, 0.14);
+        --line: rgba(255, 255, 255, 0.09);
+        --good: #34D399;
+        --bad: #F87171;
+        --font-display: 'Oswald', 'Arial Narrow', sans-serif;
+        --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: var(--font-sans);
+        background: var(--void);
+        color: var(--ink);
+        margin: 0;
+        padding: 24px 18px 60px;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.01em; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .header {
+        margin-bottom: 22px;
+        padding: 26px 24px;
+        background: linear-gradient(135deg, var(--surface-raised), var(--surface));
+        border: 1px solid var(--line);
+        border-radius: 20px;
+    }
+    .header h1 { font-size: 1.7rem; margin: 0; color: var(--ink); }
+    .header p { color: var(--ink-muted); margin: 6px 0 0; font-size: 0.92rem; }
+    .section-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 22px 22px;
+        margin-bottom: 18px;
+    }
+    .section-card h2 { margin: 0 0 6px; color: var(--ink); font-size: 1.15rem; font-weight: 600; }
+    /* Description sits directly under the heading, larger and higher-contrast than the old
+       0.9rem/muted treatment - explicit user request ("make the description larger in a
+       different place") applied consistently to every report's own explanatory copy. */
+    .section-caption { color: var(--ink-muted); font-size: 1rem; line-height: 1.5; margin: 0 0 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    /* Every generated table is wrapped in .table-scroll (see _render_* functions and the
+       week-interactive JS) so a table wider than its card scrolls horizontally within its own
+       card instead of being clipped by the page-level overflow-x: hidden safety net below. */
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); color: var(--ink); }
+    th { color: var(--ink-muted); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    td.num, th.num { text-align: right; }
+    .positive { color: var(--good); }
+    .negative { color: var(--bad); }
+    .empty { color: var(--ink-muted); font-style: italic; }
+    ul.upset-list, ul.matchup-list { list-style: none; padding: 0; margin: 0; }
+    ul.upset-list li, ul.matchup-list li { padding: 12px 0; border-bottom: 1px solid var(--line); }
+    ul.upset-list li:last-child, ul.matchup-list li:last-child { border-bottom: none; }
+    .badge {
+        display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 980px;
+        background: var(--accent-soft); color: var(--accent); font-size: 0.78rem; font-weight: 600;
+    }
+    .notes { color: var(--ink-muted); font-size: 0.85rem; margin-top: 4px; }
+    .faab-bar { background: var(--line); border-radius: 6px; height: 8px; width: 140px; }
+    .faab-bar-fill { background: var(--accent); height: 100%; border-radius: 6px; }
+
+    .week-picker-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .week-picker-row label { font-weight: 600; font-size: 0.9rem; color: var(--ink-muted); }
+    .week-picker-row select {
+        padding: 9px 14px; border-radius: 980px; border: 1px solid var(--line);
+        background: var(--void); color: var(--ink); font-family: var(--font-sans); font-size: 0.9rem;
+    }
+
+    .bracket { display: flex; gap: 22px; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
+    .bracket-round { display: flex; flex-direction: column; justify-content: space-around; min-width: 190px; flex: 0 0 auto; }
+    .bracket-round-title { text-align: center; font-weight: 600; color: var(--ink-muted); font-size: 0.8rem; margin-bottom: 10px; }
+    .bracket-match {
+        background: var(--void); border: 1px solid var(--line); border-radius: 14px;
+        padding: 8px 10px; margin-bottom: 24px; font-size: 0.85rem;
+    }
+    .bracket-team { padding: 4px 0; }
+    .bracket-team:first-child { border-bottom: 1px solid var(--line); }
+
+    @media (max-width: 640px) {
+        .header { padding: 20px 18px; border-radius: 18px; }
+        .header h1 { font-size: 1.35rem; }
+        .section-card { padding: 16px 16px; border-radius: 16px; }
+        table { font-size: 0.82rem; }
+        th, td { padding: 7px 5px; }
+        .faab-bar { width: 70px; }
+    }
+</style>"""
+
+
+def _page_shell(title, header_title, header_subtitle, body_html, extra_script=""):
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>League Overview - {league_name} ({season})</title>
-<style>
-    /* Chicago Bears palette (navy + orange) on a light canvas - see index.html for the same
-       token set. Kept in sync manually since this HTML is generated server-side, not shared
-       CSS with the frontend. */
-    :root {{
-        --color-ink: #0B162A;
-        --color-ink-secondary: #52607A;
-        --color-canvas: #F2F4F8;
-        --color-paper: #FFFFFF;
-        --color-hairline: #DCE0E8;
-        --color-accent: #C83803;
-        --color-accent-soft: #FCE7DC;
-        --color-success: #1B8A5A;
-        --color-danger: #C0392B;
-    }}
-    * {{ box-sizing: border-box; }}
-    body {{
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Tahoma, Geneva, Verdana, sans-serif;
-        background: var(--color-canvas);
-        color: var(--color-ink);
-        margin: 0;
-        padding: 20px;
-        min-height: 100vh;
-    }}
-    .container {{ max-width: 1100px; margin: 0 auto; }}
-    .header {{
-        text-align: center;
-        margin-bottom: 30px;
-        padding: 28px 25px;
-        background: var(--color-ink);
-        border-radius: 24px;
-        color: white;
-    }}
-    .header h1 {{ font-weight: 700; letter-spacing: -0.02em; }}
-    .header p {{ opacity: 0.75; margin: 4px 0 0; }}
-    .section-card {{
-        background: var(--color-paper);
-        border-radius: 20px;
-        padding: 22px 26px;
-        margin-bottom: 22px;
-        border: 1px solid var(--color-hairline);
-    }}
-    .section-card h2 {{ margin: 0 0 12px; color: var(--color-accent); font-size: 1.25rem; font-weight: 600; }}
-    .section-caption {{ color: var(--color-ink-secondary); font-size: 0.9rem; margin: 0 0 10px; }}
-    table {{ width: 100%; border-collapse: collapse; font-size: 0.92rem; }}
-    /* Every generated table is wrapped in .table-scroll (see _render_* functions and the
-       week-interactive JS) so a table wider than its card scrolls horizontally within its own
-       card instead of being clipped by the page-level overflow-x: hidden safety net below. */
-    .table-scroll {{ overflow-x: auto; -webkit-overflow-scrolling: touch; }}
-    th, td {{ text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--color-hairline); color: var(--color-ink); }}
-    th {{ color: var(--color-ink-secondary); font-weight: 600; }}
-    td.num, th.num {{ text-align: right; }}
-    .positive {{ color: var(--color-success); }}
-    .negative {{ color: var(--color-danger); }}
-    .empty {{ color: var(--color-ink-secondary); font-style: italic; }}
-    ul.upset-list, ul.matchup-list {{ list-style: none; padding: 0; margin: 0; }}
-    ul.upset-list li, ul.matchup-list li {{
-        padding: 10px 0; border-bottom: 1px solid var(--color-hairline);
-    }}
-    .badge {{
-        display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 10px;
-        background: var(--color-accent-soft); color: var(--color-accent); font-size: 0.78rem; font-weight: 600;
-    }}
-    .notes {{ color: var(--color-ink-secondary); font-size: 0.85rem; margin-top: 4px; }}
-    .faab-bar {{ background: var(--color-hairline); border-radius: 6px; height: 10px; width: 140px; }}
-    .faab-bar-fill {{ background: var(--color-accent); height: 100%; border-radius: 6px; }}
-
-    .week-picker-row {{ display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }}
-    .week-picker-row label {{ font-weight: 600; font-size: 0.9rem; }}
-    .week-picker-row select {{
-        padding: 8px 12px; border-radius: 999px; border: 1px solid var(--color-hairline);
-        background: var(--color-paper); color: var(--color-ink); font-size: 0.9rem;
-    }}
-
-    .bracket {{
-        display: flex; gap: 22px; overflow-x: auto; padding-bottom: 8px;
-        -webkit-overflow-scrolling: touch;
-    }}
-    .bracket-round {{ display: flex; flex-direction: column; justify-content: space-around; min-width: 190px; flex: 0 0 auto; }}
-    .bracket-round-title {{ text-align: center; font-weight: 600; color: var(--color-ink-secondary); font-size: 0.8rem; margin-bottom: 10px; }}
-    .bracket-match {{
-        background: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: 10px;
-        padding: 8px 10px; margin-bottom: 24px; font-size: 0.85rem;
-    }}
-    .bracket-team {{ padding: 4px 0; }}
-    .bracket-team:first-child {{ border-bottom: 1px solid var(--color-hairline); }}
-
-    @media (max-width: 640px) {{
-        .section-card {{ padding: 16px 18px; }}
-        table {{ font-size: 0.82rem; }}
-        th, td {{ padding: 5px 5px; }}
-        .faab-bar {{ width: 70px; }}
-    }}
-</style>
+<title>{title}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+{_SHARED_STYLE}
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>{league_name} - League Overview</h1>
-        <p>Season {season} - Generated {generated_at}</p>
+        <h1>{header_title}</h1>
+        <p>{header_subtitle}</p>
     </div>
-    {body}
+    {body_html}
 </div>
-{script}
+{extra_script}
 </body>
 </html>"""

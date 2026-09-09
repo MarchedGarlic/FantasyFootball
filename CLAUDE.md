@@ -24,12 +24,14 @@ next candidate host — see §6.
 | `main.py` | `run_analysis(username, season, league_id, storage, progress_cb)` — the full pipeline, called by both the CLI (`main()`) and `server.py`. No longer reads a shared config file mid-run. |
 | `server.py` | Flask app. Season/league now travel explicitly through every route (query params / POST body) instead of being hardcoded or read from a shared file. |
 | `src/storage.py` | `AnalysisStorage` — every artifact keyed by `(league_id, season)`; also the cross-league disk cache (`players.json`, ESPN rankings) and the per-`(league_id, season)` analysis lock. |
-| `src/api_clients.py` | Sleeper/ESPN HTTP clients — timeouts, retry/backoff, and the bulk (`ThreadPoolExecutor`-backed) weekly matchup/transaction fetchers. |
+| `src/api_clients.py` | Sleeper/ESPN HTTP clients — timeouts, retry/backoff, the bulk (`ThreadPoolExecutor`-backed) weekly matchup/transaction fetchers, draft-picks fetchers, and `ESPNAPI.get_preseason_draft_ranks()` (§5, Draft Rating). |
 | `src/roster_grading.py` | ESPN-tier player grading; athlete/team/position `$ref` lookups are now parallelized and memoized. |
 | `src/power_rankings.py` | Weekly power ratings + `compute_power_rank_history()` (persisted per-week rank series, used by the AI Overview). |
 | `src/faab_analysis.py` | FAAB ledger reconstruction + relative-scarcity scoring (§4.3). Returns `{'enabled': False}` for non-FAAB leagues. |
-| `src/trade_analysis.py` | Trade/waiver impact scoring (§4.1) plus the Bokeh chart builders (chart *chrome* mostly untouched — only the data feeding it changed). |
-| `src/ai_overview.py` | The six deterministic AI Overview sections (§5) + HTML rendering. No LLM call. |
+| `src/trade_analysis.py` | Trade (§4.1) and waiver (§4.5) impact scoring plus the Bokeh chart builders — chart chrome dark-themed and reworked in the 2026-09 v2 redesign (§10). |
+| `src/bokeh_theme.py` | Shared dark-theme styling for every Bokeh report (§10) — figure/legend colors, button/select stylesheets (the real shadow-DOM-reaching mechanism), the dark-optimized categorical palette. |
+| `src/draft_analysis.py` | Draft Rating + Biggest Steals scoring (§5) — reconstructs actual draft results from Sleeper and scores them against ESPN's preseason rank. Rendered as its own "Draft Info" report/tab (§10), not part of the AI Overview. |
+| `src/ai_overview.py` | The seven deterministic AI Overview sections (§5) + HTML rendering, plus `build_draft_info()`/`render_draft_info_html()` for the separate Draft Info report. No LLM call. |
 | `src/median_record_calculator.py` | Median-based record calculation (unchanged logic; O(n²) lookups fixed, dead standalone `main()` removed). |
 
 ## 1. Audit findings (2026-08) — why this rewrite happened
@@ -201,11 +203,63 @@ silently).
   by attributing impact once per transaction, not once per added player.
 - Transaction `status` is checked — anything other than `complete` is excluded from scoring.
 
+### 4.5 Waiver pickup scoring rewrite (2026-09) — position-adjusted points, not team-wide delta
+
+**The problem.** `analyze_waiver_pickups()` originally scored every pickup with the exact
+team-wide power-rating/roster-grade delta methodology that §1's audit called out and replaced for
+trades (§4.1) — but that fix was never applied to waivers. `calculate_manager_power_impact()` /
+`calculate_manager_grade_impact()` measured the *whole team's* trend in a window around the
+transaction week, not anything about the player added: a great pickup and a bench stash scored
+identically if the team's rating moved for unrelated reasons (bye week, blowout, injury) that
+week; simultaneous moves in one week got the same number; pickups in a season's last 1-2 weeks
+silently scored `0.0` (not enough before/after data) — indistinguishable from "did nothing." The
+FAAB leaderboard's "$/point of impact" efficiency column inherited the same noise. Both helper
+functions are now deleted.
+
+**The fix.** `combined_impact` is now the actual fantasy points the added player(s) scored while
+rostered, position-adjusted against the league-wide weekly average at that position — the
+industry-standard "points over positional average" approach, not team noise:
+
+1. **Rostered window** (`_build_drop_index()`, `_rostered_window_end()`): from the pickup's add
+   week through the week before that same roster's next drop of that exact player (a trade's own
+   `drops` map counts the same as a waiver drop — both mean "gave the player up"), or the last
+   analyzed week if never given up.
+2. **Position baseline** (`_build_weekly_position_baselines()`): for every week, the mean and
+   population stdev of every rostered player's actual points at each position, league-wide —
+   built from Sleeper's `players_points` (already flowing through `all_weekly_matchups`, previously
+   discarded past the top-25/week trim used for the AI Overview's top-performers section).
+3. **Per-player points lookup** (`_build_player_weekly_points()`): every player's points for every
+   week, not just weeks they cracked a top-N list.
+4. **Score** (`calculate_pickup_points_impact()`): for each week in the rostered window, weekly
+   z-score `= (points - position_mean) / position_stdev` that week; `combined_impact` is the
+   average z-score across every scored week (weeks with no data — bye/inactive/not yet played —
+   are skipped, not treated as zero). A transaction with multiple simultaneous adds gets one score
+   averaged across all of them, preserving the one-entry-per-transaction fix in §4.4. This also
+   fixes the "can't score the last 1-2 weeks" bug — no *before* data is required anymore, only
+   weeks the player was actually held.
+
+**Downstream recalibration** (the new score is a z-score, typically roughly ±2.5, not the old
+team-delta's tens-scale number):
+- `calculate_manager_grades()`'s waiver-grade formula changed from `5 + impact / 3` to
+  `5 + impact * 2.5` (so +1 std dev above a typical rostered player at that position swings the
+  grade by 2.5).
+- `create_waiver_visualization()`'s y-axis/reset-zoom range changed from `(-20, 25)` to `(-4, 4)`;
+  the `power_impact`/`grade_impact` hover fields and chart columns were replaced with
+  `weeks_rostered`/`total_points`; the methodology explanation panel and "how it's calculated"
+  step list were rewritten to match the real formula (kept in sync per this file's own stated
+  principle — see §4.1's "no more three divergent formulas/descriptions").
+- The FAAB leaderboard's "Impact/$" efficiency ratio formula is unchanged (`total impact / total
+  FAAB spent`) — same ratio semantics, just smaller displayed numbers now that the numerator is a
+  z-score sum instead of a tens-scale delta sum.
+
 ## 5. AI Overview (deterministic)
 
 New module `src/ai_overview.py` replaces `server.py`'s `create_ai_team_overview` /
 `create_detailed_mock_overview` / `create_mock_ai_overview` and the dead `openai` import entirely.
-Sections, each backed by data that is now actually persisted (previously fetched-then-discarded):
+Sections, each backed by data that is now actually persisted (previously fetched-then-discarded).
+Items 1-7 render on the Overview report/tab (`ai_overview.html`); items 8-9 were split into their
+own **Draft Info** report/tab (`draft_info.html`) in the 2026-09 v2 nav redesign (§10) — listed
+here together since they're computed by the same module and documented as one unit:
 
 1. **Top performers (week-interactive)** — head-to-head matchup winners for a selected week
    (manager vs. manager, not individual NFL players), ranked by winning score. Replaces the
@@ -240,6 +294,44 @@ Sections, each backed by data that is now actually persisted (previously fetched
    sourced from `output_data['median_standings']`, built in `main.py`).
 7. **Top waiver pickups** — season-to-date and this-week leaders from the (now de-duplicated,
    FAAB-efficiency-aware) waiver analysis in §4.
+8. **Draft Rating** (added 2026-09) — a per-manager 0-10 leaderboard of the actual startup draft,
+   reconstructed from Sleeper's own draft-picks endpoint. `draft_rating = 0.7 * quality_score +
+   0.3 * value_score` (weighted toward quality per explicit user direction). `quality_score` is
+   `grade_roster()`'s `overall_grade` run on every player the manager drafted — the same
+   ESPN-tier grading already used for weekly roster grades and trade valuation, so this reuses
+   one consistent quality signal app-wide instead of introducing a new one. `value_score` is each
+   manager's average (actual pick number − expected rank) discrepancy, z-scored against the rest
+   of the league and mapped onto the 0-10 scale the same way the waiver rewrite (§4.5) maps
+   z-scores to grades (`5 + z * 2.5`, clamped). "Expected rank" is documented in the note below.
+9. **Biggest Steals** — the largest gaps, league-wide, between a player's actual draft pick number
+   and their expected rank: `discrepancy = actual_pick_no − expected_rank`, so a large positive
+   number means the player was still on the board long after they were expected to be gone.
+   Players Sleeper's own data currently marks with any `injury_status` are excluded entirely, per
+   explicit user request. `src/draft_analysis.py`'s `calculate_biggest_steals()` /
+   `calculate_draft_ratings()` back both this and Draft Rating above from the same reconstructed
+   draft + expected-rank data.
+
+**"Expected rank" is ESPN's preseason expert-consensus rank, not real ADP — and that substitution
+was deliberate, not a shortcut.** The user asked specifically for a player's ADP (average draft
+position) vs. actual draft spot. ESPN's fantasy API (`lm-api-reads.fantasy.espn.com/apis/v3/...`,
+the same provider already used for `grade_player()`'s rankings) does expose a public,
+unauthenticated `ownership.averageDraftPosition` field — but it was checked against live data
+before use and found broken: it returns a flat `170.0` placeholder for every player queried,
+including consensus top overall picks, so it carries no real signal. The same response's
+`draftRanksByRankType.STANDARD`/`.PPR` field was checked the same way and confirmed correct
+(properly ordered, season-accurate preseason ranks). `ESPNAPI.get_preseason_draft_ranks()` in
+`src/api_clients.py` uses that field, cached 7 days (preseason ranks don't change once a season
+starts). The app's own UI text says "ESPN preseason rank," never "ADP," so this stays honest about
+what the number actually is instead of mislabeling a proxy as the real thing. `main.py` picks
+STANDARD vs. PPR rank per league based on `league_info['scoring_settings']['rec']`.
+
+Sleeper's draft data itself comes from two new `SleeperAPI` methods: `get_league_drafts()` (a
+normal redraft league has exactly one — no dynasty/keeper support, see §0) and
+`get_draft_picks(draft_id)` (round, overall pick number, player, and the drafting roster for
+every pick). `get_primary_draft()` in `src/draft_analysis.py` picks the completed one if more
+than one draft object exists. Both sections degrade to an empty state (never a hard failure) if
+the league didn't use Sleeper's own draft tool, or ESPN's preseason data isn't available for that
+season.
 
 **Week-interactive sections and the client-side rendering model:** Top Performers and the
 Playoff Bracket/Standings need a "view this as of week N" picker (explicit user request). Rather
@@ -331,19 +423,22 @@ Rendering uses the same Bears navy/orange light theme as the rest of the app (§
 
 ## 9. Results page UX (index.html / results_template.html)
 
-Every generated report (League Overview, Power Rankings, Roster Grades, Luck Analysis, Trade
-Analysis, Waiver Analysis, Manager Grades, Worst Trades) is its own standalone HTML file under
-`html_reports/`, same as before. What changed is how they're presented to the user:
+Every generated report (League Overview, Draft Info, Power Rankings, Roster Grades, Luck Analysis,
+Trade Analysis, Waiver Analysis, Manager Grades, Worst Trades) is its own standalone HTML file
+under `html_reports/`, same as before. **As of the 2026-09 v2 redesign (§10), presentation is a
+sidebar/tab-panel shell, not a scrolling stack** — the "one scrollable page with a sticky pill nav"
+model described in older versions of this section is superseded:
 
-- **One scrollable page, not a grid of links that open new tabs.** `index.html`'s step 4 (and
-  `results_template.html` for the static/Netlify build) renders a sticky pill nav
-  (`#resultsNav`) plus one `<section>` per report, each embedding that report via `<iframe>` so
-  you can scroll straight down through everything or click a nav pill to smooth-scroll to one.
-  Every section also keeps an "Open full size ↗" link for when a chart wants more room than the
-  iframe gives it.
-- `REPORT_META`/`REPORT_ORDER` in `index.html` (and the hardcoded section list in
-  `results_template.html`) is the canonical mapping from filename → display title/icon/order.
-  Add a new report there when adding a new report type.
+- **A left rail (desktop) / slide-in drawer (mobile), one report visible at a time**, not a grid
+  of links or an infinite scroll. `index.html`'s `#step4`/`.results-view` and the whole of
+  `results_template.html` both build their nav + `.tab-panel`s from the same `NAV_GROUPS`
+  structure (three labeled groups — see §10) and embed each report via `<iframe>` inside the
+  active panel, same as before. Every panel also keeps an "Open full size ↗" link for when a
+  chart wants more room than the iframe gives it.
+- `NAV_GROUPS` in `index.html` (and the matching structure in `results_template.html`) is the
+  canonical mapping from filename → display title/group. Add a new report there when adding a new
+  report type — it needs an `id`, `title`, `file`, and (in `results_template.html`) a
+  `description` shown above the embedded iframe.
 - `results_template.html`'s version checks each file exists (`fetch(..., {method: 'HEAD'})`)
   before embedding it, since a static build won't have every report for every league (e.g. no
   trades this season → no `trade_analysis_latest.html`) — shows a plain "not generated" note
@@ -424,19 +519,94 @@ Analysis, Waiver Analysis, Manager Grades, Worst Trades) is its own standalone H
 
 ## 10. Visual theme
 
-Chicago Bears palette (navy `#0B162A` + orange `#C83803`) on a light canvas, applied consistently
-across every surface the app renders:
+**Design system v2 (2026-09 "broadcast scoreboard" redesign)** replaced the earlier light
+Apple-style pass entirely, per explicit user direction: less white, a real navigation shell, more
+readable/relocated chart chrome, mobile as the primary target. This section describes the current
+theme; v1's light-canvas Apple-reference approach (alternating white/gray bands, `--color-ink`
+navy-on-white, Inter-only type) is superseded, not layered on top of.
 
-- `index.html`, `results_template.html`: CSS custom properties (`--color-ink`, `--color-accent`,
-  etc.) — see the `:root` block in either file for the full token list.
-- `src/ai_overview.py`'s `render_ai_overview_html()`: the same token values, inlined (this HTML
-  is generated server-side, so it can't share a CSS file with the frontend — token *values* are
-  kept in sync manually, not the mechanism).
-- The Bokeh-generated reports' HTML/CSS chrome (explanation panels, leaderboard tables, the
-  worst-trades standalone page) — updated to the same palette. The Category20 chart-data palette
-  (the actual per-manager line/dot colors inside each chart) and the gold/silver/bronze
-  rank-medal colors were deliberately left alone — those are functional data encoding and
-  universal medal colors, not decorative theme choices that were clashing.
+**Palette** — dark navy void, not neutral charcoal (stays recognizably "Bears," not a generic dark
+dashboard): `--void: #070D18` (page background), `--surface: #101B2D` (cards/panels),
+`--surface-raised: #18283F` (hover/active state), `--ink: #F4F6FA` / `--ink-muted: #8DA0BC` (text),
+`--accent: #FF6A2B` (brightened Bears orange — the original `#C83803` loses contrast on navy;
+`#C83803` survives as `--accent-deep` for gradients), `--line: rgba(255,255,255,0.08–0.14)`
+(hairlines), `--good: #34D399` / `--bad: #F87171` (stat deltas, tuned for dark backgrounds). A
+background layer (`body::before` in `index.html`/`results_template.html`) adds two soft radial
+accent glows plus a very-low-opacity diagonal hash pattern — a quiet yard-line nod, not literal —
+per explicit user request to add background depth instead of a flat void.
+
+**Type** — two faces with distinct jobs, not one face doing everything: **Oswald** (condensed,
+weight 600) for headlines, nav labels, and section titles; **Inter** for body copy, tables, and
+data (small-size legibility). Both loaded via Google Fonts in every page/report that renders text
+(`index.html`, `results_template.html`, `src/ai_overview.py`, and — since the worst-trades report
+is hand-authored HTML, not Bokeh — `create_worst_trades_html_report()` in `trade_analysis.py`).
+
+**Navigation shell — the headline structural change.** The old model (every report stacked on one
+long scroll, or a sticky pill nav that just smooth-scrolled down the same page) is replaced by a
+real left rail (desktop, persistent, ≥960px) that collapses to a slide-in drawer (mobile, triggered
+by a hamburger button in a sticky top bar) — "a card you hit on the left side to navigate tabs,"
+per explicit user request. One report/tab-panel is visible at a time (`.tab-panel.active`), not an
+infinite scroll. Both `index.html` (`#step4`/`.results-view`) and `results_template.html` implement
+this with the same `NAV_GROUPS` structure: reports grouped into **Overview** (Overview, Draft Info),
+**Team Analysis** (Power Rankings, Power Ranking Leaderboard, Roster Grades, Luck Analysis), and
+**League Activity** (Trade Analysis, Waiver Analysis, Manager Grades, Worst Trades) — grouping ten
+reports into three labeled clusters so the sidebar doesn't read as an undifferentiated wall, per
+explicit "easy and not overwhelming to navigate" request. Clicking a nav item toggles which
+`.tab-panel` has `.active` (CSS `display` + a `panelIn` fade/slide-up animation) and auto-closes
+the mobile drawer. "Draft Info" is its own tab now (`src/ai_overview.py`'s `build_draft_info()` /
+`render_draft_info_html()`, written to `draft_info.html`) — pulled out of the AI Overview page,
+which used to bundle it in with Top Performers/Upsets/etc. (see §5).
+
+**Bokeh chart chrome — no longer deferred.** §9's Shadow DOM finding (external `<style>` tags
+can't reach Bokeh 3.x's internally-rendered widgets) is still true, but this pass discovered the
+actual supported escape hatch: passing `stylesheets=[InlineStyleSheet(css=...)]` directly to a
+Bokeh model injects CSS into *that model's own* shadow root and does work — verified empirically
+(a themed Button/Select/figure rendered exactly as configured) before committing to it. That
+unlocks real dark-theme restyling of every Button/Select/Legend, not just the Python
+model-property tricks (`height`, `sizing_mode`) §9 already used. `src/bokeh_theme.py` centralizes
+this: `style_figure()` (background/border/grid/axis colors — plain Bokeh model properties, always
+worked, just weren't dark before), `style_legend()`, `button_stylesheet()` (`primary`/`ghost`/
+`muted` variants), `select_stylesheet()`/`multiselect_stylesheet()`/`slider_stylesheet()` for
+future selector widgets, `dark_palette()` (a curated 20-color categorical set — Bokeh's default
+`Category20` is tuned for a white background and several of its hues are nearly invisible on navy;
+this is a motivated exception to the "leave the chart-data palette alone" rule, since it was
+written for a light-canvas page and the whole page changing to dark is exactly the kind of change
+that rule anticipates revisiting), and shared Div-HTML style strings (`PANEL_STYLE`,
+`CALLOUT_STYLE`, `HEADING_STYLE`, `DESCRIPTION_STYLE`, `LABEL_STYLE`) for the explanation/
+leaderboard panels every chart builds as raw HTML (light-DOM content strings, never blocked by
+shadow DOM — see §9). Applied across every chart-producing function actually wired into
+`main.py`'s pipeline: `power_rankings.py::create_power_rating_plot`,
+`visualizations.py::create_roster_grade_plot`/`create_luck_analysis_plot`/
+`create_power_ranking_leaderboard`, and `trade_analysis.py::create_trade_visualization`/
+`create_waiver_visualization`/`create_manager_grade_visualization`/
+`create_worst_trades_html_report` (the last one is hand-authored HTML, not Bokeh, so it's a plain
+CSS edit with none of the shadow-DOM caveats). `create_combined_analysis_plot` and
+`create_trade_impact_visualization` in `visualizations.py` are dead code (not imported by
+`main.py`) and were left untouched.
+
+Three concrete fixes came out of this pass, each explicitly requested:
+- **Descriptions made larger and repositioned.** Every chart's methodology/explanation text moved
+  from a small muted caption into a prominent, larger-font panel (`DESCRIPTION_STYLE`, 16px) placed
+  at the top of the report, above the chart — not buried in a collapsed-by-default panel below it.
+- **Built-in buttons relocated.** Every chart's toggle/reset button row moved from the bottom of
+  the layout to directly under the description, above the chart/leaderboard.
+- **A real mobile bug found and fixed along the way:** Bokeh's `row()` has no flex-wrap. A
+  `sizing_mode="stretch_width"` row of 3+ buttons doesn't wrap on a narrow phone screen — the
+  labels visually overlap instead (confirmed by rendering and screenshotting at 375px). Every
+  3-or-4-button control row across all four affected functions was changed to a 2-per-row grid
+  (nested `bokeh_column`/`bokeh_row`), the same "stack unconditionally, don't rely on breakpoints"
+  philosophy §9 already used for chart-vs-leaderboard layout — Bokeh has no CSS-media-query
+  concept to hook a real responsive breakpoint into, so a version-independent structural fix beats
+  trying to detect viewport width from Python.
+- Side-panel legends (`p.add_layout(legend, 'right')`) were moved to render *inside* the plot
+  frame (`location="top_left"`/`"bottom_right"`, no side argument) instead — an outside side panel
+  adds its own fixed pixel width alongside the frame that `stretch_width` can't compensate for,
+  which was silently making every affected chart wider than a phone viewport.
+
+The Category20-replacement (`dark_palette()`) and the gold/silver/bronze medal colors remain the
+same category of exception noted in earlier passes: functional data encoding / universal medal
+colors, not decorative theme choices — medal colors specifically were left as literal gold/silver/
+bronze hex values even inside the new dark theme (`create_power_ranking_leaderboard`).
 
 ## 11. Dev workflow
 

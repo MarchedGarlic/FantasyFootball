@@ -36,9 +36,10 @@ def test_analysis_functions():
         print(f"   • Trade analysis: {len(trade_impacts)} impacts")
         
         # Test waiver analysis
+        empty_weekly_matchups = {}
         waiver_impacts = analyze_waiver_pickups(
-            empty_transactions, empty_team_power, empty_roster_grade,
-            empty_user_lookup, empty_roster_to_manager
+            empty_transactions, empty_user_lookup, empty_roster_to_manager,
+            empty_weekly_matchups
         )
         print(f"   • Waiver analysis: {len(waiver_impacts)} impacts")
         
