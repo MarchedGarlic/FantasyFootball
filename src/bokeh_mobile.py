@@ -28,9 +28,15 @@ way - two rounds of fixing, in fact:
    `display:flex; flex-direction:column`, width matching the 375px viewport exactly) in a real
    generated report at a 375px viewport.
 
-What's left for this module to do, since it truly can't touch anything inside Bokeh's shadow DOM:
-the viewport meta tag, and an `overflow-x: hidden` safety net on `html`/`body` (the *light-DOM*
-elements one level up from Bokeh's own root, which a light-DOM stylesheet can reach).
+This module's own reach stops at the *light-DOM* elements one level up from Bokeh's own root -
+the viewport meta tag, and `html`/`body` itself. That's genuinely all a post-processing
+text-replace step like this one can touch: the dark page background behind the plot (so opening
+a report's "Open full size" link doesn't flash white outside the chart) and an `overflow-x:
+hidden` safety net. **Everything Bokeh actually renders (buttons, selects, the figure itself) is
+styled from Python instead** - see `src/bokeh_theme.py`, which discovered and documents the real
+mechanism for that: passing `stylesheets=[InlineStyleSheet(css=...)]` to a Bokeh model injects
+CSS straight into that model's own shadow root (verified empirically), which is different from -
+and does work, unlike - an external `<style>` tag trying to reach in from outside.
 """
 
 _VIEWPORT_META = '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
@@ -38,11 +44,14 @@ _VIEWPORT_META = '<meta name="viewport" content="width=device-width, initial-sca
 _MOBILE_CSS = """
     <style>
         /* Light-DOM-only: everything Bokeh renders lives inside shadow roots this stylesheet
-           cannot reach (see module docstring) - the actual mobile fix is sizing_mode/height set
-           on the Bokeh models in Python. This just stops one wide shadow-DOM child from dragging
-           the whole page into horizontal scroll. */
+           cannot reach (see module docstring) - real widget/figure theming happens in Python via
+           src/bokeh_theme.py instead. This covers only the light-DOM page shell: the dark
+           background so a directly-opened report doesn't flash white outside the chart, and an
+           overflow-x safety net so one wide shadow-DOM child can't drag the whole page sideways. */
         html, body {
             overflow-x: hidden !important;
+            background: #070D18 !important;
+            color: #F4F6FA !important;
         }
     </style>"""
 

@@ -40,7 +40,13 @@ from src.visualizations import (
     create_luck_analysis_plot,
     create_power_ranking_leaderboard
 )
-from src.ai_overview import build_ai_overview
+from src.ai_overview import build_ai_overview, build_draft_info
+from src.draft_analysis import (
+    get_primary_draft,
+    reconstruct_draft_results,
+    calculate_biggest_steals,
+    calculate_draft_ratings,
+)
 
 
 def load_league_config():
@@ -414,6 +420,19 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
     }
     print(f"   Created roster mapping for {len(roster_to_manager)} teams")
 
+    progress("Fetching draft results and preseason rankings...")
+    drafts = sleeper_api.get_league_drafts(league_id)
+    primary_draft = get_primary_draft(drafts)
+    draft_picks = sleeper_api.get_draft_picks(primary_draft['draft_id']) if primary_draft else []
+    espn_draft_ranks = espn_api.get_preseason_draft_ranks(season, storage=storage)
+    draft_results = reconstruct_draft_results(draft_picks, roster_to_manager, user_lookup, all_players)
+    # PPR vs standard changes which preseason rank list (pass-catching backs/slot receivers
+    # move the most between the two) is the fairer "expected draft slot" baseline.
+    draft_scoring_type = 'ppr' if (league_info.get('scoring_settings') or {}).get('rec', 0) > 0 else 'standard'
+    biggest_steals = calculate_biggest_steals(draft_results, espn_draft_ranks, draft_scoring_type)
+    draft_ratings = calculate_draft_ratings(draft_results, espn_draft_ranks, analyzer, draft_scoring_type)
+    print(f"   Draft: {len(draft_results)} picks reconstructed, {len(draft_ratings)} managers rated")
+
     weeks_to_fetch = _determine_analysis_weeks(league_settings)
     progress(f"Fetching weekly matchups (weeks 1-{weeks_to_fetch[-1]}, in parallel)...")
     all_weekly_matchups = sleeper_api.get_league_matchups_bulk(league_id, weeks_to_fetch)
@@ -486,8 +505,8 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
         faab_ledger=faab_ledger, analyzer=analyzer,
     )
     waiver_impacts = analyze_waiver_pickups(
-        transactions_by_week, team_power_data, roster_grade_data,
-        user_lookup, roster_to_manager, all_players, output_dirs,
+        transactions_by_week, user_lookup, roster_to_manager,
+        all_weekly_matchups, all_players, output_dirs,
         faab_ledger=faab_ledger,
     )
     manager_grades = calculate_manager_grades(
@@ -557,6 +576,8 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
         },
         'faab_ledger': faab_ledger,
         'power_rank_history': power_rank_history,
+        'draft_ratings': draft_ratings,
+        'biggest_steals': biggest_steals,
         'median_standings': {
             uid: {
                 'name': data['name'],
@@ -642,6 +663,12 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
         storage.write_html(league_id, season, "ai_overview.html", ai_overview_html)
     except Exception as e:
         progress(f"[WARNING] AI overview generation failed: {e}")
+
+    try:
+        draft_info_html = build_draft_info(output_data)
+        storage.write_html(league_id, season, "draft_info.html", draft_info_html)
+    except Exception as e:
+        progress(f"[WARNING] Draft info generation failed: {e}")
 
     progress("Analysis complete!")
     return output_data

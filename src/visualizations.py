@@ -18,15 +18,19 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         from bokeh.plotting import figure, show, output_file
         from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS, CheckboxGroup
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
-        from bokeh.palettes import Category20, Category10
         from bokeh.models import Div
         import numpy as np
+        from src.bokeh_theme import (
+            style_figure, style_legend, button_stylesheet, dark_palette,
+            SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
+            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
+        )
     except ImportError:
         print("\n⚠️  Bokeh not available - install with: pip install bokeh")
         print("   Falling back to text-only Roster Grade analysis...")
         _create_roster_grade_text_analysis(roster_grade_data)
         return
-    
+
     try:
         # Try to import sklearn for trend lines, but make it optional
         try:
@@ -35,9 +39,9 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         except ImportError:
             sklearn_available = False
             print("   Note: scikit-learn not available for trend lines")
-            
-        # Use Bokeh's Category20 palette for consistent colors
-        colors = Category20[20] if len(roster_grade_data) <= 20 else Category20[20] * 2
+
+        # Dark-optimized categorical palette - see src/bokeh_theme.py
+        colors = dark_palette(len(roster_grade_data))
         
         # Prepare data for interactive plot and calculate current standings
         team_data = []
@@ -162,9 +166,9 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         
         # Set up the figure with tools (mobile-responsive)
         p = figure(
-            width=1200, 
+            width=1200,
             height=700,
-            title="Interactive Fantasy Football Roster Grade Progression",
+            title="Roster Grade Progression",
             x_axis_label="Week",
             y_axis_label="Roster Grade",
             tools="pan,wheel_zoom,box_zoom,reset,save",
@@ -173,69 +177,90 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             max_width=1200,
             min_width=300
         )
-        
-        # Create collapsible explanation panel
-        explanation_text = """
-        <h3 style="margin:10px 0 5px 0;">📊 Roster Grade Calculation Methodology</h3>
-        <div style="background-color: #F2F4F8; padding: 15px; border-radius: 5px; margin: 5px 0;">
-            <h4 style="margin: 0 0 10px 0; color: #0B162A;">📈 Data Sources & Collection</h4>
-            <p style="margin: 3px 0;"><strong>Player Rankings:</strong> ESPN weekly statistical leaders by position</p>
-            <p style="margin: 3px 0;"><strong>Position Tiers:</strong> QB top 30, RB top 60, WR/TE top 80 performers</p>
-            <p style="margin: 3px 0;"><strong>Update Frequency:</strong> Weekly analysis based on current statistical performance</p>
-            
-            <h4 style="margin: 15px 0 10px 0; color: #0B162A;">🎯 Scoring System</h4>
-            <p style="margin: 3px 0;"><strong>Starter Scoring:</strong> Full points based on tier ranking (higher tiers = more points)</p>
-            <p style="margin: 3px 0;"><strong>Bench Scoring:</strong> 50% value for depth analysis and injury protection</p>
-            <p style="margin: 3px 0;"><strong>Position Bonuses:</strong> Additional points for top-tier performers (top 10 in position)</p>
-            <p style="margin: 3px 0;"><strong>Roster Balance:</strong> Weighted scoring accounts for positional scarcity</p>
-            
-            <h4 style="margin: 15px 0 10px 0; color: #0B162A;">🔢 Grade Calculation</h4>
-            <p style="margin: 3px 0;"><strong>Raw Score:</strong> Sum of all player tier values + position bonuses</p>
-            <p style="margin: 3px 0;"><strong>Normalization:</strong> Scaled to league-relative performance metrics</p>
-            <p style="margin: 3px 0;"><strong>Final Grade:</strong> Composite score representing overall roster strength</p>
-            <p style="margin: 3px 0;"><strong>Scale Range:</strong> Typically 15-35 points, higher = stronger roster talent</p>
-            
-            <h4 style="margin: 15px 0 10px 0; color: #0B162A;">📊 Analysis Features</h4>
-            <p style="margin: 3px 0;"><strong>Trend Lines:</strong> Week-over-week progression showing roster improvement/decline</p>
-            <p style="margin: 3px 0;"><strong>Comparative Analysis:</strong> Performance relative to league average and competitors</p>
-            <p style="margin: 3px 0;"><strong>Interactive Elements:</strong> Hover for detailed breakdowns, toggle visibility controls</p>
+        style_figure(p)
+
+        # Always-visible summary sits directly under the heading, larger and higher-contrast
+        # than before (explicit user request). The full step-by-step methodology stays a
+        # collapsible deep-dive behind "Show Calculation Details" below.
+        summary_text = f"""
+        <div style="{PANEL_STYLE}">
+            <h3 style="{HEADING_STYLE}">How Roster Grade Works</h3>
+            <p style="{DESCRIPTION_STYLE}">
+                Every player on a roster is graded from ESPN's weekly statistical leaders by
+                position, starters counted in full and bench players at half value. Scores
+                typically land 15-35 - higher means stronger overall roster talent, not just one
+                big name. Click a team's name in the legend to isolate their line, or use the
+                buttons below.
+            </p>
         </div>
         """
-        
+        summary_div = Div(text=summary_text, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
+
+        # Create collapsible explanation panel (deep-dive detail, hidden until "Show Calculation
+        # Details" is clicked)
+        explanation_text = f"""
+        <div style="{PANEL_STYLE}">
+            <h4 style="{HEADING_STYLE}">Data Sources &amp; Collection</h4>
+            <p style="{LABEL_STYLE}"><strong>Player Rankings:</strong> ESPN weekly statistical leaders by position</p>
+            <p style="{LABEL_STYLE}"><strong>Position Tiers:</strong> QB top 30, RB top 60, WR/TE top 80 performers</p>
+            <p style="{LABEL_STYLE}"><strong>Update Frequency:</strong> Weekly analysis based on current statistical performance</p>
+
+            <h4 style="{HEADING_STYLE}margin-top:15px;">Scoring System</h4>
+            <p style="{LABEL_STYLE}"><strong>Starter Scoring:</strong> Full points based on tier ranking (higher tiers = more points)</p>
+            <p style="{LABEL_STYLE}"><strong>Bench Scoring:</strong> 50% value for depth analysis and injury protection</p>
+            <p style="{LABEL_STYLE}"><strong>Position Bonuses:</strong> Additional points for top-tier performers (top 10 in position)</p>
+            <p style="{LABEL_STYLE}"><strong>Roster Balance:</strong> Weighted scoring accounts for positional scarcity</p>
+
+            <h4 style="{HEADING_STYLE}margin-top:15px;">Grade Calculation</h4>
+            <p style="{LABEL_STYLE}"><strong>Raw Score:</strong> Sum of all player tier values + position bonuses</p>
+            <p style="{LABEL_STYLE}"><strong>Normalization:</strong> Scaled to league-relative performance metrics</p>
+            <p style="{LABEL_STYLE}"><strong>Final Grade:</strong> Composite score representing overall roster strength</p>
+            <p style="{LABEL_STYLE}"><strong>Scale Range:</strong> Typically 15-35 points, higher = stronger roster talent</p>
+
+            <h4 style="{HEADING_STYLE}margin-top:15px;">Analysis Features</h4>
+            <p style="{LABEL_STYLE}"><strong>Trend Lines:</strong> Week-over-week progression showing roster improvement/decline</p>
+            <p style="{LABEL_STYLE}"><strong>Comparative Analysis:</strong> Performance relative to league average and competitors</p>
+            <p style="{LABEL_STYLE}"><strong>Interactive Elements:</strong> Hover for detailed breakdowns, toggle visibility controls</p>
+        </div>
+        """
+
         # stretch_width (not scale_width) matters here: scale_width recomputes height on every
         # resize as width * (original_height/original_width) - with an original height=0 that's
         # width*0=0 forever, which would silently fight the "Show Calculation Details" button's
-        # own `explanation_div.height = 400` JS assignment below. stretch_width takes whatever
-        # height is set at any given moment instead of re-deriving it from width.
+        # own `explanation_div.height = 900` JS assignment below. stretch_width takes whatever
+        # height is set at any given moment instead of re-deriving it from width. The reveal
+        # height is generous (900, up from the original 400) so the panel's real content - long
+        # enough to overflow a tighter box - never gets visually clipped/overlapped by whatever
+        # sits below it in the layout.
         explanation_div = Div(text=explanation_text, height=0, visible=False, sizing_mode="stretch_width", max_width=1200)
-        
+
         # Create leaderboard
-        leaderboard_html = """
-        <h3 style="margin:10px 0 5px 0;">🏆 Current Roster Grade Leaderboard</h3>
-        <table style="border-collapse: collapse; width: 100%; font-size: 12px; margin: 5px 0;">
-        <tr style="background-color: #E7EAF2; font-weight: bold;">
-            <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">#</th>
-            <th style="border: 1px solid #DCE0E8; padding: 8px;">Manager</th>
-            <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Current Grade</th>
-            <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Season Avg</th>
-            <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Trend</th>
-            <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Direction</th>
+        leaderboard_html = f"""
+        <h3 style="{HEADING_STYLE}">Current Roster Grade Leaderboard</h3>
+        <table style="border-collapse: collapse; width: 100%; font-size: 13px; margin: 5px 0; color: {INK};">
+        <tr style="background-color: {SURFACE_RAISED};">
+            <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">#</th>
+            <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Manager</th>
+            <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Current Grade</th>
+            <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Season Avg</th>
+            <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Trend</th>
+            <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Direction</th>
         </tr>
         """
-        
+
         for row in leaderboard_data:
             rank = int(row[0])
-            color = "#e8f5e8" if rank <= 3 else "#fff5e6" if rank <= 6 else "#ffeaea"
+            rank_color = ACCENT if rank <= 3 else INK
             leaderboard_html += f"""
-            <tr style="background-color: {color};">
-                <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[0]}</td>
-                <td style="border: 1px solid #DCE0E8; padding: 8px;">{row[1]}</td>
-                <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[2]}</td>
-                <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[3]}</td>
-                <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[4]}</td>
-                <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[5]}</td>
+            <tr style="background-color: {SURFACE if rank % 2 == 0 else 'transparent'};">
+                <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; font-weight: 700; color: {rank_color};">{row[0]}</td>
+                <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[1]}</td>
+                <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; font-weight: 700;">{row[2]}</td>
+                <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[3]}</td>
+                <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[4]}</td>
+                <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[5]}</td>
             </tr>"""
-        
+
         leaderboard_html += "</table>"
         # Wrapped in the leaderboard's own HTML (not an external stylesheet) because Bokeh 3.x
         # renders every Div inside a shadow root that external CSS can't reach - see
@@ -248,8 +273,8 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         # spanning the full stacked-column width (see the row-to-column fix above), the viewport
         # width is the right proxy for "however much horizontal room this report actually has".
         leaderboard_div = Div(
-            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>',
-            height=200, sizing_mode="stretch_width", max_width=500
+            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;background-color:{SURFACE};border:1px solid {LINE};border-radius:16px;padding:16px 18px;box-sizing:border-box;">{leaderboard_html}</div>',
+            height_policy="auto", sizing_mode="stretch_width", max_width=500
         )
         
         # Add hover tool with detailed tooltips including combined record
@@ -331,25 +356,32 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             # Add to data legend
             data_legend_items.append((f"{team['name']} ({team['current_grade']:.1f})", [scatter_renderer, line_renderer]))
         
-        # Create legends with click policy
-        data_legend = Legend(items=data_legend_items, location="center", title="Teams (Current Grade)")
-        data_legend.click_policy = "hide"
+        # Legends render *inside* the plot frame (not as outside side panels) - see
+        # src/power_rankings.py's create_power_rating_plot for why: a side panel adds its own
+        # fixed pixel width alongside the frame that sizing_mode can't compensate for, pushing
+        # the whole figure wider than a phone viewport.
+        data_legend = Legend(items=data_legend_items, location="top_left", title="Teams", click_policy="hide")
         data_legend.title_text_font_size = "10pt"
         data_legend.label_text_font_size = "9pt"
-        p.add_layout(data_legend, 'right')
-        
+        style_legend(data_legend)
+        p.add_layout(data_legend)
+
         if trend_legend_items:
-            trend_legend = Legend(items=trend_legend_items, location="center", title="Trend Analysis")
-            trend_legend.click_policy = "hide"
-            trend_legend.title_text_font_size = "10pt" 
+            trend_legend = Legend(items=trend_legend_items, location="bottom_right", title="Trends", click_policy="hide")
+            trend_legend.title_text_font_size = "10pt"
             trend_legend.label_text_font_size = "9pt"
-            p.add_layout(trend_legend, 'left')
-        
+            style_legend(trend_legend)
+            p.add_layout(trend_legend)
+
         # Create working toggle buttons
-        toggle_data_button = Button(label="Toggle All Teams", button_type="success", sizing_mode="stretch_width", height=44)
-        toggle_trends_button = Button(label="Toggle All Trends", button_type="primary", sizing_mode="stretch_width", height=44) if sklearn_available else None
-        show_explanation_button = Button(label="Show Calculation Details", button_type="warning", sizing_mode="stretch_width", height=44)
-        reset_button = Button(label="Reset Zoom", button_type="danger", sizing_mode="stretch_width", height=44)
+        toggle_data_button = Button(label="Toggle All Teams", sizing_mode="stretch_width", height=44,
+                                     stylesheets=[button_stylesheet("primary")])
+        toggle_trends_button = Button(label="Toggle All Trends", sizing_mode="stretch_width", height=44,
+                                       stylesheets=[button_stylesheet("ghost")]) if sklearn_available else None
+        show_explanation_button = Button(label="Show Calculation Details", sizing_mode="stretch_width", height=44,
+                                          stylesheets=[button_stylesheet("muted")])
+        reset_button = Button(label="Reset Zoom", sizing_mode="stretch_width", height=44,
+                               stylesheets=[button_stylesheet("ghost")])
         
         # JavaScript callback for data toggle
         toggle_data_callback = CustomJS(args=dict(renderers=data_renderers), code="""
@@ -394,7 +426,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         explanation_callback = CustomJS(args=dict(explanation_div=explanation_div), code="""
             explanation_div.visible = !explanation_div.visible;
             if (explanation_div.visible) {
-                explanation_div.height = 400;
+                explanation_div.height = 900;
                 cb_obj.label = "Hide Calculation Details";
                 cb_obj.button_type = "success";
             } else {
@@ -410,24 +442,36 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         reset_callback = CustomJS(args=dict(plot=p), code="plot.reset.emit();")
         reset_button.js_on_event('button_click', reset_callback)
         
-        # Style the plot
-        p.grid.grid_line_alpha = 0.3
-        p.title.text_font_size = "14pt"
+        # Style the plot title (grid/axis colors already set by style_figure())
+        p.title.text_font_size = "15pt"
         p.xaxis.axis_label_text_font_size = "12pt"
         p.yaxis.axis_label_text_font_size = "12pt"
-        
-        # Create layout with controls and leaderboard
+
+        # Create layout with controls and leaderboard. Bokeh's row() has no flex-wrap - 3+
+        # buttons in one stretch_width row overlap rather than wrap on a narrow phone screen
+        # (confirmed by rendering and screenshotting at 375px), so this grids them 2-per-row
+        # instead of one long row, the same "stack unconditionally, don't rely on breakpoints"
+        # philosophy already used for chart-vs-leaderboard layout (see src/bokeh_mobile.py).
         if toggle_trends_button:
-            controls = bokeh_row(toggle_data_button, toggle_trends_button, show_explanation_button, reset_button, sizing_mode="stretch_width")
+            controls = bokeh_column(
+                bokeh_row(toggle_data_button, toggle_trends_button, sizing_mode="stretch_width"),
+                bokeh_row(show_explanation_button, reset_button, sizing_mode="stretch_width"),
+                sizing_mode="stretch_width",
+            )
         else:
-            controls = bokeh_row(toggle_data_button, show_explanation_button, reset_button, sizing_mode="stretch_width")
+            controls = bokeh_column(
+                bokeh_row(toggle_data_button, show_explanation_button, sizing_mode="stretch_width"),
+                bokeh_row(reset_button, sizing_mode="stretch_width"),
+                sizing_mode="stretch_width",
+            )
 
         # Chart and leaderboard stack vertically instead of sitting side by side - see
         # src/bokeh_mobile.py's module docstring for why this is done unconditionally in Python
         # rather than via a CSS media query targeting Bokeh's (version-fragile) internal layout
-        # classes.
+        # classes. Controls now sit right under the summary, above the chart - explicit user
+        # request to relocate the built-in buttons instead of leaving them at the very bottom.
         main_content = bokeh_column(leaderboard_div, p, sizing_mode="stretch_width")
-        layout = bokeh_column(explanation_div, main_content, controls, sizing_mode="stretch_width")
+        layout = bokeh_column(summary_div, controls, explanation_div, main_content, sizing_mode="stretch_width")
 
         # Show the interactive plot
         show(layout)
@@ -1022,13 +1066,17 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         from bokeh.plotting import figure, show, output_file
         from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
-        from bokeh.palettes import Category20
         from bokeh.models import Div, Line, Slope
         import numpy as np
+        from src.bokeh_theme import (
+            style_figure, style_legend, button_stylesheet,
+            SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
+            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE,
+        )
     except ImportError:
         print("\n⚠️  Bokeh not available - install with: pip install bokeh")
         return None
-    
+
     try:
         # Setup output file
         if output_dirs and 'html' in output_dirs:
@@ -1122,8 +1170,8 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         
         # Create figure (mobile-responsive)
         p = figure(
-            title="Fantasy Football Luck Analysis: Regular Wins vs Median Wins",
-            x_axis_label="Median Wins (Skill-Based Performance)", 
+            title="Luck Analysis: Regular Wins vs. Median Wins",
+            x_axis_label="Median Wins (Skill-Based Performance)",
             y_axis_label="Regular Wins (Head-to-Head Record)",
             width=900, height=700,
             x_range=(0, axis_max),
@@ -1132,10 +1180,11 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
             max_width=900,
             min_width=300
         )
-        
+        style_figure(p)
+
         # Add line of fairness (y = x)
-        p.line([0, axis_max], [0, axis_max], 
-               line_width=3, line_color="black", line_dash="dashed",
+        p.line([0, axis_max], [0, axis_max],
+               line_width=3, line_color=INK_MUTED, line_dash="dashed",
                legend_label="Line of Fairness (y=x)", alpha=0.7)
         
         # Add scatter plot points
@@ -1155,48 +1204,59 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
             ("Expected Win %", "@expected_win_pct{0.1f}%")
         ])
         p.add_tools(hover)
-        
-        # Create explanation div
+        if p.legend:
+            p.legend.click_policy = "hide"
+            style_legend(p.legend[0])
+
+        # Create explanation div - larger, higher-contrast description text (explicit user
+        # request), auto-height so a toggle can never overlap the layout below it.
         explanation_div = Div(
-            text="""
-            <h3 style="margin:5px 0;">Luck Analysis Explanation</h3>
-            <p style="margin:2px;"><b>Line of Fairness (y=x):</b> Where teams should be if wins were purely skill-based</p>
-            <p style="margin:2px;"><b>Above the Line:</b> Teams with more regular wins than expected (lucky)</p>
-            <p style="margin:2px;"><b>Below the Line:</b> Teams with fewer regular wins than expected (unlucky)</p>
-            <p style="margin:2px;"><b>Median Wins:</b> Theoretical wins if you played against the weekly league median</p>
-            <p style="margin:2px;"><b>Regular Wins:</b> Actual head-to-head wins from your schedule</p>
-            <p style="margin:2px;"><b>Color Coding:</b> Green (Lucky), Blue (Fair), Orange (Unlucky), Red (Very Unlucky)</p>
-            <p style="margin:10px 0px 2px 0px; font-style: italic; color: #52607A;"><b>Note:</b> This analysis focuses on luck related to matchups and scheduling. It does not factor in injuries or other external circumstances that may affect team performance.</p>
+            text=f"""
+            <div style="{PANEL_STYLE}">
+                <h3 style="{HEADING_STYLE}">How to Read This Chart</h3>
+                <p style="{DESCRIPTION_STYLE}">
+                    The dashed line of fairness is where you'd sit if wins were purely
+                    skill-based. Above it means you've won more than your median-based record
+                    says you "should have" (lucky); below it means fewer (unlucky). Median wins
+                    are the record you'd have if you played the league's weekly median score
+                    instead of your real opponent.
+                </p>
+                <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">
+                    This only measures schedule/matchup luck - it doesn't factor in injuries or
+                    other circumstances that affect performance.
+                </p>
+            </div>
             """,
-            height=170,
             visible=False,
             sizing_mode="stretch_width",
-            max_width=900
+            max_width=900,
+            height_policy="auto",
         )
-        
+
         # Create leaderboard
-        leaderboard_html = "<h3>Luck Leaderboard</h3><table style='border-collapse: collapse; width: 100%; font-size: 12px;'>"
-        leaderboard_html += "<tr style='background-color: #E7EAF2; font-weight: bold;'>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>#</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Team</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Record</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Median Wins</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Luck Factor</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Category</th>"
+        leaderboard_html = f"<h3 style='{HEADING_STYLE}'>Luck Leaderboard</h3><table style='border-collapse: collapse; width: 100%; font-size: 13px; color: {INK};'>"
+        leaderboard_html += f"<tr style='background-color: {SURFACE_RAISED};'>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};'>#</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};'>Team</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};'>Record</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};'>Median Wins</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};'>Luck Factor</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};'>Category</th>"
         leaderboard_html += "</tr>"
-        
+
         for i, data in enumerate(luck_data):
-            row_color = "#e8f5e8" if data['luck_factor'] > 0 else "#ffeaea" if data['luck_factor'] < 0 else "#F2F4F8"
-            leaderboard_html += f"<tr style='background-color: {row_color};'>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{i+1}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px;'>{data['team_name']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{data['record_display']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{data['median_wins']}</td>"
+            luck_text_color = "#34D399" if data['luck_factor'] > 0 else "#F87171" if data['luck_factor'] < 0 else INK_MUTED
+            row_bg = SURFACE if i % 2 == 0 else "transparent"
+            leaderboard_html += f"<tr style='background-color: {row_bg};'>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};'>{i+1}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 9px 8px;'>{data['team_name']}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;'>{data['record_display']}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;'>{data['median_wins']}</td>"
             luck_sign = "+" if data['luck_factor'] > 0 else ""
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{luck_sign}{data['luck_factor']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{data['luck_category']}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {luck_text_color}; font-weight: 700;'>{luck_sign}{data['luck_factor']}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;'>{data['luck_category']}</td>"
             leaderboard_html += "</tr>"
-        
+
         leaderboard_html += "</table>"
         
         # Wrapped in the leaderboard's own HTML (not an external stylesheet) because Bokeh 3.x
@@ -1210,20 +1270,22 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         # spanning the full stacked-column width (see the row-to-column fix above), the viewport
         # width is the right proxy for "however much horizontal room this report actually has".
         leaderboard_div = Div(
-            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>',
-            height=400,
+            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;background-color:{SURFACE};border:1px solid {LINE};border-radius:16px;padding:16px 18px;box-sizing:border-box;">{leaderboard_html}</div>',
+            height_policy="auto",
             sizing_mode="stretch_width",
             max_width=450
         )
 
         # Create buttons
-        explanation_button = Button(label="Show/Hide Explanation", button_type="light", sizing_mode="stretch_width", height=44)
+        explanation_button = Button(label="How to Read This Chart", sizing_mode="stretch_width", height=44,
+                                     stylesheets=[button_stylesheet("muted")])
         explanation_button.js_on_event("button_click", CustomJS(
             args=dict(explanation=explanation_div),
             code="explanation.visible = !explanation.visible;"
         ))
 
-        reset_button = Button(label="Reset Zoom", button_type="warning", sizing_mode="stretch_width", height=44)
+        reset_button = Button(label="Reset Zoom", sizing_mode="stretch_width", height=44,
+                               stylesheets=[button_stylesheet("ghost")])
         reset_button.js_on_event("button_click", CustomJS(
             args=dict(plot=p),
             code=f"""
@@ -1276,12 +1338,15 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         from bokeh.plotting import figure, show, output_file
         from bokeh.models import ColumnDataSource, HoverTool, Div
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
-        from bokeh.palettes import Category20
         import numpy as np
+        from src.bokeh_theme import (
+            SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
+            PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE,
+        )
     except ImportError:
         print("\n⚠️  Bokeh not available - install with: pip install bokeh")
         return None
-    
+
     try:
         # Setup output file
         if output_dirs and 'html' in output_dirs:
@@ -1345,64 +1410,48 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         ranking_data.sort(key=lambda x: x['power_rating'], reverse=True)
         
         # Create main leaderboard table
-        leaderboard_html = "<h2 style='text-align: center; color: #0B162A; margin-bottom: 20px;'>🏆 Power Ranking Leaderboard</h2>"
-        leaderboard_html += "<table style='border-collapse: collapse; width: 100%; margin: 0 auto; font-family: Arial, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>"
-        
+        leaderboard_html = f"<h2 style='{HEADING_STYLE} text-align: center; font-size: 22px;'>Power Ranking Leaderboard</h2>"
+        leaderboard_html += f"<table style='border-collapse: collapse; width: 100%; margin: 0 auto; color: {INK};'>"
+
         # Header row
-        leaderboard_html += "<tr style='background: #0B162A; color: white; font-weight: bold;'>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>Rank</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: left;'>Team</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>Power Rating</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>H2H Record</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>Combined Record</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>Avg Score</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>Total Points</th>"
+        leaderboard_html += f"<tr style='background: {SURFACE_RAISED};'>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: center; color: {INK_MUTED};'>Rank</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: left; color: {INK_MUTED};'>Team</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: center; color: {INK_MUTED};'>Power Rating</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: center; color: {INK_MUTED};'>H2H Record</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: center; color: {INK_MUTED};'>Combined Record</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: center; color: {INK_MUTED};'>Avg Score</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: center; color: {INK_MUTED};'>Total Points</th>"
         leaderboard_html += "</tr>"
-        
-        # Data rows
+
+        # Data rows - gold/silver/bronze medal colors are the one exception to the dark
+        # repaint (CLAUDE.md section 10): universal medal colors, not decorative theme choices.
+        medal_colors = {0: "#FFD700", 1: "#C0C0C0", 2: "#CD7F32"}
         for i, team in enumerate(ranking_data):
-            # Color coding based on rank
-            if i == 0:
-                row_style = "background-color: #ffd700; color: #0B162A;"  # Gold for 1st
-            elif i == 1:
-                row_style = "background-color: #c0c0c0; color: #0B162A;"  # Silver for 2nd
-            elif i == 2:
-                row_style = "background-color: #cd7f32; color: white;"  # Bronze for 3rd
-            elif i < len(ranking_data) // 2:
-                row_style = "background-color: #e8f5e8; color: #0B162A;"  # Light green for top half
-            else:
-                row_style = "background-color: #ffeaea; color: #0B162A;"  # Light red for bottom half
-            
-            leaderboard_html += f"<tr style='{row_style}'>"
-            
-            # Rank with trophy emojis
-            rank_display = f"#{i+1}"
-            if i == 0:
-                rank_display = "🏆 #1"
-            elif i == 1:
-                rank_display = "🥈 #2"
-            elif i == 2:
-                rank_display = "🥉 #3"
-            
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; text-align: center; font-weight: bold;'>{rank_display}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; font-weight: bold;'>{team['team_name']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; text-align: center; font-weight: bold; font-size: 16px;'>{team['power_rating']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>{team['regular_record']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>{team['combined_record']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>{team['avg_score']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 12px; text-align: center;'>{team['total_points']}</td>"
+            row_bg = SURFACE if i % 2 == 0 else "transparent"
+            rank_color = medal_colors.get(i, ACCENT if i < len(ranking_data) // 2 else INK_MUTED)
+
+            leaderboard_html += f"<tr style='background-color: {row_bg};'>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: center; font-weight: 700; color: {rank_color};'>#{i+1}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 12px; font-weight: 700;'>{team['team_name']}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: center; font-weight: 700; font-size: 16px;'>{team['power_rating']}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: center; color: {INK_MUTED};'>{team['regular_record']}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: center; color: {INK_MUTED};'>{team['combined_record']}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: center; color: {INK_MUTED};'>{team['avg_score']}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 12px; text-align: center; color: {INK_MUTED};'>{team['total_points']}</td>"
             leaderboard_html += "</tr>"
-        
+
         leaderboard_html += "</table>"
-        
-        # Create explanation
-        explanation_html = """
-        <div style='margin-top: 30px; padding: 20px; background-color: #FCE7DC; border-radius: 8px; border-left: 4px solid #C83803;'>
-            <h3 style='margin-top: 0; color: #0B162A;'>📋 Power Rating Explanation</h3>
-            <p style='margin: 5px 0; color: #52607A;'><strong>Power Rating Formula:</strong> (Average Score × 6 + (High + Low) × 2 + (Win% × 200) × 2) ÷ 10</p>
-            <p style='margin: 5px 0; color: #52607A;'><strong>H2H Record:</strong> Head-to-head wins/losses from your actual schedule</p>
-            <p style='margin: 5px 0; color: #52607A;'><strong>Combined Record:</strong> H2H record + theoretical median record</p>
-            <p style='margin: 5px 0; color: #52607A;'><strong>Ranking Colors:</strong> 🏆 Gold (1st), 🥈 Silver (2nd), 🥉 Bronze (3rd), Green (Top Half), Red (Bottom Half)</p>
+
+        # Create explanation - larger, higher-contrast description text (explicit user request)
+        explanation_html = f"""
+        <div style='margin-top: 24px; {CALLOUT_STYLE}'>
+            <h3 style='{HEADING_STYLE}'>How Power Rating Works</h3>
+            <p style='{DESCRIPTION_STYLE}'>
+                <strong>Formula:</strong> (average score &times;6 + (high + low) &times;2 + (win% &times;200) &times;2) &divide; 10
+            </p>
+            <p style='{DESCRIPTION_STYLE}'><strong>H2H Record:</strong> head-to-head wins/losses from your actual schedule</p>
+            <p style='{DESCRIPTION_STYLE}'><strong>Combined Record:</strong> H2H record + theoretical median record</p>
         </div>
         """
         
@@ -1420,8 +1469,8 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         # and just falls back to the table's own natural (too-wide) size - confirmed by measuring
         # the actual rendered boxes. Viewport units don't have that circularity.
         main_content = Div(
-            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>' + explanation_html,
-            height=700,
+            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;background-color:{SURFACE};border:1px solid {LINE};border-radius:20px;padding:20px 22px;box-sizing:border-box;">{leaderboard_html}</div>' + explanation_html,
+            height_policy="auto",
             sizing_mode="stretch_width",
             max_width=1000
         )

@@ -7,6 +7,7 @@ Analyzes trades, waivers, and manager performance using multiple metrics
 import statistics
 import numpy as np
 import os
+from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional
 
@@ -212,17 +213,153 @@ def analyze_real_trades_only(transactions_data, team_power_data, roster_grade_da
     return trade_impacts
 
 
-def analyze_waiver_pickups(transactions_data, team_power_data, roster_grade_data, user_lookup,
-                            roster_to_manager, all_players=None, output_dirs=None, faab_ledger=None):
-    """Analyze waiver wire and free agent pickups with impact scoring.
+def _build_weekly_position_baselines(all_weekly_matchups, all_players):
+    """League-wide, position-by-position weekly scoring baseline (mean + population stdev)
+    across every rostered player's actual points that week (bench included - Sleeper's
+    players_points only ever contains players who were on somebody's roster that week). This is
+    the yardstick a waiver pickup's own points get compared against - see the waiver-scoring
+    rewrite note on analyze_waiver_pickups() below.
+    """
+    baselines = {}
+    for week, matchups in (all_weekly_matchups or {}).items():
+        points_by_position = defaultdict(list)
+        for team in matchups or []:
+            for player_id, points in (team.get('players_points') or {}).items():
+                if points is None:
+                    continue
+                position = (all_players or {}).get(player_id, {}).get('position')
+                if not position:
+                    continue
+                points_by_position[position].append(float(points))
+
+        baselines[week] = {
+            position: {
+                'mean': statistics.mean(values),
+                'stdev': statistics.pstdev(values) if len(values) > 1 else 0.0,
+                'n': len(values),
+            }
+            for position, values in points_by_position.items()
+        }
+    return baselines
+
+
+def _build_player_weekly_points(all_weekly_matchups):
+    """player_id -> {week: points actually scored that week}, flattened from every roster's
+    matchup data - main.py's weekly_top_players is trimmed to the league-wide top 25/week and
+    isn't enough here, since most waiver pickups never crack that list.
+    """
+    player_points = defaultdict(dict)
+    for week, matchups in (all_weekly_matchups or {}).items():
+        for team in matchups or []:
+            for player_id, points in (team.get('players_points') or {}).items():
+                if points is None:
+                    continue
+                player_points[player_id][week] = float(points)
+    return player_points
+
+
+def _build_drop_index(transactions_data):
+    """(roster_id, player_id) -> sorted weeks that roster gave up that player, across every
+    transaction type - a trade's own 'drops' map represents 'traded away' the same shape a
+    waiver transaction's does, so one pass over all transactions covers both. Used to find when
+    a waiver pickup's rostered window ends.
+    """
+    drop_weeks = defaultdict(list)
+    for week_key, transactions in (transactions_data or {}).items():
+        week_num = _parse_week_num(week_key)
+        if week_num is None:
+            continue
+        for transaction in transactions or []:
+            if not transaction or not isinstance(transaction, dict):
+                continue
+            if transaction.get('status') not in (None, 'complete'):
+                continue
+            for player_id, roster_id in (transaction.get('drops') or {}).items():
+                drop_weeks[(roster_id, player_id)].append(week_num)
+
+    for key in drop_weeks:
+        drop_weeks[key].sort()
+    return drop_weeks
+
+
+def _rostered_window_end(drop_index, roster_id, player_id, add_week, last_week):
+    """Last week this roster still had this player, starting from add_week: the week before
+    their next drop of this exact player, or the last analyzed week if they never gave them up.
+    """
+    future_drops = [w for w in drop_index.get((roster_id, player_id), []) if w >= add_week]
+    if not future_drops:
+        return last_week
+    return max(add_week, future_drops[0] - 1)
+
+
+def calculate_pickup_points_impact(player_ids, roster_id, add_week, last_week,
+                                    player_weekly_points, position_baselines,
+                                    drop_index, all_players):
+    """Score a waiver/FA pickup by the points the added player(s) actually scored while
+    rostered, position-adjusted against the league-wide weekly average at that position (see
+    CLAUDE.md's waiver-scoring rewrite: this replaces a team-wide power/grade delta, which
+    measured bye weeks, injuries, and ordinary variance instead of the pickup itself, and
+    couldn't distinguish a league-winning stash from a bench-warmer added the same week).
+
+    For each week the player was rostered (from the pickup through the week before their next
+    drop, or the end of the analyzed season), their points that week become a z-score against
+    every rostered player at that position league-wide that same week. The pickup's score is
+    the average of those z-scores: how many standard deviations above/below a typical rostered
+    player at that position this pickup performed, per week they were held. A transaction with
+    multiple simultaneous adds gets one score averaged across all of them, matching the
+    one-entry-per-transaction design (CLAUDE.md section 4.4).
+    """
+    z_scores = []
+    total_points = 0.0
+    weeks_scored = 0
+
+    for player_id in player_ids:
+        position = (all_players or {}).get(player_id, {}).get('position')
+        end_week = _rostered_window_end(drop_index, roster_id, player_id, add_week, last_week)
+
+        for week in range(add_week, end_week + 1):
+            points = player_weekly_points.get(player_id, {}).get(week)
+            if points is None:
+                continue  # bye week, inactive, or game data not yet available
+            baseline = (position_baselines.get(week) or {}).get(position)
+            if not baseline or baseline['n'] < 2:
+                continue  # too few rostered players at this position that week to compare against
+
+            mean, stdev = baseline['mean'], baseline['stdev']
+            z_scores.append((points - mean) / stdev if stdev > 0 else 0.0)
+            total_points += points
+            weeks_scored += 1
+
+    position_adjusted_score = round(sum(z_scores) / len(z_scores), 3) if z_scores else 0.0
+    return {
+        'combined_impact': position_adjusted_score,
+        'weeks_rostered_scored': weeks_scored,
+        'total_points_while_rostered': round(total_points, 1),
+    }
+
+
+def analyze_waiver_pickups(transactions_data, user_lookup, roster_to_manager,
+                            all_weekly_matchups, all_players=None, output_dirs=None, faab_ledger=None):
+    """Analyze waiver wire and free agent pickups with position-adjusted points impact scoring.
 
     One entry per (transaction, roster) - not per added player. The old version created a
     separate entry per player added within a single transaction, each carrying the *same*
     team-level power/grade impact, which double- (or triple-) counted that manager's weekly
     impact and 'total moves' whenever they batched multiple simultaneous adds into one waiver
-    run (see CLAUDE.md section 4.4).
+    run (see CLAUDE.md section 4.4). combined_impact now comes from
+    calculate_pickup_points_impact() - the added player(s)' own actual performance while
+    rostered, not a team-wide delta.
     """
     print("\nAnalyzing Waiver Wire & Free Agent Impacts...")
+
+    if not all_weekly_matchups:
+        print("     No weekly matchup data available - skipping waiver impact scoring")
+        return []
+
+    last_week = max(all_weekly_matchups.keys())
+    position_baselines = _build_weekly_position_baselines(all_weekly_matchups, all_players)
+    player_weekly_points = _build_player_weekly_points(all_weekly_matchups)
+    drop_index = _build_drop_index(transactions_data)
 
     waiver_impacts = []
 
@@ -260,14 +397,17 @@ def analyze_waiver_pickups(transactions_data, team_power_data, roster_grade_data
                     continue
 
                 manager_name = user_lookup[manager_id].get('display_name', f'Manager {manager_id}')
-                players_added = [get_player_name_from_id(pid, all_players) for pid, rid in adds.items() if rid == roster_id]
+                player_ids_added = [pid for pid, rid in adds.items() if rid == roster_id]
+                players_added = [get_player_name_from_id(pid, all_players) for pid in player_ids_added]
                 players_dropped = [get_player_name_from_id(pid, all_players) for pid, rid in drops.items() if rid == roster_id]
 
                 if not players_added:
                     continue
 
-                power_impact = calculate_manager_power_impact(manager_id, week_num, team_power_data)
-                grade_impact = calculate_manager_grade_impact(manager_id, week_num, roster_grade_data)
+                impact = calculate_pickup_points_impact(
+                    player_ids_added, roster_id, week_num, last_week,
+                    player_weekly_points, position_baselines, drop_index, all_players,
+                )
                 faab_event = _find_faab_event(faab_ledger, transaction.get('transaction_id'), roster_id)
 
                 waiver_impacts.append({
@@ -279,39 +419,13 @@ def analyze_waiver_pickups(transactions_data, team_power_data, roster_grade_data
                     'players_dropped': players_dropped or ['None (roster space)'],
                     'player_added': ', '.join(players_added),
                     'player_dropped': ', '.join(players_dropped) if players_dropped else 'None (roster space)',
-                    'power_impact': power_impact,
-                    'grade_impact': grade_impact,
-                    'combined_impact': power_impact + grade_impact,
                     'transaction_type': transaction_type,
+                    **impact,
                     **_faab_fields(faab_event),
                 })
 
     print(f"     Analyzed {len(waiver_impacts)} waiver/FA transactions")
     return waiver_impacts
-
-
-def calculate_manager_power_impact(manager_id, week_num, team_power_data, window_size=3):
-    """Calculate power rating impact for a manager around a specific week (legacy function for waivers)"""
-    if manager_id not in team_power_data:
-        return 0.0
-    
-    power_data = team_power_data[manager_id]['weekly_power_ratings']
-    
-    # Get before and after windows
-    before_weeks = [w for w in power_data.keys() if w < week_num]
-    after_weeks = [w for w in power_data.keys() if w > week_num]
-    
-    if len(before_weeks) < 2 or len(after_weeks) < 2:
-        return 0.0
-    
-    # Calculate averages
-    recent_before = sorted(before_weeks)[-min(window_size, len(before_weeks)):]
-    recent_after = sorted(after_weeks)[:min(window_size, len(after_weeks))]
-    
-    before_avg = statistics.mean([power_data[w] for w in recent_before])
-    after_avg = statistics.mean([power_data[w] for w in recent_after])
-    
-    return after_avg - before_avg
 
 
 def calculate_improved_trade_impact(manager_id, trade_week, team_power_data, roster_grade_data, matchup_data=None):
@@ -386,30 +500,6 @@ def calculate_improved_trade_impact(manager_id, trade_week, team_power_data, ros
     }
 
 
-def calculate_manager_grade_impact(manager_id, week_num, roster_grade_data, window_size=2):
-    """Calculate roster grade impact for a manager around a specific week"""
-    if manager_id not in roster_grade_data:
-        return 0.0
-    
-    grade_data = roster_grade_data[manager_id]['weekly_roster_grades']
-    
-    # Get before and after windows
-    before_weeks = [w for w in grade_data.keys() if w < week_num]
-    after_weeks = [w for w in grade_data.keys() if w > week_num]
-    
-    if len(before_weeks) < 1 or len(after_weeks) < 1:
-        return 0.0
-    
-    # Calculate averages
-    recent_before = sorted(before_weeks)[-min(window_size, len(before_weeks)):]
-    recent_after = sorted(after_weeks)[:min(window_size, len(after_weeks))]
-    
-    before_avg = statistics.mean([grade_data[w] for w in recent_before])
-    after_avg = statistics.mean([grade_data[w] for w in recent_after])
-    
-    return after_avg - before_avg
-
-
 def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup, matchup_data=None):
     """Calculate comprehensive manager grades based on trades, waivers, and lineup decisions"""
     print("\nCalculating Manager Performance Grades...")
@@ -465,8 +555,10 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
     for impact in waiver_impacts:
         manager_id = impact['manager_id']
         if manager_id in manager_grades:
-            # Good pickups = positive combined impact, scale to 0-10
-            waiver_score = max(0, min(10, 5 + impact['combined_impact'] / 3))
+            # combined_impact is now a position-adjusted z-score (typically roughly -2.5..+2.5,
+            # not the old team-delta's tens-scale), so it's a multiplier here, not a divisor:
+            # +1 std dev above a typical rostered player at that position swings the grade by 2.5.
+            waiver_score = max(0, min(10, 5 + impact['combined_impact'] * 2.5))
             if manager_id not in waiver_scores:
                 waiver_scores[manager_id] = []
             waiver_scores[manager_id].append(waiver_score)
@@ -609,12 +701,16 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     """Create enhanced trade visualization with clean data, leaderboard, and detailed explanations"""
     try:
         from bokeh.plotting import figure, show, output_file
-        from bokeh.models import (ColumnDataSource, HoverTool, Legend, LegendItem, 
+        from bokeh.models import (ColumnDataSource, HoverTool, Legend, LegendItem,
                                 Button, CustomJS, Div)
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
-        from bokeh.palettes import Category20
         from sklearn.linear_model import LinearRegression
         import numpy as np
+        from src.bokeh_theme import (
+            style_figure, style_legend, button_stylesheet, dark_palette,
+            SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
+            PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
+        )
     except ImportError:
         print("\n⚠️  Bokeh and/or sklearn not available for trade visualization")
         return
@@ -694,11 +790,11 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         manager_data[manager]['trade_ids'].append(trade['trade_id'])
         manager_data[manager]['faab_notes'].append(trade.get('faab_note', 'No FAAB'))
     
-    # Color mapping with legend
+    # Color mapping with legend (dark-optimized palette - see src/bokeh_theme.py)
     unique_managers = sorted(all_managers)
-    colors_palette = Category20[max(3, min(20, len(unique_managers)))]
+    colors_palette = dark_palette(len(unique_managers))
     color_map = {manager: colors_palette[i % len(colors_palette)] for i, manager in enumerate(unique_managers)}
-    
+
     # Create leaderboard of worst trades. There is exactly one impact formula in this codebase
     # now (CLAUDE.md section 4.1): combined_impact = net player value acquired vs. given up.
     # The old version ranked this leaderboard by a *different* ad hoc formula than the one
@@ -864,76 +960,78 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         x_range=(0.5, 15.5),
         y_range=(-30, 45)
     )
+    style_figure(p)
     
     # Add zero reference line
-    p.line([0.5, 15.5], [0, 0], line_color='black', line_width=1, line_dash='dashed', alpha=0.5)
-    
+    p.line([0.5, 15.5], [0, 0], line_color=LINE, line_width=1, line_dash='dashed', alpha=0.8)
+
     # Create collapsible explanation panel
-    explanation_text = """
-    <h3 style="margin:10px 0 5px 0;">📊 Trade Impact Analysis Methodology</h3>
-    <div style="background-color: #F2F4F8; padding: 15px; border-radius: 5px; margin: 5px 0;">
-        <h4 style="margin: 0 0 10px 0; color: #0B162A;">🔍 Data Collection & Processing</h4>
-        <p style="margin: 3px 0;"><strong>Trade Detection:</strong> Real fantasy football trades identified from league transaction data</p>
-        <p style="margin: 3px 0;"><strong>Individual Transactions:</strong> Each trade shown as separate data point (no aggregation)</p>
-        <p style="margin: 3px 0;"><strong>Multi-Manager Trades:</strong> Complex trades broken down by individual manager perspective</p>
-        <p style="margin: 3px 0;"><strong>Time Analysis:</strong> Before/after trade performance comparison with 2-week windows</p>
-        
-        <h4 style="margin: 15px 0 10px 0; color: #0B162A;">📈 Impact Calculation Formula</h4>
-        <p style="margin: 3px 0;"><strong>Combined Impact (the plotted score):</strong> Net player value = value of players acquired minus value of players given up, each player graded on ESPN's season stat-leader tiers (~1-10 scale)</p>
-        <p style="margin: 3px 0;"><strong>Team Trend (context only, shown on hover):</strong> This manager's weekly power rating / roster grade change from the week before the trade to the week of the trade - correlation, not the trade's cause</p>
-        <p style="margin: 3px 0;"><strong>FAAB:</strong> Shown on hover when the trade also included a FAAB budget transfer</p>
-        
-        <h4 style="margin: 15px 0 10px 0; color: #0B162A;">🎯 Impact Scale & Interpretation</h4>
-        <p style="margin: 3px 0;"><strong>Excellent Trade (+15+):</strong> Significantly improved team strength and performance</p>
-        <p style="margin: 3px 0;"><strong>Good Trade (+5 to +15):</strong> Solid improvement with positive team impact</p>
-        <p style="margin: 3px 0;"><strong>Neutral Trade (-5 to +5):</strong> Minimal impact, roughly equal value exchange</p>
-        <p style="margin: 3px 0;"><strong>Poor Trade (-5 to -15):</strong> Negative impact, team likely weakened</p>
-        <p style="margin: 3px 0;"><strong>Terrible Trade (-15+):</strong> Significant team damage, very poor value</p>
-        
-        <h4 style="margin: 15px 0 10px 0; color: #0B162A;">🔧 Technical Features</h4>
-        <p style="margin: 3px 0;"><strong>Hover Details:</strong> Teams involved, players exchanged, impact breakdown</p>
-        <p style="margin: 3px 0;"><strong>Color Legend:</strong> Each manager assigned unique color for easy identification</p>
-        <p style="margin: 3px 0;"><strong>Jitter Positioning:</strong> Overlapping trades separated slightly for visibility</p>
-        <p style="margin: 3px 0;"><strong>Worst Trades Report:</strong> Text file generated with detailed analysis of poor trades</p>
+    explanation_text = f"""
+    <div style="{PANEL_STYLE}">
+        <h3 style="{HEADING_STYLE}">Trade Impact Analysis Methodology</h3>
+        <h4 style="{HEADING_STYLE}font-size:15px;">Data Collection &amp; Processing</h4>
+        <p style="{LABEL_STYLE}"><strong>Trade Detection:</strong> Real fantasy football trades identified from league transaction data</p>
+        <p style="{LABEL_STYLE}"><strong>Individual Transactions:</strong> Each trade shown as separate data point (no aggregation)</p>
+        <p style="{LABEL_STYLE}"><strong>Multi-Manager Trades:</strong> Complex trades broken down by individual manager perspective</p>
+        <p style="{LABEL_STYLE}"><strong>Time Analysis:</strong> Before/after trade performance comparison with 2-week windows</p>
+
+        <h4 style="{HEADING_STYLE}font-size:15px;margin-top:15px;">Impact Calculation Formula</h4>
+        <p style="{LABEL_STYLE}"><strong>Combined Impact (the plotted score):</strong> Net player value = value of players acquired minus value of players given up, each player graded on ESPN's season stat-leader tiers (~1-10 scale)</p>
+        <p style="{LABEL_STYLE}"><strong>Team Trend (context only, shown on hover):</strong> This manager's weekly power rating / roster grade change from the week before the trade to the week of the trade - correlation, not the trade's cause</p>
+        <p style="{LABEL_STYLE}"><strong>FAAB:</strong> Shown on hover when the trade also included a FAAB budget transfer</p>
+
+        <h4 style="{HEADING_STYLE}font-size:15px;margin-top:15px;">Impact Scale &amp; Interpretation</h4>
+        <p style="{LABEL_STYLE}"><strong>Excellent Trade (+15+):</strong> Significantly improved team strength and performance</p>
+        <p style="{LABEL_STYLE}"><strong>Good Trade (+5 to +15):</strong> Solid improvement with positive team impact</p>
+        <p style="{LABEL_STYLE}"><strong>Neutral Trade (-5 to +5):</strong> Minimal impact, roughly equal value exchange</p>
+        <p style="{LABEL_STYLE}"><strong>Poor Trade (-5 to -15):</strong> Negative impact, team likely weakened</p>
+        <p style="{LABEL_STYLE}"><strong>Terrible Trade (-15+):</strong> Significant team damage, very poor value</p>
+
+        <h4 style="{HEADING_STYLE}font-size:15px;margin-top:15px;">Technical Features</h4>
+        <p style="{LABEL_STYLE}"><strong>Hover Details:</strong> Teams involved, players exchanged, impact breakdown</p>
+        <p style="{LABEL_STYLE}"><strong>Color Legend:</strong> Each manager assigned unique color for easy identification</p>
+        <p style="{LABEL_STYLE}"><strong>Jitter Positioning:</strong> Overlapping trades separated slightly for visibility</p>
+        <p style="{LABEL_STYLE}"><strong>Worst Trades Report:</strong> Text file generated with detailed analysis of poor trades</p>
     </div>
     """
-    
+
     explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1200, height=0, visible=False)
-    
+
     # Create leaderboard
-    leaderboard_html = """
-    <h3 style="margin:10px 0 5px 0;">🏆 Trade Performance Leaderboard</h3>
-    <table style="border-collapse: collapse; width: 100%; font-size: 12px; margin: 5px 0;">
-    <tr style="background-color: #E7EAF2; font-weight: bold;">
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">#</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px;">Manager</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Avg Impact</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Total Gain</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Total Trades</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Success Rate</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Trend</th>
+    leaderboard_html = f"""
+    <h3 style="{HEADING_STYLE}">Trade Performance Leaderboard</h3>
+    <table style="border-collapse: collapse; width: 100%; font-size: 13px; margin: 5px 0; color: {INK};">
+    <tr style="background-color: {SURFACE_RAISED};">
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">#</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Manager</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Avg Impact</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Gain</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Trades</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Success Rate</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Trend</th>
     </tr>
     """
-    
+
     for row in leaderboard_data:
         rank = int(row[0])
-        color = "#e8f5e8" if rank <= 3 else "#fff5e6" if rank <= 6 else "#ffeaea"
+        row_bg = SURFACE if rank % 2 == 0 else "transparent"
+        rank_color = ACCENT if rank <= 3 else INK
         leaderboard_html += f"""
-        <tr style="background-color: {color};">
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[0]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px;">{row[1]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[2]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[3]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[4]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[5]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[6]}</td>
+        <tr style="background-color: {row_bg};">
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; font-weight: 700; color: {rank_color};">{row[0]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[1]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[2]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[3]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[4]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[5]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[6]}</td>
         </tr>"""
-    
-    leaderboard_html += """
+
+    leaderboard_html += f"""
     </table>
-    <div style="margin-top: 10px; font-size: 11px; color: #52607A;">
-        <strong>Legend:</strong> Avg Impact = Average net effect per trade | Total Gain = Sum of all trade impacts | 
-        Success Rate = % of trades with positive impact | Trend = Overall performance direction
+    <div style="margin-top: 10px; font-size: 12px; color: {INK_MUTED};">
+        <strong>Legend:</strong> Avg Impact = average net effect per trade &middot; Total Gain = sum of all trade impacts &middot;
+        Success Rate = % of trades with positive impact &middot; Trend = overall performance direction
     </div>
     """
     # Wrapped in the leaderboard's own HTML (not an external stylesheet) because Bokeh 3.x
@@ -947,35 +1045,36 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     # spanning the full stacked-column width (see the row-to-column fix above), the viewport
     # width is the right proxy for "however much horizontal room this report actually has".
     leaderboard_div = Div(
-        text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>',
-        sizing_mode="stretch_width", max_width=600, height=300
+        text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;background-color:{SURFACE};border:1px solid {LINE};border-radius:16px;padding:16px 18px;box-sizing:border-box;">{leaderboard_html}</div>',
+        sizing_mode="stretch_width", max_width=600, height_policy="auto"
     )
-    
-    # Create calculation explanation panel (always visible)
-    calc_explanation_html = """
-    <h3 style="margin:10px 0 5px 0;">📋 How Trade Impact Is Calculated</h3>
-    <div style="background-color: #FCE7DC; padding: 12px; border-radius: 5px; margin: 5px 0; border-left: 4px solid #C83803;">
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 1:</strong> Grade every player acquired and every player given up (ESPN season stat-leader tiers, ~1-10 scale)</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 2:</strong> Value Acquired = sum of acquired players' grades</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 3:</strong> Value Given Up = sum of given-up players' grades</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 4:</strong> Combined Impact = Value Acquired - Value Given Up</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Context only:</strong> Team Trend (hover) compares this manager's power rating/roster grade the week before vs. the week of the trade - it is not part of the score</p>
-        <p style="margin: 8px 0 5px 0; font-size: 12px; color: #52607A;"><em>Positive values mean the manager received more value than they gave up; negative values mean the opposite</em></p>
+
+    # Create calculation explanation panel (always visible - larger, higher-contrast
+    # description text sits at the top of the page, explicit user request)
+    calc_explanation_html = f"""
+    <h3 style="{HEADING_STYLE}">How Trade Impact Is Calculated</h3>
+    <div style="{CALLOUT_STYLE}">
+        <p style="{DESCRIPTION_STYLE}"><strong>Step 1:</strong> Grade every player acquired and every player given up (ESPN season stat-leader tiers, ~1-10 scale)</p>
+        <p style="{DESCRIPTION_STYLE}"><strong>Step 2:</strong> Value Acquired = sum of acquired players' grades</p>
+        <p style="{DESCRIPTION_STYLE}"><strong>Step 3:</strong> Value Given Up = sum of given-up players' grades</p>
+        <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Combined Impact = Value Acquired - Value Given Up</p>
+        <p style="{DESCRIPTION_STYLE}"><strong>Context only:</strong> Team Trend (hover) compares this manager's power rating/roster grade the week before vs. the week of the trade - it is not part of the score</p>
+        <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">Positive values mean the manager received more value than they gave up; negative values mean the opposite</p>
     </div>
     """
-    calc_explanation_div = Div(text=calc_explanation_html, sizing_mode="stretch_width", max_width=1200, height=120)
-    
+    calc_explanation_div = Div(text=calc_explanation_html, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
+
     # Create data sources and renderers for each manager
     data_legend_items = []
     data_renderers = []
-    
+
     for manager in unique_managers:
         if manager not in manager_data:
             continue
-            
+
         data = manager_data[manager]
         color = color_map[manager]
-        
+
         # Create data source for this manager
         source = ColumnDataSource(data={
             'week': data['weeks'],
@@ -989,7 +1088,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
             'trade_id': data['trade_ids'],
             'faab_note': data['faab_notes'],
         })
-        
+
         # Add scatter plot
         scatter = p.scatter(
             x='week', y='combined_impact',
@@ -1000,17 +1099,20 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
             line_color='white',
             line_width=1
         )
-        
+
         data_renderers.append(scatter)
         data_legend_items.append(LegendItem(label=f"{manager} ({len(data['weeks'])} trades)", renderers=[scatter]))
-    
-    # Add interactive legend
-    data_legend = Legend(items=data_legend_items, location="top_right", 
+
+    # Legend renders *inside* the plot frame (not as an outside 'right' panel) - a side panel
+    # adds its own fixed pixel width alongside the frame, which sizing_mode="stretch_width"
+    # can't compensate for, pushing the whole figure wider than a phone viewport.
+    data_legend = Legend(items=data_legend_items, location="top_left",
                         title="Manager Trade History", click_policy="hide")
     data_legend.title_text_font_size = "11pt"
     data_legend.label_text_font_size = "10pt"
-    p.add_layout(data_legend, 'right')
-    
+    style_legend(data_legend)
+    p.add_layout(data_legend)
+
     # Clean hover tool - simplified
     hover = HoverTool(tooltips=[
         ("Manager", "@manager"),
@@ -1026,7 +1128,8 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     p.add_tools(hover)
     
     # Create control buttons
-    toggle_data_button = Button(label="Toggle All Data", button_type="success", sizing_mode="stretch_width", height=44)
+    toggle_data_button = Button(label="Toggle All Data", sizing_mode="stretch_width", height=44,
+                                 stylesheets=[button_stylesheet("primary")])
     toggle_data_button.js_on_event("button_click", CustomJS(args=dict(renderers=data_renderers), code="""
         let any_visible = false;
         for (let i = 0; i < renderers.length; i++) {
@@ -1035,51 +1138,58 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
                 break;
             }
         }
-        
+
         for (let i = 0; i < renderers.length; i++) {
             renderers[i].visible = !any_visible;
         }
-        
+
         cb_obj.label = any_visible ? "Show All Data" : "Hide All Data";
     """))
-    
-    show_explanation_button = Button(label="Show Calculation Details", button_type="warning", sizing_mode="stretch_width", height=44)
+
+    show_explanation_button = Button(label="Show Calculation Details", sizing_mode="stretch_width", height=44,
+                                      stylesheets=[button_stylesheet("muted")])
     show_explanation_button.js_on_event("button_click", CustomJS(args=dict(explanation_div=explanation_div), code="""
         explanation_div.visible = !explanation_div.visible;
         if (explanation_div.visible) {
-            explanation_div.height = 500;
+            explanation_div.height = 900;
             cb_obj.label = "Hide Calculation Details";
-            cb_obj.button_type = "success";
         } else {
             explanation_div.height = 0;
             cb_obj.label = "Show Calculation Details";
-            cb_obj.button_type = "warning";
         }
     """))
-    
-    reset_button = Button(label="Reset Zoom", button_type="danger", sizing_mode="stretch_width", height=44)
+
+    reset_button = Button(label="Reset Zoom", sizing_mode="stretch_width", height=44,
+                           stylesheets=[button_stylesheet("ghost")])
     reset_button.js_on_event("button_click", CustomJS(args=dict(plot=p), code="""
         plot.x_range.start = 0.5;
         plot.x_range.end = 15.5;
         plot.y_range.start = -30;
         plot.y_range.end = 45;
     """))
-    
+
     # Create layout
     # Chart and leaderboard stack vertically instead of sitting side by side - see
     # src/bokeh_mobile.py's module docstring for why this is done unconditionally in Python
     # rather than via a CSS media query targeting Bokeh's (version-fragile) internal layout
     # classes.
     main_content = bokeh_column(leaderboard_div, p, sizing_mode="stretch_width")
-    button_row = bokeh_row(toggle_data_button, show_explanation_button, reset_button, sizing_mode="stretch_width")
-    
-    # Add spacing between explanation and leaderboard
-    spacer_div = Div(text="<div style='height: 50px;'></div>", sizing_mode="stretch_width", max_width=1200, height=50)
-    layout = bokeh_column(calc_explanation_div, spacer_div, explanation_div, main_content, button_row, sizing_mode="stretch_width")
-    
-    # Style the plot
-    p.grid.grid_line_alpha = 0.3
-    p.title.text_font_size = "14pt"
+    # Bokeh's row() has no flex-wrap - 3 buttons in one stretch_width row overlap rather than
+    # wrap on a narrow phone screen (confirmed by rendering and screenshotting at 375px), so
+    # this grids them 2-per-row instead, the same "stack unconditionally" philosophy already
+    # used for chart-vs-leaderboard layout (see src/bokeh_mobile.py).
+    button_row = bokeh_column(
+        bokeh_row(toggle_data_button, show_explanation_button, sizing_mode="stretch_width"),
+        bokeh_row(reset_button, sizing_mode="stretch_width"),
+        sizing_mode="stretch_width",
+    )
+
+    # Description first, then the relocated buttons, then the data - explicit user request to
+    # move the built-in controls instead of leaving them buried at the very bottom of the page.
+    layout = bokeh_column(calc_explanation_div, button_row, explanation_div, main_content, sizing_mode="stretch_width")
+
+    # Style the plot title (grid/axis colors already set by style_figure())
+    p.title.text_font_size = "15pt"
     p.title.align = "center"
     
     show(layout)
@@ -1094,11 +1204,15 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     """Create enhanced waiver wire analysis visualization with individual transactions and leaderboard"""
     try:
         from bokeh.plotting import figure, show, output_file
-        from bokeh.models import (ColumnDataSource, HoverTool, Legend, LegendItem, 
+        from bokeh.models import (ColumnDataSource, HoverTool, Legend, LegendItem,
                                 Button, CustomJS, Div)
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
-        from bokeh.palettes import Category20
         import numpy as np
+        from src.bokeh_theme import (
+            style_figure, style_legend, button_stylesheet, dark_palette,
+            SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
+            PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
+        )
     except ImportError:
         print("\n⚠️  Bokeh not available for waiver visualization")
         return
@@ -1123,8 +1237,8 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             'waiver_id': waiver_id,
             'manager_name': impact['manager_name'],
             'week': impact['week'],
-            'power_impact': impact['power_impact'],
-            'grade_impact': impact['grade_impact'],
+            'weeks_rostered': impact.get('weeks_rostered_scored', 0),
+            'total_points': impact.get('total_points_while_rostered', 0.0),
             'combined_impact': impact['combined_impact'],
             'player_added': impact.get('player_added', 'Unknown'),
             'player_dropped': impact.get('player_dropped', 'None'),
@@ -1145,8 +1259,8 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         if manager not in manager_data:
             manager_data[manager] = {
                 'weeks': [],
-                'power_impacts': [],
-                'grade_impacts': [],
+                'weeks_rostered': [],
+                'total_points': [],
                 'combined_impacts': [],
                 'players_added': [],
                 'players_dropped': [],
@@ -1159,8 +1273,8 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         week_jitter = waiver['week'] + np.random.uniform(-0.15, 0.15)
 
         manager_data[manager]['weeks'].append(week_jitter)
-        manager_data[manager]['power_impacts'].append(waiver['power_impact'])
-        manager_data[manager]['grade_impacts'].append(waiver['grade_impact'])
+        manager_data[manager]['weeks_rostered'].append(waiver['weeks_rostered'])
+        manager_data[manager]['total_points'].append(waiver['total_points'])
         manager_data[manager]['combined_impacts'].append(waiver['combined_impact'])
         manager_data[manager]['players_added'].append(waiver['player_added'])
         manager_data[manager]['players_dropped'].append(waiver['player_dropped'])
@@ -1171,11 +1285,11 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             if waiver.get('faab_spent') else 'No FAAB / not a FAAB league'
         )
     
-    # Color mapping with legend
+    # Color mapping with legend (dark-optimized palette - see src/bokeh_theme.py)
     unique_managers = sorted(all_managers)
-    colors_palette = Category20[max(3, min(20, len(unique_managers)))]
+    colors_palette = dark_palette(len(unique_managers))
     color_map = {manager: colors_palette[i % len(colors_palette)] for i, manager in enumerate(unique_managers)}
-    
+
     # Calculate leaderboard statistics
     manager_stats = {}
     for waiver in individual_waivers:
@@ -1223,6 +1337,9 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             str(stats['total_waivers']),
             f"{success_rate:.1f}%",
             stats['best_pickup'] or 'None',
+            # avg_impact is a position-adjusted z-score now, so +-1 here is a literal +-1
+            # standard deviation from the position's weekly average - still a sensible
+            # "clearly above/below average" cutoff for the trend arrow.
             "📈" if avg_impact > 1 else "📉" if avg_impact < -1 else "➡️",
             f"${stats['total_faab_spent']:.0f}",
             f"{faab_efficiency:+.2f}" if stats['total_faab_spent'] > 0 else "-",
@@ -1239,90 +1356,92 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         height=700,
         sizing_mode="stretch_width",
         title="Waiver Wire & Free Agent Analysis: Individual Transaction Impact",
-        x_axis_label="Week", 
-        y_axis_label="Combined Impact Score",
+        x_axis_label="Week",
+        y_axis_label="Position-Adjusted Score (std. deviations vs. position average)",
         tools="pan,wheel_zoom,box_zoom,reset,save",
         x_range=(0.5, 15.5),
-        y_range=(-20, 25)
+        y_range=(-4, 4)
     )
-    
+    style_figure(p)
+
     # Add zero reference line
-    p.line([0.5, 15.5], [0, 0], line_color='black', line_width=1, line_dash='dashed', alpha=0.5)
+    p.line([0.5, 15.5], [0, 0], line_color=LINE, line_width=1, line_dash='dashed', alpha=0.8)
     
     # Create collapsible explanation panel
-    explanation_text = """
-    <h3 style="margin:10px 0 5px 0;">📊 Waiver Wire Impact Analysis Methodology</h3>
-    <div style="background-color: #F2F4F8; padding: 15px; border-radius: 5px; margin: 5px 0;">
-        <h4 style="margin: 0 0 10px 0; color: #0B162A;">🔍 Data Collection & Processing</h4>
-        <p style="margin: 3px 0;"><strong>Transaction Detection:</strong> All waiver claims and free agent pickups identified</p>
-        <p style="margin: 3px 0;"><strong>Individual Transactions:</strong> Each pickup/drop shown as separate data point</p>
-        <p style="margin: 3px 0;"><strong>Transaction Types:</strong> Waiver claims, free agent pickups, and drops tracked</p>
-        <p style="margin: 3px 0;"><strong>Time Analysis:</strong> Before/after pickup performance comparison with 2-week windows</p>
-        
-        <h4 style="margin: 15px 0 10px 0; color: #0B162A;">📈 Impact Calculation Formula</h4>
-        <p style="margin: 3px 0;"><strong>Power Rating Impact:</strong> Change in weekly power score after pickup</p>
-        <p style="margin: 3px 0;"><strong>Roster Grade Impact:</strong> Change in roster talent evaluation after pickup</p>
-        <p style="margin: 3px 0;"><strong>Combined Score:</strong> Power Impact + Roster Impact (equal weighting)</p>
-        <p style="margin: 3px 0;"><strong>Baseline Comparison:</strong> 2 weeks before pickup vs 2 weeks after pickup</p>
-        
-        <h4 style="margin: 15px 0 10px 0; color: #0B162A;">🎯 Impact Scale & Interpretation</h4>
-        <p style="margin: 3px 0;"><strong>Excellent Pickup (+10+):</strong> Significantly improved team strength</p>
-        <p style="margin: 3px 0;"><strong>Good Pickup (+3 to +10):</strong> Solid improvement with positive impact</p>
-        <p style="margin: 3px 0;"><strong>Neutral Pickup (-3 to +3):</strong> Minimal impact, depth/bye week move</p>
-        <p style="margin: 3px 0;"><strong>Poor Pickup (-3 to -10):</strong> Negative impact, wasted claim/spot</p>
-        <p style="margin: 3px 0;"><strong>Terrible Pickup (-10+):</strong> Significant team damage, very poor decision</p>
-        
-        <h4 style="margin: 15px 0 10px 0; color: #0B162A;">🔧 Technical Features</h4>
-        <p style="margin: 3px 0;"><strong>Hover Details:</strong> Manager, players involved, impact breakdown</p>
-        <p style="margin: 3px 0;"><strong>Color Legend:</strong> Each manager assigned unique color</p>
-        <p style="margin: 3px 0;"><strong>Transaction Separation:</strong> Overlapping pickups separated for visibility</p>
-        <p style="margin: 3px 0;"><strong>Best Pickups Tracking:</strong> Leaderboard shows top waiver wire successes</p>
+    explanation_text = f"""
+    <div style="{PANEL_STYLE}">
+        <h3 style="{HEADING_STYLE}">Waiver Wire Impact Analysis Methodology</h3>
+        <h4 style="{HEADING_STYLE}font-size:15px;">Data Collection &amp; Processing</h4>
+        <p style="{LABEL_STYLE}"><strong>Transaction Detection:</strong> All waiver claims and free agent pickups identified</p>
+        <p style="{LABEL_STYLE}"><strong>Individual Transactions:</strong> Each transaction (all players it added) shown as one data point, not one per player</p>
+        <p style="{LABEL_STYLE}"><strong>Transaction Types:</strong> Waiver claims and free agent pickups tracked (trades are scored separately)</p>
+        <p style="{LABEL_STYLE}"><strong>Rostered Window:</strong> The pickup's actual fantasy points are tracked from the week they were added through the week before you dropped them (or traded them away), or the end of the analyzed season if you never gave them up</p>
+
+        <h4 style="{HEADING_STYLE}font-size:15px;margin-top:15px;">Impact Calculation Formula</h4>
+        <p style="{LABEL_STYLE}"><strong>Position Baseline:</strong> Every rostered player's actual points at a given position, league-wide, for a given week</p>
+        <p style="{LABEL_STYLE}"><strong>Weekly Score:</strong> The pickup's points that week, expressed as a z-score (standard deviations) against that week's position baseline</p>
+        <p style="{LABEL_STYLE}"><strong>Position-Adjusted Score:</strong> The average of those weekly z-scores across every week you had them rostered</p>
+        <p style="{LABEL_STYLE}"><strong>Why position-adjusted:</strong> A QB and a TE score on very different raw-point scales - z-scores make a great TE pickup comparable to a great RB pickup</p>
+
+        <h4 style="{HEADING_STYLE}font-size:15px;margin-top:15px;">Impact Scale &amp; Interpretation</h4>
+        <p style="{LABEL_STYLE}"><strong>Elite Pickup (+1.5 or higher):</strong> Consistently well above the average rostered player at their position</p>
+        <p style="{LABEL_STYLE}"><strong>Good Pickup (+0.5 to +1.5):</strong> Solidly above average while rostered</p>
+        <p style="{LABEL_STYLE}"><strong>Neutral Pickup (-0.5 to +0.5):</strong> Performed like a typical rostered player at that position</p>
+        <p style="{LABEL_STYLE}"><strong>Poor Pickup (-1.5 to -0.5):</strong> Below average while rostered</p>
+        <p style="{LABEL_STYLE}"><strong>Bust (below -1.5):</strong> Well below the position's average - likely dead roster weight</p>
+
+        <h4 style="{HEADING_STYLE}font-size:15px;margin-top:15px;">Technical Features</h4>
+        <p style="{LABEL_STYLE}"><strong>Hover Details:</strong> Manager, players involved, weeks rostered, points scored, and the position-adjusted score</p>
+        <p style="{LABEL_STYLE}"><strong>Color Legend:</strong> Each manager assigned unique color</p>
+        <p style="{LABEL_STYLE}"><strong>Transaction Separation:</strong> Overlapping pickups separated for visibility</p>
+        <p style="{LABEL_STYLE}"><strong>Best Pickups Tracking:</strong> Leaderboard shows top waiver wire successes</p>
     </div>
     """
-    
+
     explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1200, height=0, visible=False)
-    
+
     # Create leaderboard
-    leaderboard_html = """
-    <h3 style="margin:10px 0 5px 0;">🏆 Waiver Wire Performance Leaderboard</h3>
-    <table style="border-collapse: collapse; width: 100%; font-size: 12px; margin: 5px 0;">
-    <tr style="background-color: #E7EAF2; font-weight: bold;">
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">#</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px;">Manager</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Avg Impact</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Total Gain</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Total Moves</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Success Rate</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px;">Best Pickup</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Trend</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">FAAB Spent</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">Impact/$</th>
+    leaderboard_html = f"""
+    <h3 style="{HEADING_STYLE}">Waiver Wire Performance Leaderboard</h3>
+    <table style="border-collapse: collapse; width: 100%; font-size: 13px; margin: 5px 0; color: {INK};">
+    <tr style="background-color: {SURFACE_RAISED};">
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">#</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Manager</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Avg Impact</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Gain</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Moves</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Success Rate</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Best Pickup</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Trend</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">FAAB Spent</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Impact/$</th>
     </tr>
     """
 
     for row in leaderboard_data:
         rank = int(row[0])
-        color = "#e8f5e8" if rank <= 3 else "#fff5e6" if rank <= 6 else "#ffeaea"
+        row_bg = SURFACE if rank % 2 == 0 else "transparent"
+        rank_color = ACCENT if rank <= 3 else INK
         leaderboard_html += f"""
-        <tr style="background-color: {color};">
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[0]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px;">{row[1]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[2]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[3]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[4]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[5]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px;">{row[6]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[7]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[8]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[9]}</td>
+        <tr style="background-color: {row_bg};">
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; font-weight: 700; color: {rank_color};">{row[0]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[1]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[2]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[3]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[4]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[5]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[6]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[7]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[8]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[9]}</td>
         </tr>"""
 
-    leaderboard_html += """
+    leaderboard_html += f"""
     </table>
-    <div style="margin-top: 10px; font-size: 11px; color: #52607A;">
-        <strong>Legend:</strong> Avg Impact = Average net effect per waiver move | Total Gain = Sum of all pickup impacts |
-        Success Rate = % of moves with positive impact | Best Pickup = Highest impact player acquired |
-        FAAB Spent/Impact per $ only populate in leagues on FAAB bidding
+    <div style="margin-top: 10px; font-size: 12px; color: {INK_MUTED};">
+        <strong>Legend:</strong> Avg Impact = average position-adjusted z-score per waiver move (std. deviations vs. the position's weekly average) &middot;
+        Total Gain = sum of all pickups' position-adjusted scores &middot; Success Rate = % of moves with a positive score &middot;
+        Best Pickup = highest-scoring player acquired &middot; FAAB Spent/Impact per $ only populate in leagues on FAAB bidding
     </div>
     """
     # Wrapped in the leaderboard's own HTML (not an external stylesheet) because Bokeh 3.x
@@ -1336,41 +1455,41 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     # spanning the full stacked-column width (see the row-to-column fix above), the viewport
     # width is the right proxy for "however much horizontal room this report actually has".
     leaderboard_div = Div(
-        text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>',
-        sizing_mode="stretch_width", max_width=600, height=350
+        text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;background-color:{SURFACE};border:1px solid {LINE};border-radius:16px;padding:16px 18px;box-sizing:border-box;">{leaderboard_html}</div>',
+        sizing_mode="stretch_width", max_width=600, height_policy="auto"
     )
-    
-    # Create calculation explanation panel (always visible)
-    calc_explanation_html = """
-    <h3 style="margin:10px 0 5px 0;">📋 How Waiver Wire Impact Is Calculated</h3>
-    <div style="background-color: #FCE7DC; padding: 12px; border-radius: 5px; margin: 5px 0; border-left: 4px solid #C83803;">
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 1:</strong> Identify the 2 weeks before and 2 weeks after each pickup</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 2:</strong> Calculate average Power Rating for before/after periods</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 3:</strong> Calculate average Roster Grade for before/after periods</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 4:</strong> Power Impact = After Power - Before Power</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 5:</strong> Roster Impact = After Grade - Before Grade</p>
-        <p style="margin: 5px 0; font-size: 13px;"><strong>Step 6:</strong> Net Effect = Power Impact + Roster Impact</p>
-        <p style="margin: 8px 0 5px 0; font-size: 12px; color: #52607A;"><em>Positive values mean the pickup helped your team, negative values mean it hurt or had no benefit</em></p>
+
+    # Create calculation explanation panel (always visible - larger, higher-contrast
+    # description text sits at the top of the page, explicit user request)
+    calc_explanation_html = f"""
+    <h3 style="{HEADING_STYLE}">How Waiver Wire Impact Is Calculated</h3>
+    <div style="{CALLOUT_STYLE}">
+        <p style="{DESCRIPTION_STYLE}"><strong>Step 1:</strong> Find the weeks the pickup was actually rostered - from the week added through the week before you dropped or traded them (or the end of the season if you kept them)</p>
+        <p style="{DESCRIPTION_STYLE}"><strong>Step 2:</strong> For each of those weeks, look up their actual fantasy points scored</p>
+        <p style="{DESCRIPTION_STYLE}"><strong>Step 3:</strong> Compare that to every rostered player at the same position, league-wide, that same week (the mean and spread)</p>
+        <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Weekly Score = (their points - position mean) / position standard deviation, that week</p>
+        <p style="{DESCRIPTION_STYLE}"><strong>Step 5:</strong> Position-Adjusted Score = the average of every Weekly Score across the weeks they were rostered</p>
+        <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">Positive values mean the pickup outperformed a typical rostered player at their position while you had them; negative values mean they underperformed</p>
     </div>
     """
-    calc_explanation_div = Div(text=calc_explanation_html, sizing_mode="stretch_width", max_width=1200, height=120)
-    
+    calc_explanation_div = Div(text=calc_explanation_html, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
+
     # Create data sources and renderers for each manager
     data_legend_items = []
     data_renderers = []
-    
+
     for manager in unique_managers:
         if manager not in manager_data:
             continue
-            
+
         data = manager_data[manager]
         color = color_map[manager]
-        
+
         # Create data source for this manager
         source = ColumnDataSource(data={
             'week': data['weeks'],
-            'power_impact': data['power_impacts'],
-            'grade_impact': data['grade_impacts'],
+            'weeks_rostered': data['weeks_rostered'],
+            'total_points': data['total_points'],
             'combined_impact': data['combined_impacts'],
             'player_added': data['players_added'],
             'player_dropped': data['players_dropped'],
@@ -1379,7 +1498,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             'waiver_id': data['waiver_ids'],
             'faab_label': data['faab_labels'],
         })
-        
+
         # Add scatter plot with triangles for waivers
         scatter = p.scatter(
             x='week', y='combined_impact',
@@ -1391,16 +1510,19 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             line_color='white',
             line_width=1
         )
-        
+
         data_renderers.append(scatter)
         data_legend_items.append(LegendItem(label=f"{manager} ({len(data['weeks'])} moves)", renderers=[scatter]))
-    
-    # Add interactive legend
-    data_legend = Legend(items=data_legend_items, location="top_right", 
+
+    # Legend renders *inside* the plot frame (not as an outside 'right' panel) - see
+    # create_trade_visualization above for why: a side panel adds its own fixed pixel width
+    # alongside the frame, pushing the whole figure wider than a phone viewport.
+    data_legend = Legend(items=data_legend_items, location="top_left",
                         title="Manager Waiver Activity", click_policy="hide")
     data_legend.title_text_font_size = "11pt"
     data_legend.label_text_font_size = "10pt"
-    p.add_layout(data_legend, 'right')
+    style_legend(data_legend)
+    p.add_layout(data_legend)
     
     # Clean hover tool
     hover = HoverTool(tooltips=[
@@ -1409,15 +1531,16 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         ("Transaction Type", "@transaction_type"),
         ("Player Added", "@player_added"),
         ("Player Dropped", "@player_dropped"),
-        ("Power Impact", "@power_impact{+0.1f}"),
-        ("Roster Impact", "@grade_impact{+0.1f}"),
-        ("Net Effect", "@combined_impact{+0.1f}"),
+        ("Weeks Rostered", "@weeks_rostered"),
+        ("Points While Rostered", "@total_points{0.1f}"),
+        ("Position-Adjusted Score", "@combined_impact{+0.2f}"),
         ("FAAB", "@faab_label"),
     ])
     p.add_tools(hover)
     
     # Create control buttons
-    toggle_data_button = Button(label="Toggle All Data", button_type="success", sizing_mode="stretch_width", height=44)
+    toggle_data_button = Button(label="Toggle All Data", sizing_mode="stretch_width", height=44,
+                                 stylesheets=[button_stylesheet("primary")])
     toggle_data_button.js_on_event("button_click", CustomJS(args=dict(renderers=data_renderers), code="""
         let any_visible = false;
         for (let i = 0; i < renderers.length; i++) {
@@ -1426,51 +1549,58 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
                 break;
             }
         }
-        
+
         for (let i = 0; i < renderers.length; i++) {
             renderers[i].visible = !any_visible;
         }
-        
+
         cb_obj.label = any_visible ? "Show All Data" : "Hide All Data";
     """))
-    
-    show_explanation_button = Button(label="Show Calculation Details", button_type="warning", sizing_mode="stretch_width", height=44)
+
+    show_explanation_button = Button(label="Show Calculation Details", sizing_mode="stretch_width", height=44,
+                                      stylesheets=[button_stylesheet("muted")])
     show_explanation_button.js_on_event("button_click", CustomJS(args=dict(explanation_div=explanation_div), code="""
         explanation_div.visible = !explanation_div.visible;
         if (explanation_div.visible) {
-            explanation_div.height = 500;
+            explanation_div.height = 900;
             cb_obj.label = "Hide Calculation Details";
-            cb_obj.button_type = "success";
         } else {
             explanation_div.height = 0;
             cb_obj.label = "Show Calculation Details";
-            cb_obj.button_type = "warning";
         }
     """))
-    
-    reset_button = Button(label="Reset Zoom", button_type="danger", sizing_mode="stretch_width", height=44)
+
+    reset_button = Button(label="Reset Zoom", sizing_mode="stretch_width", height=44,
+                           stylesheets=[button_stylesheet("ghost")])
     reset_button.js_on_event("button_click", CustomJS(args=dict(plot=p), code="""
         plot.x_range.start = 0.5;
         plot.x_range.end = 15.5;
-        plot.y_range.start = -20;
-        plot.y_range.end = 25;
+        plot.y_range.start = -4;
+        plot.y_range.end = 4;
     """))
-    
+
     # Create layout
     # Chart and leaderboard stack vertically instead of sitting side by side - see
     # src/bokeh_mobile.py's module docstring for why this is done unconditionally in Python
     # rather than via a CSS media query targeting Bokeh's (version-fragile) internal layout
     # classes.
     main_content = bokeh_column(leaderboard_div, p, sizing_mode="stretch_width")
-    button_row = bokeh_row(toggle_data_button, show_explanation_button, reset_button, sizing_mode="stretch_width")
-    
-    # Add spacing between explanation and leaderboard
-    spacer_div = Div(text="<div style='height: 50px;'></div>", sizing_mode="stretch_width", max_width=1200, height=50)
-    layout = bokeh_column(calc_explanation_div, spacer_div, explanation_div, main_content, button_row, sizing_mode="stretch_width")
-    
-    # Style the plot
-    p.grid.grid_line_alpha = 0.3
-    p.title.text_font_size = "14pt"
+    # Bokeh's row() has no flex-wrap - 3 buttons in one stretch_width row overlap rather than
+    # wrap on a narrow phone screen (confirmed by rendering and screenshotting at 375px), so
+    # this grids them 2-per-row instead, the same "stack unconditionally" philosophy already
+    # used for chart-vs-leaderboard layout (see src/bokeh_mobile.py).
+    button_row = bokeh_column(
+        bokeh_row(toggle_data_button, show_explanation_button, sizing_mode="stretch_width"),
+        bokeh_row(reset_button, sizing_mode="stretch_width"),
+        sizing_mode="stretch_width",
+    )
+
+    # Description first, then the relocated buttons, then the data - explicit user request to
+    # move the built-in controls instead of leaving them at the very bottom of the page.
+    layout = bokeh_column(calc_explanation_div, button_row, explanation_div, main_content, sizing_mode="stretch_width")
+
+    # Style the plot title (grid/axis colors already set by style_figure())
+    p.title.text_font_size = "15pt"
     p.title.align = "center"
     
     show(layout)
@@ -1487,9 +1617,13 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         from bokeh.plotting import figure, show, output_file
         from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS, Div, DataTable, TableColumn
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
-        from bokeh.palettes import Category20
         from sklearn.linear_model import LinearRegression
         import numpy as np
+        from src.bokeh_theme import (
+            style_figure, style_legend, button_stylesheet, dark_palette,
+            SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
+            PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
+        )
     except ImportError:
         print("\n⚠️  Bokeh or scikit-learn not available for manager grade visualization")
         return
@@ -1504,8 +1638,8 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         plot_filename = "manager_grades.html"
     output_file(plot_filename)
     
-    # Enhanced data preparation with better scaling
-    colors = Category20[20] if len(manager_grades) <= 20 else Category20[20] * 2
+    # Enhanced data preparation with better scaling (dark-optimized palette - see src/bokeh_theme.py)
+    colors = dark_palette(len(manager_grades))
     team_data = []
     
     # Calculate league averages for more significant differences
@@ -1664,6 +1798,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         x_range=(0.5, 15.5),
         y_range=(0, 10)
     )
+    style_figure(p)
     
     # Create enhanced hover with proper data
     hover_data = HoverTool(tooltips=[
@@ -1735,40 +1870,43 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         
         data_legend_items.append((f"{team['name']} ({team['enhanced_overall']:.1f})", [scatter, line]))
     
-    # Create legends
-    data_legend = Legend(items=data_legend_items, location="center", title="Manager Performance")
-    data_legend.click_policy = "hide"
-    p.add_layout(data_legend, 'right')
-    
+    # Legends render *inside* the plot frame (not as outside side panels) - a side panel adds
+    # its own fixed pixel width alongside the frame, pushing the whole figure wider than a
+    # phone viewport (see create_trade_visualization above for the same fix).
+    data_legend = Legend(items=data_legend_items, location="top_left", title="Managers", click_policy="hide")
+    style_legend(data_legend)
+    p.add_layout(data_legend)
+
     if trend_legend_items:
-        trend_legend = Legend(items=trend_legend_items, location="center", title="Trend Analysis")
-        trend_legend.click_policy = "hide"
-        p.add_layout(trend_legend, 'left')
+        trend_legend = Legend(items=trend_legend_items, location="bottom_right", title="Trends", click_policy="hide")
+        style_legend(trend_legend)
+        p.add_layout(trend_legend)
     
     # Create leaderboard table
-    leaderboard_html = """
-    <h3 style="margin:10px 0 5px 0;">Manager Performance Leaderboard</h3>
-    <table style="border-collapse: collapse; width: 100%; font-size: 12px;">
-    <tr style="background-color: #E7EAF2; font-weight: bold;">
-        <th style="border: 1px solid #DCE0E8; padding: 8px;">#</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px;">Manager</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px;">Grade</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px;">Trend</th>
-        <th style="border: 1px solid #DCE0E8; padding: 8px;">Direction</th>
+    leaderboard_html = f"""
+    <h3 style="{HEADING_STYLE}">Manager Performance Leaderboard</h3>
+    <table style="border-collapse: collapse; width: 100%; font-size: 13px; color: {INK};">
+    <tr style="background-color: {SURFACE_RAISED};">
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">#</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Manager</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Grade</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Trend</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Direction</th>
     </tr>
     """
-    
+
     for row in leaderboard_data:
-        color = "#e8f5e8" if row[0] <= 3 else "#fff5e6" if row[0] <= 6 else "#ffeaea"
+        row_bg = SURFACE if row[0] % 2 == 0 else "transparent"
+        rank_color = ACCENT if row[0] <= 3 else INK
         leaderboard_html += f"""
-        <tr style="background-color: {color};">
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[0]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px;">{row[1]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[2]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[3]}</td>
-            <td style="border: 1px solid #DCE0E8; padding: 8px; text-align: center;">{row[4]}</td>
+        <tr style="background-color: {row_bg};">
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; font-weight: 700; color: {rank_color};">{row[0]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[1]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; font-weight: 700;">{row[2]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[3]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[4]}</td>
         </tr>"""
-    
+
     leaderboard_html += "</table>"
     # Wrapped in the leaderboard's own HTML (not an external stylesheet) because Bokeh 3.x
     # renders every Div inside a shadow root that external CSS can't reach - see
@@ -1781,39 +1919,39 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     # spanning the full stacked-column width (see the row-to-column fix above), the viewport
     # width is the right proxy for "however much horizontal room this report actually has".
     leaderboard_div = Div(
-        text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>',
-        sizing_mode="stretch_width", max_width=500, height=300
+        text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;background-color:{SURFACE};border:1px solid {LINE};border-radius:16px;padding:16px 18px;box-sizing:border-box;">{leaderboard_html}</div>',
+        sizing_mode="stretch_width", max_width=500, height_policy="auto"
     )
-    
-    # Create explanation panel (toggleable)
-    explanation_text = """
-    <h3 style="margin:5px 0;">Manager Performance Grading Methodology</h3>
-    <p style="margin:2px;"><b>Enhanced Calculation:</b> Z-score normalization for greater differentiation between managers</p>
-    <p style="margin:2px;"><b>Formula Components:</b></p>
-    <ul style="margin:5px 0; padding-left:20px;">
-        <li><b>Performance (40%):</b> Weekly scores relative to league average + consistency metrics</li>
-        <li><b>Trade Analysis (25%):</b> Net impact of all trade transactions on team improvement</li>
-        <li><b>Waiver Analysis (20%):</b> Success rate and impact of waiver wire acquisitions</li>
-        <li><b>Start/Sit Accuracy (15%):</b> Optimal lineup decisions vs actual lineup choices</li>
-    </ul>
-    <p style="margin:2px;"><b>Grade Scale:</b> 8-10 Elite • 6-8 Above Average • 4-6 Average • 2-4 Below Average • 0-2 Poor</p>
-    <p style="margin:2px;"><b>Trend Analysis:</b> Linear regression showing management skill development trajectory</p>
-    <p style="margin:2px;"><b>Records:</b> Simulated based on weekly performance relative to league average</p>
+
+    # Create explanation panel (always visible - larger, higher-contrast description text,
+    # explicit user request)
+    explanation_text = f"""
+    <div style="{PANEL_STYLE}">
+        <h3 style="{HEADING_STYLE}">Manager Performance Grading Methodology</h3>
+        <p style="{DESCRIPTION_STYLE}">
+            Every manager gets a 0-10 overall grade blending four weighted components:
+            <strong>performance</strong> (40% - weekly scores relative to league average plus
+            consistency), <strong>trade analysis</strong> (25% - net impact of every trade),
+            <strong>waiver analysis</strong> (20% - success rate and impact of pickups), and
+            <strong>start/sit accuracy</strong> (15% - optimal lineup decisions vs. actual ones).
+        </p>
+        <p style="{LABEL_STYLE} margin-top: 8px;"><strong>Grade Scale:</strong> 8-10 Elite &middot; 6-8 Above Average &middot; 4-6 Average &middot; 2-4 Below Average &middot; 0-2 Poor</p>
+        <p style="{LABEL_STYLE}"><strong>Trend Analysis:</strong> Linear regression showing management skill development trajectory</p>
+    </div>
     """
-    
-    explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1200, height=180)
-    
-    # Enhanced toggle controls at bottom
-    show_explanation_button = Button(label="Show/Hide Explanation", button_type="light", sizing_mode="stretch_width", height=44)
-    toggle_managers_button = Button(label="Toggle All Data", button_type="success", sizing_mode="stretch_width", height=44)
-    toggle_trends_button = Button(label="Toggle All Trends", button_type="primary", sizing_mode="stretch_width", height=44)
-    reset_zoom_button = Button(label="Reset Zoom", button_type="warning", sizing_mode="stretch_width", height=44)
+
+    explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
+
+    # Toggle controls, relocated above the chart - explicit user request to move the built-in
+    # buttons instead of leaving them at the very bottom of the page
+    toggle_managers_button = Button(label="Toggle All Data", sizing_mode="stretch_width", height=44,
+                                     stylesheets=[button_stylesheet("primary")])
+    toggle_trends_button = Button(label="Toggle All Trends", sizing_mode="stretch_width", height=44,
+                                   stylesheets=[button_stylesheet("ghost")])
+    reset_zoom_button = Button(label="Reset Zoom", sizing_mode="stretch_width", height=44,
+                                stylesheets=[button_stylesheet("ghost")])
     
     # JavaScript callbacks
-    explanation_callback = CustomJS(args=dict(explanation=explanation_div), code="""
-        explanation.visible = !explanation.visible;
-    """)
-    
     managers_callback = CustomJS(args=dict(renderers=data_renderers), code="""
         var all_visible = renderers.every(r => r.visible);
         for (var r of renderers) {
@@ -1837,22 +1975,27 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         plot.y_range.end = 10;
     """)
     
-    show_explanation_button.js_on_click(explanation_callback)
     toggle_managers_button.js_on_click(managers_callback)
     toggle_trends_button.js_on_click(trends_callback)
     reset_zoom_button.js_on_click(reset_callback)
-    
+
     # Leaderboard stacks above the plot instead of sitting side by side - see
     # src/bokeh_mobile.py's module docstring for why this is done unconditionally in Python
     # rather than via a CSS media query targeting Bokeh's (version-fragile) internal layout
     # classes.
     main_content = bokeh_column(leaderboard_div, p, spacing=10, sizing_mode="stretch_width")
-    control_row = bokeh_row(show_explanation_button, toggle_managers_button, toggle_trends_button, reset_zoom_button, sizing_mode="stretch_width")
+    # Bokeh's row() has no flex-wrap - 3 buttons in one stretch_width row overlap rather than
+    # wrap on a narrow phone screen (confirmed by rendering and screenshotting at 375px), so
+    # this grids them 2-per-row instead.
+    control_row = bokeh_column(
+        bokeh_row(toggle_managers_button, toggle_trends_button, sizing_mode="stretch_width"),
+        bokeh_row(reset_zoom_button, sizing_mode="stretch_width"),
+        sizing_mode="stretch_width",
+    )
 
-    # Start with explanation hidden
-    explanation_div.visible = False
-
-    layout = bokeh_column(explanation_div, main_content, control_row, spacing=5, sizing_mode="stretch_width")
+    # Description first, then the relocated buttons, then the data - explicit user request to
+    # move the built-in controls instead of leaving them at the very bottom of the page.
+    layout = bokeh_column(explanation_div, control_row, main_content, spacing=5, sizing_mode="stretch_width")
 
     show(layout)
     make_bokeh_html_mobile_friendly(plot_filename)
@@ -1873,22 +2016,30 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Worst Trades Report - Fantasy Football Analysis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* Chicago Bears palette (navy + orange) - kept in sync with index.html and
-           src/ai_overview.py's generated CSS, so every report page matches the homepage. */
+        /* Dark "broadcast scoreboard" theme (2026-09) - kept in sync with index.html and
+           src/ai_overview.py's generated CSS, so every report page matches the homepage. This
+           page is hand-authored HTML (not Bokeh), so plain CSS applies with no shadow-DOM
+           caveats - see src/bokeh_mobile.py's module docstring for why every *other* report in
+           this file needs a different mechanism (src/bokeh_theme.py) instead. */
         html {{
             overflow-x: hidden;
         }}
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
-            background: #F2F4F8;
-            color: #0B162A;
+            background: #070D18;
+            color: #F4F6FA;
             min-height: 100vh;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }}
+        h1, h2, h3, h4, h5 {{ font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 600; }}
         /* A trades-table wider than its card (long comma-joined player-name cells) scrolls in
            place within this wrapper instead of forcing the whole page to scroll sideways. */
         .table-scroll {{
@@ -1899,8 +2050,8 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
         .container {{
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            border: 1px solid #DCE0E8;
+            background: #101B2D;
+            border: 1px solid #22344E;
             border-radius: 20px;
             padding: 30px;
         }}
@@ -1908,88 +2059,91 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
             text-align: center;
             margin-bottom: 30px;
             padding: 22px 20px;
-            background: #0B162A;
+            background: linear-gradient(135deg, #18283F, #101B2D);
+            border: 1px solid #22344E;
             border-radius: 16px;
-            color: white;
+            color: #F4F6FA;
         }}
         .header h1 {{
-            color: white;
+            color: #F4F6FA;
             margin: 0;
-            font-size: 2.2em;
-            font-weight: 700;
-            letter-spacing: -0.02em;
+            font-size: 2em;
         }}
         .header p {{
-            color: rgba(255,255,255,0.75);
+            color: #8DA0BC;
             margin: 10px 0 0 0;
             font-size: 1.1em;
         }}
         .methodology {{
-            background: #F2F4F8;
-            border-left: 5px solid #C83803;
+            background: #18283F;
+            border-left: 5px solid #FF6A2B;
             padding: 15px 20px;
             margin: 20px 0;
-            border-radius: 5px;
+            border-radius: 12px;
         }}
         .methodology h3 {{
-            color: #C83803;
+            color: #F4F6FA;
             margin-top: 0;
+        }}
+        .methodology li {{
+            color: #8DA0BC;
+            font-size: 16px;
+            line-height: 1.55;
         }}
         .trades-table {{
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
             font-size: 14px;
-            border: 1px solid #DCE0E8;
+            border: 1px solid #22344E;
             border-radius: 10px;
             overflow: hidden;
         }}
         .trades-table th {{
-            background: #0B162A;
-            color: white;
-            font-weight: bold;
+            background: #18283F;
+            color: #8DA0BC;
+            font-weight: 700;
             padding: 15px 10px;
             text-align: left;
         }}
         .trades-table td {{
             padding: 12px 10px;
-            border-bottom: 1px solid #DCE0E8;
+            border-bottom: 1px solid #22344E;
+            color: #F4F6FA;
         }}
         .trades-table tr:hover {{
-            background: #F2F4F8;
+            background: #18283F;
         }}
         .rank-1 {{
-            background: #FCE7DC;
+            background: rgba(255, 106, 43, 0.16);
             font-weight: bold;
         }}
         .rank-2 {{
-            background: #FCE7DC;
-            opacity: 0.7;
+            background: rgba(255, 106, 43, 0.11);
         }}
         .rank-3 {{
-            background: #FCE7DC;
-            opacity: 0.45;
+            background: rgba(255, 106, 43, 0.07);
         }}
         .impact-negative {{
-            color: #C0392B;
+            color: #F87171;
             font-weight: bold;
         }}
         .impact-positive {{
-            color: #1B8A5A;
+            color: #34D399;
             font-weight: bold;
         }}
         .detailed-section {{
             margin: 40px 0;
         }}
         .trade-card {{
-            background: white;
-            border: 1px solid #DCE0E8;
+            background: #18283F;
+            border: 1px solid #22344E;
             border-radius: 14px;
             padding: 20px;
             margin: 15px 0;
         }}
         .trade-card h4 {{
-            color: #C83803;
+            color: #FF6A2B;
             margin-top: 0;
             font-size: 1.3em;
         }}
@@ -2000,13 +2154,13 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
             margin-top: 15px;
         }}
         .players-section {{
-            background: #F2F4F8;
+            background: #101B2D;
             padding: 15px;
-            border-radius: 5px;
+            border-radius: 10px;
         }}
         .players-section h5 {{
             margin-top: 0;
-            color: #0B162A;
+            color: #F4F6FA;
         }}
         .impact-stats {{
             display: flex;
@@ -2015,27 +2169,27 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
             text-align: center;
         }}
         .stat {{
-            background: #E7EAF2;
+            background: #101B2D;
             padding: 10px;
-            border-radius: 5px;
+            border-radius: 10px;
             flex: 1;
             margin: 0 5px;
         }}
         .stat .label {{
             font-size: 0.9em;
-            color: #52607A;
+            color: #8DA0BC;
         }}
         .stat .value {{
             font-size: 1.2em;
             font-weight: bold;
-            color: #0B162A;
+            color: #F4F6FA;
         }}
         .footer {{
             text-align: center;
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 2px solid #DCE0E8;
-            color: #52607A;
+            border-top: 1px solid #22344E;
+            color: #8DA0BC;
         }}
         @media (max-width: 768px) {{
             .container {{
@@ -2063,12 +2217,12 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚨 Worst Trades Report</h1>
+            <h1>Worst Trades Report</h1>
             <p>Fantasy Football Analysis - Generated {datetime.now().strftime('%B %d, %Y at %I:%M %p')}</p>
         </div>
         
         <div class="methodology">
-            <h3>📊 Methodology</h3>
+            <h3>Methodology</h3>
             <ul>
                 <li><strong>Combined Impact</strong> = Net Player Value = Value Acquired − Value Given Up</li>
                 <li><strong>Player value</strong> comes from ESPN's season stat-leader tiers (~1-10 scale per player)</li>
@@ -2079,7 +2233,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
             </ul>
         </div>
 
-        <h2>🏆 Top 10 Worst Trades (Net Player Value)</h2>
+        <h2>Top 10 Worst Trades (Net Player Value)</h2>
         <div class="table-scroll">
         <table class="trades-table">
             <thead>
@@ -2118,7 +2272,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
         </div>
 
         <div class="detailed-section">
-            <h2>🔍 Detailed Breakdown</h2>
+            <h2>Detailed Breakdown</h2>
 """
 
     # Add detailed breakdown cards for top 10
@@ -2170,7 +2324,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
         </div>
 
         <div class="detailed-section">
-            <h2>⚡ Worst Power Impact Trades</h2>
+            <h2>Worst Power Impact Trades</h2>
             <p style="text-align: center; color: #52607A; margin-bottom: 20px;">
                 Trades ranked by most negative impact on weekly scoring potential
             </p>
@@ -2213,7 +2367,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
         </div>
 
         <div class="detailed-section">
-            <h2>📊 Worst Roster Grade Impact Trades</h2>
+            <h2>Worst Roster Grade Impact Trades</h2>
             <p style="text-align: center; color: #52607A; margin-bottom: 20px;">
                 Trades ranked by most negative impact on roster construction quality
             </p>
@@ -2257,7 +2411,7 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
         </div>
 
         <div class="footer">
-            <p>📈 Analysis based on {len(worst_trades)} total trades</p>
+            <p>Analysis based on {len(worst_trades)} total trades</p>
             <p>Report generated by Fantasy Football Analysis Engine</p>
         </div>
     </div>

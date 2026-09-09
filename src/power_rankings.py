@@ -203,8 +203,12 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         from bokeh.plotting import figure, show, output_file
         from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS
         from bokeh.layouts import column, row
-        from bokeh.palettes import Category20
         import numpy as np
+        from src.bokeh_theme import (
+            style_figure, style_legend, button_stylesheet, dark_palette,
+            SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
+            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE,
+        )
     except ImportError:
         print("\n⚠️  Bokeh not available - install with: pip install bokeh")
         print("   Falling back to text-only Power Rating analysis...")
@@ -220,8 +224,9 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
             sklearn_available = False
             print("   Note: scikit-learn not available for trend lines")
         
-        # Use Bokeh's Category20 palette for better colors
-        colors = Category20[20] if len(team_power_data) <= 20 else Category20[20] * 2
+        # Dark-optimized categorical palette (Bokeh's Category20 is tuned for a white
+        # background - several of its hues are nearly invisible against this app's navy void)
+        colors = dark_palette(len(team_power_data))
         
         # Prepare data for interactive plot
         team_data = []
@@ -362,26 +367,32 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
             width=1100,
             height=700,
             sizing_mode="stretch_width",
-            title="Interactive Fantasy Football Power Rating Progression",
+            title="Power Rating Progression",
             x_axis_label="Week",
             y_axis_label="Power Rating",
             tools="pan,wheel_zoom,box_zoom,reset,save",
             x_range=(0.5, 15.5)
         )
-        
-        # Create explanation panel
+        style_figure(p)
+
+        # Explanation panel: larger, higher-contrast description text sits directly under the
+        # heading (explicit user request - "make the description larger, in a different place"),
+        # dark-themed to match the rest of the app.
         from bokeh.models import Div
-        explanation_text = """
-        <h3 style="margin:5px 0;">Power Rating Analysis Methodology</h3>
-        <p style="margin:2px;"><b>Formula:</b> (avg×6 + (high+low)×2 + (win%×200)×2) ÷ 10</p>
-        <p style="margin:2px;"><b>Components:</b> Weekly scores + high/low range + win percentage bonus</p>
-        <p style="margin:2px;"><b>Weighting:</b> 60% average score, 20% range consistency, 20% win success</p>
-        <p style="margin:2px;"><b>Trend Lines:</b> Linear regression showing performance trajectory over time</p>
-        <p style="margin:2px;"><b>Scale:</b> Higher values indicate stronger overall team performance</p>
-        <p style="margin:2px;"><b>Interactive:</b> Click legend to hide/show teams, hover for detailed stats</p>
+        explanation_text = f"""
+        <div style="{PANEL_STYLE}">
+            <h3 style="{HEADING_STYLE}">How Power Rating Works</h3>
+            <p style="{DESCRIPTION_STYLE}">
+                Each week's rating blends your scoring average, your high/low range, and your win
+                percentage - <code style="color:{ACCENT};">(avg&times;6 + (high+low)&times;2 + (win%&times;200)&times;2) &divide; 10</code>.
+                Higher values mean stronger overall performance. Dashed lines are each team's
+                trend (linear regression over the season). Click a name in the legend to hide or
+                show just that team, or use the buttons below to toggle everyone at once.
+            </p>
+        </div>
         """
-        
-        explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1100, height=100)
+
+        explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1100, height_policy="auto")
         
         # Add hover tool with detailed tooltips
         hover = HoverTool(tooltips=[
@@ -458,24 +469,30 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
             data_legend_items.append((f"{team['name']}", [scatter_renderer, line_renderer]))
         
         # Create two separate legends with click policies
-        data_legend = Legend(items=data_legend_items, location="center", title="Teams (Power Ratings)")
-        data_legend.click_policy = "hide"
+        # Legends render *inside* the plot frame (not as an outside 'right' panel) - a side
+        # panel adds its own fixed pixel width alongside the frame, which sizing_mode
+        # "stretch_width" can't compensate for, so the whole figure ends up wider than a phone
+        # viewport. Inside placement (with a translucent background from style_legend so it
+        # doesn't fully hide data underneath) keeps the figure's real width capped at whatever
+        # stretch_width actually gives it.
+        data_legend = Legend(items=data_legend_items, location="top_left", title="Teams", click_policy="hide")
         data_legend.title_text_font_size = "10pt"
         data_legend.label_text_font_size = "9pt"
-        
+        style_legend(data_legend)
+        p.add_layout(data_legend)
+
         if sklearn_available and trend_legend_items:
-            trend_legend = Legend(items=trend_legend_items, location="center", title="Power Trends")
-            trend_legend.click_policy = "hide"
+            trend_legend = Legend(items=trend_legend_items, location="bottom_right", title="Trends", click_policy="hide")
             trend_legend.title_text_font_size = "10pt"
             trend_legend.label_text_font_size = "9pt"
-            p.add_layout(trend_legend, 'right')
-        
-        # Position legends
-        p.add_layout(data_legend, 'right')
+            style_legend(trend_legend)
+            p.add_layout(trend_legend)
         
         # Create toggle buttons
-        toggle_data_button = Button(label="All Teams", button_type="success", sizing_mode="stretch_width", height=44)
-        toggle_trends_button = Button(label="All Trends", button_type="warning", sizing_mode="stretch_width", height=44)
+        toggle_data_button = Button(label="Toggle All Teams", sizing_mode="stretch_width", height=44,
+                                     stylesheets=[button_stylesheet("primary")])
+        toggle_trends_button = Button(label="Toggle All Trends", sizing_mode="stretch_width", height=44,
+                                       stylesheets=[button_stylesheet("ghost")])
         
         # JavaScript callbacks for toggle buttons
         toggle_data_callback = CustomJS(
@@ -537,55 +554,45 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         
         toggle_data_button.js_on_event('button_click', toggle_data_callback)
         
-        # Style the plot
-        p.grid.grid_line_alpha = 0.3
-        p.title.text_font_size = "14pt"
+        # Style the plot title (grid/axis colors already set by style_figure())
+        p.title.text_font_size = "15pt"
         p.xaxis.axis_label_text_font_size = "12pt"
         p.yaxis.axis_label_text_font_size = "12pt"
-        
+
         # Create leaderboard HTML
-        leaderboard_html = "<h3>Power Rankings Leaderboard</h3>"
-        leaderboard_html += "<table style='border-collapse: collapse; width: 100%; font-size: 12px;'>"
-        leaderboard_html += "<tr style='background-color: #0B162A; color: white; font-weight: bold;'>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Rank</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Team</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Current Rating</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Record</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Avg Score</th>"
-        leaderboard_html += "<th style='border: 1px solid #DCE0E8; padding: 8px;'>Trend</th>"
+        leaderboard_html = f"<h3 style='{HEADING_STYLE}'>Power Rankings Leaderboard</h3>"
+        leaderboard_html += f"<table style='border-collapse: collapse; width: 100%; font-size: 13px; color: {INK};'>"
+        leaderboard_html += f"<tr style='background-color: {SURFACE_RAISED};'>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};'>Rank</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};'>Team</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};'>Current Rating</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};'>Record</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};'>Avg Score</th>"
+        leaderboard_html += f"<th style='border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};'>Trend</th>"
         leaderboard_html += "</tr>"
-        
+
         # Sort teams by current power rating for leaderboard
         sorted_for_leaderboard = sorted(team_data, key=lambda x: x['current_rating'], reverse=True)
-        
+
         for i, team in enumerate(sorted_for_leaderboard):
-            # Add trophy emojis for top 3
-            rank_display = f"🥇 {i+1}" if i == 0 else f"🥈 {i+1}" if i == 1 else f"🥉 {i+1}" if i == 2 else str(i+1)
-            
-            # Color code based on ranking
-            if i < 3:
-                row_color = "#fff3cd"  # Gold for top 3
-            elif i < 6:
-                row_color = "#E7EAF2"  # Navy-soft for middle
-            else:
-                row_color = "#F2F4F8"  # Canvas for bottom
-            
-            trend_icon = "📈" if team['slope'] > 0.5 else "📉" if team['slope'] < -0.5 else "➡️"
-            trend_text = f"{trend_icon} {team['slope']:+.1f}"
-            
-            leaderboard_html += f"<tr style='background-color: {row_color};'>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center; font-weight: bold;'>{rank_display}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px;'>{team['name']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center; font-weight: bold;'>{team['current_rating']:.1f}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{team['record']}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{team['avg_score']:.1f}</td>"
-            leaderboard_html += f"<td style='border: 1px solid #DCE0E8; padding: 8px; text-align: center;'>{trend_text}</td>"
+            rank_display = f"#{i+1}"
+            row_bg = SURFACE if i % 2 == 0 else "transparent"
+            trend_color = "#34D399" if team['slope'] > 0.5 else "#F87171" if team['slope'] < -0.5 else INK_MUTED
+            trend_text = f"{team['slope']:+.1f}/wk"
+
+            leaderboard_html += f"<tr style='background-color: {row_bg};'>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 9px 8px; font-weight: 700; color: {ACCENT if i < 3 else INK};'>{rank_display}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 9px 8px;'>{team['name']}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 9px 8px; font-weight: 700;'>{team['current_rating']:.1f}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 9px 8px; color: {INK_MUTED};'>{team['record']}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 9px 8px; color: {INK_MUTED};'>{team['avg_score']:.1f}</td>"
+            leaderboard_html += f"<td style='border-bottom: 1px solid {LINE}; padding: 9px 8px; color: {trend_color}; font-weight: 600;'>{trend_text}</td>"
             leaderboard_html += "</tr>"
-        
+
         leaderboard_html += "</table>"
-        leaderboard_html += "<p style='font-size: 10px; color: #52607A; margin-top: 10px;'>"
-        leaderboard_html += "Current Rating = Latest week's power rating | "
-        leaderboard_html += "Trend = Weekly rating change direction and slope"
+        leaderboard_html += f"<p style='font-size: 11px; color: {INK_MUTED}; margin-top: 10px;'>"
+        leaderboard_html += "Current Rating = latest week's power rating &middot; "
+        leaderboard_html += "Trend = weekly rating change direction and slope"
         leaderboard_html += "</p>"
         
         # Wrapped in the leaderboard's own HTML (not an external stylesheet) because Bokeh 3.x
@@ -599,7 +606,7 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         # spanning the full stacked-column width (see the row-to-column fix above), the viewport
         # width is the right proxy for "however much horizontal room this report actually has".
         leaderboard_div = Div(
-            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;">{leaderboard_html}</div>',
+            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;background-color:{SURFACE};border:1px solid {LINE};border-radius:16px;padding:16px 18px;box-sizing:border-box;">{leaderboard_html}</div>',
             sizing_mode="stretch_width", max_width=450, height=500
         )
 
@@ -615,9 +622,11 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         # lean on instead (confirmed: Bokeh's internal grid/flex layout classes differ across
         # versions, so overriding them from outside is fragile - stacking unconditionally is the
         # version-independent fix). See src/bokeh_mobile.py's docstring for the same reasoning
-        # applied to trade_analysis.py/visualizations.py.
+        # applied to trade_analysis.py/visualizations.py. Controls now sit right under the
+        # description, above the chart - explicit user request to relocate the built-in buttons
+        # instead of leaving them buried at the very bottom of the page.
         main_content = column(p, leaderboard_div, sizing_mode="stretch_width")
-        layout = column(explanation_div, main_content, controls, sizing_mode="stretch_width")
+        layout = column(explanation_div, controls, main_content, sizing_mode="stretch_width")
 
         # Show the interactive plot
         show(layout)

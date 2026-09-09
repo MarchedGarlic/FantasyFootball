@@ -3,346 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏈 Fantasy Football League Analysis Results</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏈</text></svg>">
+    <title>Fantasy Football Analysis Results</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23070D18'/><path d='M30 38 L70 38 L70 48 L46 48 L46 58 L64 58 L64 68 L46 68 L46 82 L30 82 Z' fill='%23FF6A2B'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* Chicago Bears palette (navy + orange) on a light canvas - kept in sync with the
-           tokens in index.html and src/ai_overview.py's generated CSS. */
+        /* Dark "broadcast scoreboard" theme (2026-09) - kept in sync by hand with index.html
+           and src/ai_overview.py's inlined CSS. See index.html for the full design-system note. */
         :root {
-            --color-ink: #0B162A;
-            --color-ink-secondary: #52607A;
-            --color-canvas: #F2F4F8;
-            --color-paper: #FFFFFF;
-            --color-hairline: #DCE0E8;
-            --color-accent: #C83803;
-            --color-accent-hover: #A62E02;
+            --void: #070D18;
+            --surface: #101B2D;
+            --surface-raised: #18283F;
+            --surface-hover: #1F3350;
+            --ink: #F4F6FA;
+            --ink-muted: #8DA0BC;
+            --ink-faint: #5A6E8C;
+            --accent: #FF6A2B;
+            --accent-deep: #C83803;
+            --accent-glow: rgba(255, 106, 43, 0.35);
+            --accent-soft: rgba(255, 106, 43, 0.14);
+            --line: rgba(255, 255, 255, 0.08);
+            --line-strong: rgba(255, 255, 255, 0.14);
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --radius-pill: 999px;
+            --font-display: 'Oswald', 'Arial Narrow', sans-serif;
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --sidebar-w: 264px;
+            --topbar-h: 56px;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            overflow-x: hidden;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { overflow-x: hidden; scroll-behavior: smooth; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--color-canvas);
-            color: var(--color-ink);
+            font-family: var(--font-body);
+            background: var(--void);
+            color: var(--ink);
             min-height: 100vh;
-            padding: 20px;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 12% -8%, rgba(255, 106, 43, 0.16), transparent 42%),
+                radial-gradient(circle at 100% 8%, rgba(66, 133, 244, 0.09), transparent 38%),
+                repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.025) 0px, rgba(255, 255, 255, 0.025) 1px, transparent 1px, transparent 90px),
+                var(--void);
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 32px 30px;
-            background: var(--color-ink);
-            border-radius: 28px;
-            color: white;
+        h1, h2, h3, .font-display { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.01em; }
+
+        .app-shell { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+
+        .topbar {
+            position: sticky; top: 0; z-index: 30;
+            display: flex; align-items: center; gap: 14px;
+            height: var(--topbar-h); padding: 0 16px;
+            background: rgba(7, 13, 24, 0.88);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--line);
+        }
+        .menu-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 38px; height: 38px; border-radius: var(--radius-md);
+            background: var(--surface-raised); border: 1px solid var(--line);
+            color: var(--ink); cursor: pointer; flex-shrink: 0;
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .menu-btn:hover { background: var(--surface-hover); }
+        .menu-btn:active { transform: scale(0.94); }
+        .menu-btn svg { width: 20px; height: 20px; }
+        .topbar-title { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .topbar .back-link { margin-left: auto; font-size: 0.85rem; color: var(--ink-muted); text-decoration: none; font-weight: 600; white-space: nowrap; }
+        .topbar .back-link:hover { color: var(--ink); }
+
+        .sidebar-scrim { position: fixed; inset: 0; z-index: 35; background: rgba(3, 6, 12, 0.66); opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+        .sidebar-scrim.open { opacity: 1; pointer-events: auto; }
+
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0;
+            width: min(var(--sidebar-w), 84vw); z-index: 40;
+            background: var(--surface); border-right: 1px solid var(--line);
+            overflow-y: auto; transform: translateX(-100%);
+            transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column;
+        }
+        .sidebar.open { transform: translateX(0); }
+
+        .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 20px 18px 14px; }
+        .sidebar-brand .mark {
+            width: 30px; height: 30px; border-radius: 8px; background: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display); font-weight: 700; color: var(--void); font-size: 1rem; flex-shrink: 0;
+        }
+        .sidebar-brand .name { font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; color: var(--ink); }
+        .sidebar-brand .sub { font-size: 0.72rem; color: var(--ink-muted); }
+        .sidebar-close { margin-left: auto; width: 30px; height: 30px; border-radius: var(--radius-md); background: transparent; border: none; color: var(--ink-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        @media (min-width: 960px) { .sidebar-close { display: none; } }
+
+        .nav-scroll { flex: 1; padding: 4px 12px 20px; }
+        .nav-group-label { font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; padding: 18px 10px 8px; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 10px; width: 100%;
+            padding: 10px 12px; border-radius: var(--radius-md);
+            background: transparent; border: none; color: var(--ink-muted);
+            font-family: var(--font-body); font-weight: 600; font-size: 0.9rem;
+            text-align: left; cursor: pointer; position: relative;
+            transition: background 0.16s ease, color 0.16s ease; text-decoration: none;
+        }
+        .nav-item + .nav-item { margin-top: 2px; }
+        .nav-item:hover { background: var(--surface-hover); color: var(--ink); }
+        .nav-item.active { background: var(--surface-raised); color: var(--ink); }
+        .nav-item.active::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+        .nav-item .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-faint); flex-shrink: 0; }
+        .nav-item.active .dot { background: var(--accent); }
+
+        .main-content { flex: 1; min-width: 0; padding: 20px 16px 64px; }
+        @media (min-width: 960px) {
+            .sidebar { position: sticky; transform: none; height: 100vh; }
+            .sidebar-scrim { display: none; }
+            .topbar { display: none; }
+            .main-content { padding: 40px 44px 80px; }
         }
 
-        .header h1 {
-            font-size: 2.75rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: 10px;
-        }
+        .page-wide { max-width: 1180px; margin: 0 auto; }
 
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.75;
-        }
+        .results-hero { margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+        .results-hero h2 { font-size: 1.6rem; font-weight: 600; color: var(--ink); }
+        .results-hero p { color: var(--ink-muted); font-size: 0.9rem; margin-top: 4px; }
 
-        /* Sticky jump-to nav - every report gets a pill link, clicking smooth-scrolls to its
-           section further down the same page instead of opening a separate file. */
-        .results-nav {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 24px;
-            position: sticky;
-            top: 10px;
-            z-index: 10;
-            background: var(--color-paper);
-            padding: 10px;
-            border-radius: 999px;
-            border: 1px solid var(--color-hairline);
-        }
+        .last-updated { color: var(--ink-faint); font-size: 0.82rem; margin-top: 8px; }
 
-        .results-nav a {
-            padding: 8px 16px;
-            border-radius: 999px;
-            background: #E7EAF2;
-            color: var(--color-ink);
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: background 0.2s ease, color 0.2s ease;
-            white-space: nowrap;
-        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: panelIn 0.4s ease; }
+        @keyframes panelIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-        .results-nav a:hover {
-            background: #FCE7DC;
-            color: var(--color-accent);
-        }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+        .panel-header h3 { font-size: 1.3rem; font-weight: 600; color: var(--ink); }
+        .panel-header a.open-full { font-size: 0.85rem; color: var(--accent); text-decoration: none; font-weight: 600; white-space: nowrap; }
+        .panel-header a.open-full:hover { text-decoration: underline; }
+        .panel-description { color: var(--ink-muted); margin-bottom: 14px; line-height: 1.55; font-size: 0.92rem; }
 
-        .result-section {
-            background: var(--color-paper);
-            border: 1px solid var(--color-hairline);
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 24px;
-            scroll-margin-top: 70px;
-        }
-
-        .result-section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .result-section-header h2 {
-            color: var(--color-ink);
-            font-size: 1.3rem;
-        }
-
-        .result-section-header a.open-full {
-            font-size: 0.85rem;
-            color: var(--color-accent);
-            text-decoration: none;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .result-section-description {
-            color: var(--color-ink-secondary);
-            margin-bottom: 14px;
-            line-height: 1.5;
-        }
-
-        .result-section-frame-wrap {
-            overflow-x: auto;
-            border: 1px solid var(--color-hairline);
-            border-radius: 14px;
-        }
-
-        /* Height is set per-iframe by wireIframeAutosize() to match its actual content height -
-           a fixed height here would give the iframe its own internal scrollbar whenever content
-           is taller than that number, which is what was trapping vertical swipes on mobile
-           (the finger starts a scroll gesture over the iframe rectangle, and the iframe's own
-           scrollbar wins instead of the outer page). min-height is just the pre-load placeholder. */
-        .result-section iframe {
-            width: 100%;
-            min-height: 300px;
-            border: none;
-            display: block;
-        }
-
-        .result-section .unavailable-note {
-            color: var(--color-ink-secondary);
-            font-style: italic;
-            padding: 20px;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            color: var(--color-ink-secondary);
-        }
-
-        .last-updated {
-            background: var(--color-paper);
-            border: 1px solid var(--color-hairline);
-            padding: 15px;
-            border-radius: 14px;
-            margin-bottom: 20px;
-            text-align: center;
-            color: var(--color-ink-secondary);
-        }
-
-        .back-btn {
-            background: var(--color-ink);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 999px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-
-        .back-btn:hover {
-            background: #1B3B6F;
-        }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .results-nav {
-                gap: 6px;
-                padding: 8px;
-            }
-
-            .results-nav a {
-                padding: 7px 12px;
-                font-size: 0.8rem;
-            }
-
-            .result-section {
-                padding: 16px;
-            }
-
-            .result-section iframe {
-                min-height: 220px;
-            }
-        }
+        .panel-frame-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); }
+        .panel-frame-wrap iframe { width: 100%; min-height: 320px; border: none; display: block; color-scheme: dark; }
+        .unavailable-note { color: var(--ink-muted); font-style: italic; padding: 24px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <a href="/" class="back-btn">← Start New Analysis</a>
-
-        <div class="header">
-            <h1>🏈 Fantasy Football Analysis Results</h1>
-            <p>Every report lives on this page - scroll down or jump to one</p>
-        </div>
-
-        <div class="last-updated" id="lastUpdated">
-            📅 Loading analysis timestamp...
-        </div>
-
-        <nav class="results-nav" id="resultsNav">
-            <a href="#report-overview">🤖 League Overview</a>
-            <a href="#report-power">⚡ Power Rankings</a>
-            <a href="#report-power-leaderboard">📋 Power Ranking Leaderboard</a>
-            <a href="#report-roster">📊 Roster Grades</a>
-            <a href="#report-luck">🍀 Luck Analysis</a>
-            <a href="#report-trade">🔄 Trade Analysis</a>
-            <a href="#report-waiver">📈 Waiver Analysis</a>
-            <a href="#report-manager">🏆 Manager Grades</a>
-            <a href="#report-worst">🚨 Worst Trades</a>
+    <div class="app-shell">
+        <div id="sidebarScrim" class="sidebar-scrim"></div>
+        <nav id="sidebar" class="sidebar" aria-label="Report navigation">
+            <div class="sidebar-brand">
+                <div class="mark">F</div>
+                <div>
+                    <div class="name">Fantasy Football</div>
+                    <div class="sub">Results</div>
+                </div>
+                <button id="sidebarClose" class="sidebar-close" aria-label="Close navigation">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div id="navScroll" class="nav-scroll"></div>
         </nav>
 
-        <section class="result-section" id="report-overview">
-            <div class="result-section-header"><h2>🤖 League Overview</h2></div>
-            <p class="result-section-description">
-                Head-to-head top performers by week, biggest upsets, power ranking movers, matchups to
-                watch, a projected playoff bracket, median standings, and top waiver pickups - all in
-                one place, with a week picker so you can look back at any point in the season.
-            </p>
-            <div class="result-section-frame-wrap" data-file="ai_overview_latest.html"></div>
-        </section>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+            <header class="topbar">
+                <button id="menuToggle" class="menu-btn" aria-label="Open navigation">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+                </button>
+                <span class="topbar-title" id="topbarTitle">Overview</span>
+                <a href="/" class="back-link">&larr; New Analysis</a>
+            </header>
 
-        <section class="result-section" id="report-power">
-            <div class="result-section-header"><h2>⚡ Power Rankings</h2></div>
-            <p class="result-section-description">
-                Track team performance over time with interactive power rating progression charts.
-            </p>
-            <div class="result-section-frame-wrap" data-file="power_rating_interactive_latest.html"></div>
-        </section>
-
-        <section class="result-section" id="report-power-leaderboard">
-            <div class="result-section-header"><h2>📋 Power Ranking Leaderboard</h2></div>
-            <p class="result-section-description">
-                A sortable leaderboard view of the same power ratings.
-            </p>
-            <div class="result-section-frame-wrap" data-file="power_ranking_leaderboard_latest.html"></div>
-        </section>
-
-        <section class="result-section" id="report-roster">
-            <div class="result-section-header"><h2>📊 Roster Grades</h2></div>
-            <p class="result-section-description">
-                Analyze roster quality and talent distribution across all teams.
-            </p>
-            <div class="result-section-frame-wrap" data-file="roster_grades_interactive_latest.html"></div>
-        </section>
-
-        <section class="result-section" id="report-luck">
-            <div class="result-section-header"><h2>🍀 Luck Analysis</h2></div>
-            <p class="result-section-description">
-                Compare regular wins to median-based performance - who's been lucky vs. unlucky.
-            </p>
-            <div class="result-section-frame-wrap" data-file="luck_analysis_latest.html"></div>
-        </section>
-
-        <section class="result-section" id="report-trade">
-            <div class="result-section-header"><h2>🔄 Trade Analysis</h2></div>
-            <p class="result-section-description">
-                Every league trade with player-value impact scoring (and FAAB context for leagues that use it).
-            </p>
-            <div class="result-section-frame-wrap" data-file="trade_analysis_latest.html"></div>
-        </section>
-
-        <section class="result-section" id="report-waiver">
-            <div class="result-section-header"><h2>📈 Waiver Wire Analysis</h2></div>
-            <p class="result-section-description">
-                Waiver wire pickups and free agent acquisitions, including FAAB spend and efficiency.
-            </p>
-            <div class="result-section-frame-wrap" data-file="waiver_analysis_latest.html"></div>
-        </section>
-
-        <section class="result-section" id="report-manager">
-            <div class="result-section-header"><h2>🏆 Manager Report Cards</h2></div>
-            <p class="result-section-description">
-                Comprehensive manager performance grades based on trades, waivers, and overall strategy.
-            </p>
-            <div class="result-section-frame-wrap" data-file="manager_grades_latest.html"></div>
-        </section>
-
-        <section class="result-section" id="report-worst">
-            <div class="result-section-header"><h2>🚨 Worst Trades Report</h2></div>
-            <p class="result-section-description">
-                The worst trades in your league with detailed impact analysis.
-            </p>
-            <div class="result-section-frame-wrap" data-file="worst_trades_report_latest.html"></div>
-        </section>
-
-        <div class="footer">
-            <p>💡 All visualizations are interactive - hover, click, and explore!</p>
-            <p>📱 Mobile-friendly dashboards for on-the-go analysis</p>
+            <main class="main-content">
+                <div class="page-wide">
+                    <div class="results-hero">
+                        <h2>League Results</h2>
+                        <p>Pick a report from the menu to dig in.</p>
+                        <div class="last-updated" id="lastUpdated">Loading analysis timestamp...</div>
+                    </div>
+                    <div id="tabPanels"></div>
+                </div>
+            </main>
         </div>
     </div>
 
     <script>
-        // Load the latest analysis timestamp (build.js writes files with a _latest suffix)
-        fetch('data/fantasy_analysis_latest.json')
-            .then(response => response.json())
-            .then(data => {
-                const timestamp = data.analysis_info?.timestamp;
+        // Every report the static build might have generated, grouped for the sidebar, with a
+        // short description (shown above each embedded report) and the data file to check for
+        // existence before embedding it - not every league has every report (e.g. no trades
+        // this season means no trade_analysis file).
+        const NAV_GROUPS = [
+            { label: 'Overview', items: [
+                { id: 'overview', title: 'Overview', file: 'ai_overview_latest.html',
+                  description: "Head-to-head top performers by week, biggest upsets, power ranking movers, matchups to watch, a projected playoff bracket, median standings, and top waiver pickups." },
+                { id: 'draft', title: 'Draft Info', file: 'draft_info_latest.html',
+                  description: "Every manager's Draft Rating and the season's Biggest Steals - the largest gaps between a player's actual draft pick and where experts expected them to go." },
+            ]},
+            { label: 'Team Analysis', items: [
+                { id: 'power', title: 'Power Rankings', file: 'power_rating_interactive_latest.html',
+                  description: "Track team performance over time with interactive power rating progression charts." },
+                { id: 'power-leaderboard', title: 'Power Leaderboard', file: 'power_ranking_leaderboard_latest.html',
+                  description: "A sortable leaderboard view of the same power ratings." },
+                { id: 'roster', title: 'Roster Grades', file: 'roster_grades_interactive_latest.html',
+                  description: "Analyze roster quality and talent distribution across all teams." },
+                { id: 'luck', title: 'Luck Analysis', file: 'luck_analysis_latest.html',
+                  description: "Compare regular wins to median-based performance - who's been lucky vs. unlucky." },
+            ]},
+            { label: 'League Activity', items: [
+                { id: 'trades', title: 'Trade Analysis', file: 'trade_analysis_latest.html',
+                  description: "Every league trade with player-value impact scoring (and FAAB context for leagues that use it)." },
+                { id: 'waivers', title: 'Waiver Analysis', file: 'waiver_analysis_latest.html',
+                  description: "Waiver wire pickups and free agent acquisitions, including FAAB spend and efficiency." },
+                { id: 'managers', title: 'Manager Grades', file: 'manager_grades_latest.html',
+                  description: "Comprehensive manager performance grades based on trades, waivers, and overall strategy." },
+                { id: 'worst', title: 'Worst Trades', file: 'worst_trades_report_latest.html',
+                  description: "The worst trades in your league with detailed impact analysis." },
+            ]},
+        ];
 
-                if (timestamp) {
-                    const date = new Date(timestamp);
-                    document.getElementById('lastUpdated').innerHTML =
-                        `📅 Last Updated: ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
-                }
-            })
-            .catch(error => {
-                console.log('Error loading data:', error);
-                document.getElementById('lastUpdated').innerHTML = '📅 Analysis data loading...';
-            });
+        function initSidebarToggle() {
+            const sidebar = document.getElementById('sidebar');
+            const scrim = document.getElementById('sidebarScrim');
+            const menuBtn = document.getElementById('menuToggle');
+            const closeBtn = document.getElementById('sidebarClose');
+            const open = () => { sidebar.classList.add('open'); scrim.classList.add('open'); };
+            const close = () => { sidebar.classList.remove('open'); scrim.classList.remove('open'); };
+            menuBtn.addEventListener('click', open);
+            closeBtn.addEventListener('click', close);
+            scrim.addEventListener('click', close);
+            window._closeSidebar = close;
+        }
 
-        // Resize an embedded report's iframe to match its real content height, so the iframe
-        // never has its own internal scrollbar. Same-origin static build (this page and every
-        // report file are served from the same host), so contentDocument is readable directly -
-        // no postMessage handshake needed.
+        function activateTab(id) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.tab === id));
+            document.querySelectorAll('.tab-panel').forEach(el => el.classList.toggle('active', el.dataset.tab === id));
+            const active = document.querySelector(`.nav-item[data-tab="${id}"]`);
+            document.getElementById('topbarTitle').textContent = active ? active.dataset.title : 'Fantasy Football';
+            if (window._closeSidebar) window._closeSidebar();
+            window.scrollTo({ top: 0, behavior: 'auto' });
+        }
+
         function autosizeIframe(iframe) {
             try {
                 const doc = iframe.contentDocument || iframe.contentWindow.document;
@@ -350,12 +261,8 @@
                     doc.documentElement ? doc.documentElement.scrollHeight : 0,
                     doc.body ? doc.body.scrollHeight : 0
                 );
-                if (height > 0) {
-                    iframe.style.height = (height + 24) + 'px';
-                }
-            } catch (e) {
-                console.warn('Could not autosize iframe (unexpected cross-origin?):', e);
-            }
+                if (height > 0) iframe.style.height = (height + 24) + 'px';
+            } catch (e) { console.warn('Could not autosize iframe:', e); }
         }
 
         function wireIframeAutosize(iframe) {
@@ -366,40 +273,85 @@
                     if (doc && doc.body && 'ResizeObserver' in window) {
                         new ResizeObserver(() => autosizeIframe(iframe)).observe(doc.body);
                     }
-                } catch (e) { /* best effort - the load-time measurement above still applies */ }
+                } catch (e) { /* best effort */ }
             });
             window.addEventListener('resize', () => autosizeIframe(iframe));
         }
 
-        // Not every report exists for every league (e.g. no trades this season means no
-        // trade_analysis file) - check each one exists before embedding it, and show a plain
-        // note instead of a broken iframe when it doesn't.
-        document.querySelectorAll('.result-section-frame-wrap').forEach(async (wrap) => {
-            const file = wrap.dataset.file;
-            try {
-                const response = await fetch(file, { method: 'HEAD' });
-                if (response.ok) {
-                    const iframe = document.createElement('iframe');
-                    iframe.src = file;
-                    iframe.loading = 'lazy';
-                    wrap.appendChild(iframe);
-                    wireIframeAutosize(iframe);
+        async function buildNavAndPanels() {
+            const navScroll = document.getElementById('navScroll');
+            const tabPanels = document.getElementById('tabPanels');
+            let firstId = null;
 
-                    const header = wrap.closest('.result-section').querySelector('.result-section-header');
-                    const openLink = document.createElement('a');
-                    openLink.className = 'open-full';
-                    openLink.href = file;
-                    openLink.target = '_blank';
-                    openLink.rel = 'noopener noreferrer';
-                    openLink.innerHTML = 'Open full size &#8599;';
-                    header.appendChild(openLink);
-                } else {
-                    wrap.innerHTML = '<p class="unavailable-note">Not generated for this analysis.</p>';
+            for (const group of NAV_GROUPS) {
+                const label = document.createElement('div');
+                label.className = 'nav-group-label';
+                label.textContent = group.label;
+                navScroll.appendChild(label);
+
+                for (const item of group.items) {
+                    const navBtn = document.createElement('button');
+                    navBtn.className = 'nav-item';
+                    navBtn.dataset.tab = item.id;
+                    navBtn.dataset.title = item.title;
+                    navBtn.innerHTML = `<span class="dot"></span><span>${item.title}</span>`;
+                    navBtn.addEventListener('click', () => activateTab(item.id));
+                    navScroll.appendChild(navBtn);
+
+                    const panel = document.createElement('section');
+                    panel.className = 'tab-panel';
+                    panel.dataset.tab = item.id;
+                    panel.innerHTML = `
+                        <div class="panel-header"><h3>${item.title}</h3></div>
+                        <p class="panel-description">${item.description}</p>
+                        <div class="panel-frame-wrap" data-file="${item.file}"></div>
+                    `;
+                    tabPanels.appendChild(panel);
+                    if (!firstId) firstId = item.id;
+
+                    try {
+                        const response = await fetch(item.file, { method: 'HEAD' });
+                        const wrap = panel.querySelector('.panel-frame-wrap');
+                        if (response.ok) {
+                            const iframe = document.createElement('iframe');
+                            iframe.src = item.file;
+                            iframe.loading = 'lazy';
+                            wrap.appendChild(iframe);
+                            wireIframeAutosize(iframe);
+
+                            const openLink = document.createElement('a');
+                            openLink.className = 'open-full';
+                            openLink.href = item.file;
+                            openLink.target = '_blank';
+                            openLink.rel = 'noopener noreferrer';
+                            openLink.innerHTML = 'Open full size &#8599;';
+                            panel.querySelector('.panel-header').appendChild(openLink);
+                        } else {
+                            wrap.innerHTML = '<p class="unavailable-note">Not generated for this analysis.</p>';
+                        }
+                    } catch (error) {
+                        panel.querySelector('.panel-frame-wrap').innerHTML = '<p class="unavailable-note">Not generated for this analysis.</p>';
+                    }
                 }
-            } catch (error) {
-                wrap.innerHTML = '<p class="unavailable-note">Not generated for this analysis.</p>';
             }
-        });
+
+            if (firstId) activateTab(firstId);
+        }
+
+        initSidebarToggle();
+        buildNavAndPanels();
+
+        fetch('data/fantasy_analysis_latest.json')
+            .then(response => response.json())
+            .then(data => {
+                const timestamp = data.analysis_info?.timestamp;
+                if (timestamp) {
+                    const date = new Date(timestamp);
+                    document.getElementById('lastUpdated').textContent =
+                        `Last updated: ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+                }
+            })
+            .catch(() => { document.getElementById('lastUpdated').textContent = 'Analysis data loading...'; });
     </script>
 </body>
 </html>
