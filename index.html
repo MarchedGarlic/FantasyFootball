@@ -275,6 +275,23 @@
         }
         .nav-item.active .dot { background: var(--accent); }
 
+        .nav-subitem {
+            display: block;
+            width: 100%;
+            padding: 7px 12px 7px 34px;
+            border-radius: var(--radius-md);
+            background: transparent;
+            border: none;
+            color: var(--ink-faint);
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-align: left;
+            cursor: pointer;
+        }
+        .nav-subitem:hover { background: var(--surface-hover); color: var(--ink-muted); }
+        .nav-subitem.active { color: var(--accent); }
+
         .sidebar-footer {
             padding: 14px 16px 18px;
             border-top: 1px solid var(--line);
@@ -288,6 +305,7 @@
         @media (min-width: 960px) {
             .sidebar {
                 position: sticky;
+                top: 0;
                 transform: none;
                 height: 100vh;
             }
@@ -702,8 +720,19 @@
         // this analysis get rendered (see renderNav/renderPanels).
         const NAV_GROUPS = [
             { label: 'Overview', items: [
-                { id: 'overview', title: 'Overview', file: 'ai_overview.html' },
-                { id: 'draft', title: 'Draft Info', file: 'draft_info.html' },
+                { id: 'overview', title: 'Overview', file: 'ai_overview.html', sections: [
+                    { id: 'top-performers', title: 'Top Performers' },
+                    { id: 'upsets', title: 'Biggest Upsets' },
+                    { id: 'power-movers', title: 'Power Ranking Movers' },
+                    { id: 'matchups-to-watch', title: 'Matchups to Watch' },
+                    { id: 'bracket', title: 'Playoff Bracket' },
+                    { id: 'median-standings', title: 'Median Standings' },
+                    { id: 'waiver-pickups', title: 'Top Waiver Pickups' },
+                ]},
+                { id: 'draft', title: 'Draft Info', file: 'draft_info.html', sections: [
+                    { id: 'draft-rating', title: 'Draft Rating' },
+                    { id: 'biggest-steals', title: 'Biggest Steals' },
+                ]},
             ]},
             { label: 'Team Analysis', items: [
                 { id: 'power', title: 'Power Rankings', file: 'power_rating_interactive.html' },
@@ -1063,6 +1092,50 @@
             window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
         }
 
+        // Scrolls to a section id *inside* an embedded report's iframe - used by the Overview/
+        // Draft Info sub-nav so a click can jump straight to one of the several sections those
+        // reports bundle onto one page, instead of only ever landing at the top. The iframe may
+        // still be `loading="lazy"` and not started yet (it was `display:none` until this same
+        // click's activateTab() just made its panel visible), so this waits for its 'load'
+        // event rather than assuming the content is already there.
+        function scrollToSectionInIframe(iframe, sectionId) {
+            const tryScroll = () => {
+                try {
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+                    const el = doc.getElementById(sectionId);
+                    if (!el) return;
+                    // wireIframeAutosize() sizes this iframe to its full content height, so it
+                    // has no scroll position of its own to move (the OUTER page is what
+                    // actually scrolls through it) - scrollIntoView() inside the iframe's own
+                    // document would be a no-op. Scroll the outer window to the section's
+                    // position instead: its own offset within the iframe, plus the iframe's
+                    // offset within this page.
+                    const targetY = window.scrollY + iframe.getBoundingClientRect().top
+                        + el.getBoundingClientRect().top - 12;
+                    window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+                } catch (e) { /* not ready yet - ignore */ }
+            };
+            if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+                tryScroll();
+                // Bokeh content can reflow asynchronously after 'load' (see wireIframeAutosize's
+                // own ResizeObserver), which can shift the iframe's height and throw off the
+                // target position computed above - one cheap follow-up corrects for that
+                // without needing to track every possible reflow.
+                setTimeout(tryScroll, 400);
+            } else {
+                iframe.addEventListener('load', () => { tryScroll(); setTimeout(tryScroll, 400); }, { once: true });
+            }
+        }
+
+        function activateSection(tabId, sectionId) {
+            activateTab(tabId);
+            document.querySelectorAll('.nav-subitem').forEach(el => {
+                el.classList.toggle('active', el.dataset.tab === tabId && el.dataset.section === sectionId);
+            });
+            const iframe = document.querySelector(`.tab-panel[data-tab="${tabId}"] .panel-frame-wrap iframe`);
+            if (iframe) scrollToSectionInIframe(iframe, sectionId);
+        }
+
         function renderNavAndPanels(available, league_id, season) {
             const navScroll = document.getElementById('navScroll');
             const tabPanels = document.getElementById('tabPanels');
@@ -1088,6 +1161,18 @@
                     navBtn.innerHTML = `<span class="dot"></span><span>${item.title}</span>`;
                     navBtn.addEventListener('click', () => activateTab(item.id));
                     navScroll.appendChild(navBtn);
+
+                    if (item.sections) {
+                        item.sections.forEach(section => {
+                            const subBtn = document.createElement('button');
+                            subBtn.className = 'nav-subitem';
+                            subBtn.dataset.tab = item.id;
+                            subBtn.dataset.section = section.id;
+                            subBtn.textContent = section.title;
+                            subBtn.addEventListener('click', () => activateSection(item.id, section.id));
+                            navScroll.appendChild(subBtn);
+                        });
+                    }
 
                     const src = `/results/${item.file}?league_id=${league_id}&season=${season}`;
                     const panel = document.createElement('section');

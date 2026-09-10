@@ -18,7 +18,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         from bokeh.plotting import figure, show, output_file
         from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS, CheckboxGroup
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
-        from bokeh.models import Div
+        from bokeh.models import Div, LabelSet
         import numpy as np
         from src.bokeh_theme import (
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
@@ -199,6 +199,13 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
                 big name. Click a team's name in the legend to isolate their line, or use the
                 buttons below.
             </p>
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                <strong style="color:{ACCENT};">What this means:</strong> this measures roster
+                <em>talent</em>, not results - a team with a high roster grade but a losing
+                record has the pieces to turn things around (bad luck or poor lineup decisions
+                are more likely culprits than a weak roster). A low grade with a winning record
+                is overperforming their talent and may be due for a regression.
+            </p>
         </div>
         """
         summary_div = Div(text=summary_text, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
@@ -316,7 +323,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         trend_renderers = []
         
         # Add each team's data to the plot
-        for team in team_data:
+        for i, team in enumerate(team_data):
             # Plot the data points
             scatter_renderer = p.scatter(
                 x='week', y='grade',
@@ -359,7 +366,28 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
                 
                 # Add to trend legend
                 trend_legend_items.append((f"{team['name']} {trend_direction} ({team['slope']:+.1f}/wk)", [trend_renderer]))
-            
+
+            # Manager name next to the most recent point only (see power_rankings.py's
+            # create_power_rating_plot for why not every week's point). Always visible
+            # regardless of legend toggle state - Bokeh's Legend only accepts GlyphRenderers,
+            # not a LabelSet, in an item's renderer list.
+            last_point_source = ColumnDataSource(data={
+                'week': [team['source'].data['week'][-1]],
+                'grade': [team['source'].data['grade'][-1]],
+                'name': [team['name']],
+            })
+            # Anchored to the right of the label (x_offset negative, text_align right) so the
+            # text extends back toward the chart instead of off its right edge, where the
+            # season's final week - and therefore every one of these labels - sits. y_offset
+            # cycles per team since every label shares that same final week and would otherwise
+            # stack on top of each other for teams with a similar current grade.
+            p.add_layout(LabelSet(
+                x='week', y='grade', text='name', source=last_point_source,
+                x_offset=-8, y_offset=[8, -20, 18, -32][i % 4], text_align='right',
+                text_font_size='9px', text_color=team['color'],
+                background_fill_color=SURFACE, background_fill_alpha=0.65,
+            ))
+
             # Add to data legend
             data_legend_items.append((f"{team['name']} ({team['current_grade']:.1f})", [scatter_renderer, line_renderer]))
         
@@ -1077,7 +1105,7 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         from bokeh.plotting import figure, show, output_file
         from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
-        from bokeh.models import Div, Line, Slope
+        from bokeh.models import Div, Line, Slope, LabelSet
         import numpy as np
         from src.bokeh_theme import (
             style_figure, style_legend, legend_toggle_button, button_stylesheet,
@@ -1159,10 +1187,20 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         
         # Sort by luck factor for display
         luck_data.sort(key=lambda x: x['luck_factor'], reverse=True)
-        
+
+        # Teams with similar records land at nearly the same (median_wins, regular_wins) spot,
+        # so a fixed label offset stacks their names into an unreadable pile (confirmed by
+        # rendering this at a real 375px width - see the mobile-review notes). Cycling the
+        # vertical offset per point is a cheap, imperfect declutter - it spreads most
+        # collisions apart without true overlap detection, which isn't worth the complexity
+        # for ~12 points. Hover still gives the exact team when labels do still touch.
+        label_y_offsets = [8, -20, 18, -32]
+        label_offsets = [label_y_offsets[i % len(label_y_offsets)] for i in range(len(luck_data))]
+
         # Create Bokeh data source
         source = ColumnDataSource(data={
             'team_name': [d['team_name'] for d in luck_data],
+            'label_y_offset': label_offsets,
             'regular_wins': [d['regular_wins'] for d in luck_data],
             'median_wins': [d['median_wins'] for d in luck_data],
             'regular_losses': [d['regular_losses'] for d in luck_data],
@@ -1202,7 +1240,17 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         scatter = p.scatter('median_wins', 'regular_wins', source=source,
                           size=15, color='luck_color', alpha=0.8,
                           line_color='white', line_width=2)
-        
+
+        # Manager name next to each point - only ~12 points on this chart (one per manager,
+        # not one per week), so labeling every one stays readable even on a phone. A small,
+        # fixed font size (not viewport-relative - Bokeh has no media-query equivalent) keeps
+        # it unobtrusive at any width.
+        p.add_layout(LabelSet(
+            x='median_wins', y='regular_wins', text='team_name', source=source,
+            x_offset=8, y_offset='label_y_offset', text_font_size='9px', text_color=INK,
+            background_fill_color=SURFACE, background_fill_alpha=0.65,
+        ))
+
         # Add hover tool
         hover = HoverTool(tooltips=[
             ("Team", "@team_name"),
@@ -1233,6 +1281,13 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
                     says you "should have" (lucky); below it means fewer (unlucky). Median wins
                     are the record you'd have if you played the league's weekly median score
                     instead of your real opponent.
+                </p>
+                <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                    <strong style="color:{ACCENT};">What this means:</strong> a team well above
+                    the line has been winning close games and catching favorable matchups - their
+                    record looks better than their actual scoring suggests, and it may not last.
+                    A team well below the line has been running into buzzsaws or losing close
+                    ones - their record understates how good they actually are.
                 </p>
                 <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">
                     This only measures schedule/matchup luck - it doesn't factor in injuries or

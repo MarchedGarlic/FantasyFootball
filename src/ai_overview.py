@@ -301,9 +301,10 @@ def build_ai_overview(output_data, detailed_data, roster_data, league_settings, 
 
 # ---- rendering (server-rendered sections) ----
 
-def _card(title, body_html, extra_attrs=""):
+def _card(title, body_html, extra_attrs="", section_id=None):
+    id_attr = f'id="{section_id}"' if section_id else ""
     return f"""
-    <div class="section-card" {extra_attrs}>
+    <div class="section-card" {id_attr} {extra_attrs}>
         <h2>{title}</h2>
         {body_html}
     </div>
@@ -321,7 +322,12 @@ def _render_upsets(upsets):
         </li>"""
         for u in upsets
     )
-    return f"<ul class='upset-list'>{items}</ul>"
+    return f"""
+    <p class="section-caption">A lower-ranked team beating a higher-ranked one - the upset score
+    weighs how big the rank gap was and how decisively they won, so a bigger number means a
+    more surprising result.</p>
+    <ul class='upset-list'>{items}</ul>
+    """
 
 
 def _render_power_movers(section):
@@ -339,7 +345,10 @@ def _render_power_movers(section):
         for m in section['movers']
     )
     return f"""
-    <p class="section-caption">Week {section['last_week']} to Week {section['this_week']}</p>
+    <p class="section-caption">Week {section['last_week']} to Week {section['this_week']} - a big
+    positive change means that manager is trending up fast (a hot streak or a team finally
+    finding its groove); a big negative change is a warning sign, even if their record still
+    looks fine.</p>
     <div class="table-scroll"><table>
         <tr><th>Manager</th><th>Last Week</th><th>This Week</th><th>Change</th></tr>
         {rows}
@@ -358,7 +367,11 @@ def _render_matchups_to_watch(matchups):
         </li>"""
         for m in matchups
     )
-    return f"<ul class='matchup-list'>{items}</ul>"
+    return f"""
+    <p class="section-caption">Next week's matchups that carry real standings stakes - two teams
+    fighting for the same playoff spot, or a bubble team that needs a win.</p>
+    <ul class='matchup-list'>{items}</ul>
+    """
 
 
 def _render_median_standings(rows):
@@ -468,7 +481,10 @@ def _render_waiver_pickups(section):
 
     return f"""
     {this_week_html}
-    <p class="section-caption">Season-best pickups</p>
+    <p class="section-caption">Season-best pickups - "Impact" is how much better the player
+    performed than an average rostered player at their position while you had them; a positive
+    number means the pickup was a real difference-maker, not just a warm body filling a roster
+    spot.</p>
     <div class="table-scroll"><table>{header}{season_rows}</table></div>
     """
 
@@ -718,23 +734,28 @@ def render_ai_overview_html(analysis_info, sections, faab_ledger, roster_to_mana
     top_performers_card = _card(
         "Top Performers",
         week_picker_html + '<p class="section-caption">Head-to-head matchup winners, ranked by winning score</p>'
-        + '<div id="topPerformersBody"><p class="empty">Loading...</p></div>'
+        + '<div id="topPerformersBody"><p class="empty">Loading...</p></div>',
+        section_id="top-performers",
     )
 
     bracket_card = _card(
         "Projected Playoff Bracket &amp; Standings",
         '<div id="standingsBody"><p class="empty">Loading...</p></div>'
-        + '<div id="bracketBody" style="margin-top: 18px;"><p class="empty">Loading...</p></div>'
+        + '<div id="bracketBody" style="margin-top: 18px;"><p class="empty">Loading...</p></div>',
+        section_id="bracket",
     )
 
+    # Section ids match the sidebar's Overview sub-nav (index.html/results_template.html's
+    # OVERVIEW_SECTIONS) so a sub-nav click can scroll straight to one instead of only ever
+    # landing at the top of this page.
     body = (
         top_performers_card
-        + _card("Biggest Upsets", _render_upsets(sections['upsets']))
-        + _card("Power Ranking Movers: Last Week vs This Week", _render_power_movers(sections['power_movers']))
-        + _card("Matchups to Watch", _render_matchups_to_watch(sections['matchups_to_watch']))
+        + _card("Biggest Upsets", _render_upsets(sections['upsets']), section_id="upsets")
+        + _card("Power Ranking Movers: Last Week vs This Week", _render_power_movers(sections['power_movers']), section_id="power-movers")
+        + _card("Matchups to Watch", _render_matchups_to_watch(sections['matchups_to_watch']), section_id="matchups-to-watch")
         + bracket_card
-        + _card("Median Standings", _render_median_standings(sections['median_standings']))
-        + _card("Top Waiver Pickups", _render_waiver_pickups(sections['waiver_pickups']))
+        + _card("Median Standings", _render_median_standings(sections['median_standings']), section_id="median-standings")
+        + _card("Top Waiver Pickups", _render_waiver_pickups(sections['waiver_pickups']), section_id="waiver-pickups")
         + _render_faab_tracker(faab_ledger, roster_to_manager, manager_names)
     )
 
@@ -760,8 +781,8 @@ def render_draft_info_html(analysis_info, draft_ratings, biggest_steals):
     generated_at = datetime.now().strftime('%B %d, %Y at %I:%M %p')
 
     body = (
-        _card("Draft Rating", _render_draft_ratings(draft_ratings))
-        + _card("Biggest Steals", _render_biggest_steals(biggest_steals))
+        _card("Draft Rating", _render_draft_ratings(draft_ratings), section_id="draft-rating")
+        + _card("Biggest Steals", _render_biggest_steals(biggest_steals), section_id="biggest-steals")
     )
 
     return _page_shell(

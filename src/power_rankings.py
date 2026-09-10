@@ -207,7 +207,7 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
     """Create interactive Power Rating progression plot with toggleable trend lines"""
     try:
         from bokeh.plotting import figure, show, output_file
-        from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS
+        from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS, LabelSet
         from bokeh.layouts import column, row
         import numpy as np
         from src.bokeh_theme import (
@@ -401,6 +401,13 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
                 trend (linear regression over the season). Click a name in the legend to hide or
                 show just that team, or use the buttons below to toggle everyone at once.
             </p>
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                <strong style="color:{ACCENT};">What this means:</strong> the team on top of this
+                chart is playing the best fantasy football overall - not just winning, but doing
+                it with a strong scoring average and floor. A team with a losing record but a
+                high power rating has been getting unlucky and is likely to turn it around; the
+                reverse (a winning record, low rating) is a team living on the edge.
+            </p>
         </div>
         """
 
@@ -436,7 +443,7 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         trend_legend_items = []
         
         # Add each team's data to the plot
-        for team in team_data:
+        for i, team in enumerate(team_data):
             # Plot the data points
             scatter_renderer = p.scatter(
                 x='week', y='rating',
@@ -476,7 +483,32 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
                 
                 # Add to trend legend
                 trend_legend_items.append((f"{team['name']} Trend {trend_direction} ({team['slope']:+.1f}/wk)", [trend_renderer]))
-            
+
+            # Team name next to its most recent point only - labeling every week's point on an
+            # 18-week, 12-team chart would be unreadable, but a name at the end of each line
+            # gives an at-a-glance "current standings" read without relying on hover/legend.
+            # Small fixed font size since Bokeh has no media-query equivalent to shrink it on
+            # narrow screens - kept unobtrusive at any width instead. Always visible regardless
+            # of legend toggle state - Bokeh's Legend only accepts GlyphRenderers in an item's
+            # renderer list, so a LabelSet (an Annotation, not a GlyphRenderer) can't be wired
+            # to hide/show together with its line via the native click-to-hide legend.
+            last_point_source = ColumnDataSource(data={
+                'week': [team['source'].data['week'][-1]],
+                'rating': [team['source'].data['rating'][-1]],
+                'name': [team['name']],
+            })
+            # Anchored to the right of the label (x_offset negative, text_align right) so the
+            # text extends back toward the chart instead of off its right edge, where the
+            # season's final week - and therefore every one of these labels - sits. y_offset
+            # cycles per team since every label shares that same final week and would otherwise
+            # stack on top of each other for teams with a similar current rating.
+            p.add_layout(LabelSet(
+                x='week', y='rating', text='name', source=last_point_source,
+                x_offset=-8, y_offset=[8, -20, 18, -32][i % 4], text_align='right',
+                text_font_size='9px', text_color=team['color'],
+                background_fill_color=SURFACE, background_fill_alpha=0.65,
+            ))
+
             # Add to data legend
             data_legend_items.append((f"{team['name']}", [scatter_renderer, line_renderer]))
         

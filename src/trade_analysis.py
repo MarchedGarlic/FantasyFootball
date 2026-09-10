@@ -715,7 +715,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     try:
         from bokeh.plotting import figure, show, output_file
         from bokeh.models import (ColumnDataSource, HoverTool, Legend, LegendItem,
-                                Button, CustomJS, Div)
+                                Button, CustomJS, Div, LabelSet)
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
         from sklearn.linear_model import LinearRegression
         import numpy as np
@@ -1076,6 +1076,12 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Combined Impact = Value Acquired - Value Given Up</p>
         <p style="{DESCRIPTION_STYLE}"><strong>Context only:</strong> Team Trend (hover) compares this manager's power rating/roster grade the week before vs. the week of the trade - it is not part of the score</p>
         <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">Positive values mean the manager received more value than they gave up; negative values mean the opposite</p>
+        <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+            <strong style="color:{ACCENT};">What this means:</strong> a manager with several
+            points above the zero line has consistently won their trades - they're finding
+            value other managers are giving away. Well below zero means the opposite; it's worth
+            a look at whether they're trading need over value, or getting outmaneuvered.
+        </p>
     </div>
     """
     calc_explanation_div = Div(text=calc_explanation_html, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
@@ -1118,6 +1124,17 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
 
         data_renderers.append(scatter)
         data_legend_items.append(LegendItem(label=f"{manager} ({len(data['weeks'])} trades)", renderers=[scatter]))
+
+        # Manager name next to every trade point - a real season's trade count is small enough
+        # (this league: 16) that labeling each one stays readable, unlike Waiver Analysis's
+        # hundreds of points. Always visible regardless of legend toggle state (see
+        # power_rankings.py's create_power_rating_plot for why: a LabelSet can't be wired into
+        # a Legend item's renderer list).
+        p.add_layout(LabelSet(
+            x='week', y='combined_impact', text='manager', source=source,
+            x_offset=8, y_offset=6, text_font_size='9px', text_color=color,
+            background_fill_color=SURFACE, background_fill_alpha=0.65,
+        ))
 
     # Legend renders *inside* the plot frame (not as an outside 'right' panel) - a side panel
     # adds its own fixed pixel width alongside the frame, which sizing_mode="stretch_width"
@@ -1490,6 +1507,12 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Weekly Score = (their points - position mean) / position standard deviation, that week</p>
         <p style="{DESCRIPTION_STYLE}"><strong>Step 5:</strong> Position-Adjusted Score = the average of every Weekly Score across the weeks they were rostered</p>
         <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">Positive values mean the pickup outperformed a typical rostered player at their position while you had them; negative values mean they underperformed</p>
+        <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+            <strong style="color:{ACCENT};">What this means:</strong> a manager showing up here
+            often with positive scores has a good eye for the waiver wire - they're finding
+            usable players before anyone else notices. A pile of pickups near zero or negative
+            means those roster spots probably weren't worth the churn.
+        </p>
     </div>
     """
     calc_explanation_div = Div(text=calc_explanation_html, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
@@ -1636,7 +1659,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     """Create comprehensive manager grade visualization with enhanced features"""
     try:
         from bokeh.plotting import figure, show, output_file
-        from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS, Div, DataTable, TableColumn
+        from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS, Div, DataTable, TableColumn, LabelSet
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
         from sklearn.linear_model import LinearRegression
         import numpy as np
@@ -1857,7 +1880,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     data_legend_items = []
     trend_legend_items = []
     
-    for team in team_data:
+    for i, team in enumerate(team_data):
         # Main data points and connecting lines
         scatter = p.scatter(
             x='week', y='grade',
@@ -1894,7 +1917,27 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             trend_renderers.append(trend)
             trend_hover.renderers.append(trend)
             trend_legend_items.append((f"{team['name']} {trend_direction} ({team['slope']:+.3f}/wk)", [trend]))
-        
+
+        # Manager name next to the most recent point only (see power_rankings.py's
+        # create_power_rating_plot for why not every week). Always visible regardless of
+        # legend toggle state - a LabelSet can't be wired into a Legend item's renderer list.
+        last_point_source = ColumnDataSource(data={
+            'week': [team['source'].data['week'][-1]],
+            'grade': [team['source'].data['grade'][-1]],
+            'name': [team['name']],
+        })
+        # Anchored to the right of the label (x_offset negative, text_align right) so the text
+        # extends back toward the chart instead of off its right edge, where the season's final
+        # week - and therefore every one of these labels - sits. y_offset cycles per manager
+        # since every label shares that same final week and would otherwise stack on top of
+        # each other for managers with a similar current grade.
+        p.add_layout(LabelSet(
+            x='week', y='grade', text='name', source=last_point_source,
+            x_offset=-8, y_offset=[8, -20, 18, -32][i % 4], text_align='right',
+            text_font_size='9px', text_color=team['color'],
+            background_fill_color=SURFACE, background_fill_alpha=0.65,
+        ))
+
         data_legend_items.append((f"{team['name']} ({team['enhanced_overall']:.1f})", [scatter, line]))
     
     # Legends render *inside* the plot frame (not as outside side panels) - a side panel adds
@@ -1967,6 +2010,13 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         </p>
         <p style="{LABEL_STYLE} margin-top: 8px;"><strong>Grade Scale:</strong> 8-10 Elite &middot; 6-8 Above Average &middot; 4-6 Average &middot; 2-4 Below Average &middot; 0-2 Poor</p>
         <p style="{LABEL_STYLE}"><strong>Trend Analysis:</strong> Linear regression showing management skill development trajectory</p>
+        <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+            <strong style="color:{ACCENT};">What this means:</strong> this grades how well a
+            manager has <em>played</em> the game overall - lineup decisions, trades, and waivers
+            combined - not just their win-loss record. A manager with a mediocre record but a
+            high grade is doing the right things and should turn it around; a good record with a
+            low grade suggests they're winning in spite of their own decisions.
+        </p>
     </div>
     """
 
