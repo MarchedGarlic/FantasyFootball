@@ -213,7 +213,7 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         from src.bokeh_theme import (
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
-            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE,
+            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, collapsible_description_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh not available - install with: pip install bokeh")
@@ -394,20 +394,25 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         explanation_text = f"""
         <div style="{PANEL_STYLE}">
             <h3 style="{HEADING_STYLE}">How Power Rating Works</h3>
-            <p style="{DESCRIPTION_STYLE}">
-                Each week's rating blends your scoring average, your high/low range, and your win
-                percentage - <code style="color:{ACCENT};">(avg&times;6 + (high+low)&times;2 + (win%&times;200)&times;2) &divide; 10</code>.
-                Higher values mean stronger overall performance. Dashed lines are each team's
-                trend (linear regression over the season). Click a name in the legend to hide or
-                show just that team, or use the buttons below to toggle everyone at once.
-            </p>
-            <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
-                <strong style="color:{ACCENT};">What this means:</strong> the team on top of this
-                chart is playing the best fantasy football overall - not just winning, but doing
-                it with a strong scoring average and floor. A team with a losing record but a
-                high power rating has been getting unlucky and is likely to turn it around; the
-                reverse (a winning record, low rating) is a team living on the edge.
-            </p>
+            {collapsible_description_html(
+                short_html=f'<p style="{DESCRIPTION_STYLE}">Blends scoring average, high/low range, and win percentage into one number - higher means a stronger overall team.</p>',
+                full_extra_html=f'''
+                <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                    The exact formula: <code style="color:{ACCENT};">(avg&times;6 + (high+low)&times;2 + (win%&times;200)&times;2) &divide; 10</code>.
+                    Dashed lines are each team's trend (linear regression over the season). Click a
+                    name in the legend to hide or show just that team, or use the buttons below to
+                    toggle everyone at once.
+                </p>
+                <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                    <strong style="color:{ACCENT};">What this means:</strong> the team on top of this
+                    chart is playing the best fantasy football overall - not just winning, but doing
+                    it with a strong scoring average and floor. A team with a losing record but a
+                    high power rating has been getting unlucky and is likely to turn it around; the
+                    reverse (a winning record, low rating) is a team living on the edge.
+                </p>
+                ''',
+                toggle_id="power-rating-expl",
+            )}
         </div>
         """
 

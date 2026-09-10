@@ -723,6 +723,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
+            collapsible_description_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh and/or sklearn not available for trade visualization")
@@ -1070,18 +1071,24 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     calc_explanation_html = f"""
     <h3 style="{HEADING_STYLE}">How Trade Impact Is Calculated</h3>
     <div style="{CALLOUT_STYLE}">
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 1:</strong> Grade every player acquired and every player given up (ESPN season stat-leader tiers, ~1-10 scale)</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 2:</strong> Value Acquired = sum of acquired players' grades</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 3:</strong> Value Given Up = sum of given-up players' grades</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Combined Impact = Value Acquired - Value Given Up</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Context only:</strong> Team Trend (hover) compares this manager's power rating/roster grade the week before vs. the week of the trade - it is not part of the score</p>
-        <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">Positive values mean the manager received more value than they gave up; negative values mean the opposite</p>
-        <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
-            <strong style="color:{ACCENT};">What this means:</strong> a manager with several
-            points above the zero line has consistently won their trades - they're finding
-            value other managers are giving away. Well below zero means the opposite; it's worth
-            a look at whether they're trading need over value, or getting outmaneuvered.
-        </p>
+        <p style="{DESCRIPTION_STYLE}">Net player value gained or given up in every trade - a manager above zero got more than they gave up; below zero, less.</p>
+        {collapsible_description_html(
+            short_html="",
+            full_extra_html=f'''
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;"><strong>Step 1:</strong> Grade every player acquired and every player given up (ESPN season stat-leader tiers, ~1-10 scale)</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 2:</strong> Value Acquired = sum of acquired players grades</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 3:</strong> Value Given Up = sum of given-up players grades</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Combined Impact = Value Acquired - Value Given Up</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Context only:</strong> Team Trend (hover) compares this manager\'s power rating/roster grade the week before vs. the week of the trade - it is not part of the score</p>
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                <strong style="color:{ACCENT};">What this means:</strong> a manager with several
+                points above the zero line has consistently won their trades - they are finding
+                value other managers are giving away. Well below zero means the opposite; it is
+                worth a look at whether they are trading need over value, or getting outmaneuvered.
+            </p>
+            ''',
+            toggle_id="trade-calc-expl",
+        )}
     </div>
     """
     calc_explanation_div = Div(text=calc_explanation_html, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
@@ -1246,6 +1253,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
+            collapsible_description_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh not available for waiver visualization")
@@ -1501,18 +1509,25 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     calc_explanation_html = f"""
     <h3 style="{HEADING_STYLE}">How Waiver Wire Impact Is Calculated</h3>
     <div style="{CALLOUT_STYLE}">
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 1:</strong> Find the weeks the pickup was actually rostered - from the week added through the week before you dropped or traded them (or the end of the season if you kept them)</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 2:</strong> For each of those weeks, look up their actual fantasy points scored</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 3:</strong> Compare that to every rostered player at the same position, league-wide, that same week (the mean and spread)</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Weekly Score = (their points - position mean) / position standard deviation, that week</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 5:</strong> Position-Adjusted Score = the average of every Weekly Score across the weeks they were rostered</p>
-        <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">Positive values mean the pickup outperformed a typical rostered player at their position while you had them; negative values mean they underperformed</p>
-        <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
-            <strong style="color:{ACCENT};">What this means:</strong> a manager showing up here
-            often with positive scores has a good eye for the waiver wire - they're finding
-            usable players before anyone else notices. A pile of pickups near zero or negative
-            means those roster spots probably weren't worth the churn.
-        </p>
+        <p style="{DESCRIPTION_STYLE}">How much better (or worse) a pickup played than an average rostered player at their position, while you had them.</p>
+        {collapsible_description_html(
+            short_html="",
+            full_extra_html=f'''
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;"><strong>Step 1:</strong> Find the weeks the pickup was actually rostered - from the week added through the week before you dropped or traded them (or the end of the season if you kept them)</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 2:</strong> For each of those weeks, look up their actual fantasy points scored</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 3:</strong> Compare that to every rostered player at the same position, league-wide, that same week (the mean and spread)</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Weekly Score = (their points - position mean) / position standard deviation, that week</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 5:</strong> Position-Adjusted Score = the average of every Weekly Score across the weeks they were rostered</p>
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">Positive values mean the pickup outperformed a typical rostered player at their position while you had them; negative values mean they underperformed</p>
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                <strong style="color:{ACCENT};">What this means:</strong> a manager showing up here
+                often with positive scores has a good eye for the waiver wire - they are finding
+                usable players before anyone else notices. A pile of pickups near zero or negative
+                means those roster spots probably were not worth the churn.
+            </p>
+            ''',
+            toggle_id="waiver-calc-expl",
+        )}
     </div>
     """
     calc_explanation_div = Div(text=calc_explanation_html, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
@@ -1667,6 +1682,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
+            collapsible_description_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh or scikit-learn not available for manager grade visualization")
@@ -2001,22 +2017,28 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     explanation_text = f"""
     <div style="{PANEL_STYLE}">
         <h3 style="{HEADING_STYLE}">Manager Performance Grading Methodology</h3>
-        <p style="{DESCRIPTION_STYLE}">
-            Every manager gets a 0-10 overall grade blending four weighted components:
-            <strong>performance</strong> (40% - weekly scores relative to league average plus
-            consistency), <strong>trade analysis</strong> (25% - net impact of every trade),
-            <strong>waiver analysis</strong> (20% - success rate and impact of pickups), and
-            <strong>start/sit accuracy</strong> (15% - optimal lineup decisions vs. actual ones).
-        </p>
-        <p style="{LABEL_STYLE} margin-top: 8px;"><strong>Grade Scale:</strong> 8-10 Elite &middot; 6-8 Above Average &middot; 4-6 Average &middot; 2-4 Below Average &middot; 0-2 Poor</p>
-        <p style="{LABEL_STYLE}"><strong>Trend Analysis:</strong> Linear regression showing management skill development trajectory</p>
-        <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
-            <strong style="color:{ACCENT};">What this means:</strong> this grades how well a
-            manager has <em>played</em> the game overall - lineup decisions, trades, and waivers
-            combined - not just their win-loss record. A manager with a mediocre record but a
-            high grade is doing the right things and should turn it around; a good record with a
-            low grade suggests they're winning in spite of their own decisions.
-        </p>
+        {collapsible_description_html(
+            short_html=f'<p style="{DESCRIPTION_STYLE}">A 0-10 grade for how well a manager has played the game overall - lineup decisions, trades, and waivers - not just their win-loss record.</p>',
+            full_extra_html=f'''
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                Blends four weighted components: <strong>performance</strong> (40% - weekly
+                scores relative to league average plus consistency), <strong>trade
+                analysis</strong> (25% - net impact of every trade), <strong>waiver
+                analysis</strong> (20% - success rate and impact of pickups), and
+                <strong>start/sit accuracy</strong> (15% - optimal lineup decisions vs. actual
+                ones).
+            </p>
+            <p style="{LABEL_STYLE} margin-top: 8px;"><strong>Grade Scale:</strong> 8-10 Elite &middot; 6-8 Above Average &middot; 4-6 Average &middot; 2-4 Below Average &middot; 0-2 Poor</p>
+            <p style="{LABEL_STYLE}"><strong>Trend Analysis:</strong> Linear regression showing management skill development trajectory</p>
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                <strong style="color:{ACCENT};">What this means:</strong> a manager with a
+                mediocre record but a high grade is doing the right things and should turn it
+                around; a good record with a low grade suggests they are winning in spite of
+                their own decisions.
+            </p>
+            ''',
+            toggle_id="manager-grade-expl",
+        )}
     </div>
     """
 

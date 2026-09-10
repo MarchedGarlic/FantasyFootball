@@ -23,7 +23,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         from src.bokeh_theme import (
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
-            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
+            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE, collapsible_description_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh not available - install with: pip install bokeh")
@@ -192,20 +192,24 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         summary_text = f"""
         <div style="{PANEL_STYLE}">
             <h3 style="{HEADING_STYLE}">How Roster Grade Works</h3>
-            <p style="{DESCRIPTION_STYLE}">
-                Every player on a roster is graded from ESPN's weekly statistical leaders by
-                position, starters counted in full and bench players at half value. Scores
-                typically land 15-35 - higher means stronger overall roster talent, not just one
-                big name. Click a team's name in the legend to isolate their line, or use the
-                buttons below.
-            </p>
-            <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
-                <strong style="color:{ACCENT};">What this means:</strong> this measures roster
-                <em>talent</em>, not results - a team with a high roster grade but a losing
-                record has the pieces to turn things around (bad luck or poor lineup decisions
-                are more likely culprits than a weak roster). A low grade with a winning record
-                is overperforming their talent and may be due for a regression.
-            </p>
+            {collapsible_description_html(
+                short_html=f'<p style="{DESCRIPTION_STYLE}">Every player is graded from ESPN weekly stat leaders - higher means stronger overall roster talent, not just one big name.</p>',
+                full_extra_html=f'''
+                <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                    Starters count in full, bench players at half value. Scores typically land
+                    15-35. Click a team's name in the legend to isolate their line, or use the
+                    buttons below.
+                </p>
+                <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                    <strong style="color:{ACCENT};">What this means:</strong> this measures roster
+                    <em>talent</em>, not results - a team with a high roster grade but a losing
+                    record has the pieces to turn things around (bad luck or poor lineup decisions
+                    are more likely culprits than a weak roster). A low grade with a winning record
+                    is overperforming their talent and may be due for a regression.
+                </p>
+                ''',
+                toggle_id="roster-grade-expl",
+            )}
         </div>
         """
         summary_div = Div(text=summary_text, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
@@ -1110,7 +1114,7 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         from src.bokeh_theme import (
             style_figure, style_legend, legend_toggle_button, button_stylesheet,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
-            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE,
+            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, collapsible_description_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh not available - install with: pip install bokeh")
@@ -1269,33 +1273,37 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
             style_legend(p.legend[0])
             show_legend_button = legend_toggle_button(p.legend[0])
 
-        # Create explanation div - larger, higher-contrast description text (explicit user
-        # request), auto-height so a toggle can never overlap the layout below it.
+        # Always-visible explanation div, matching every other chart's "prominent, larger panel
+        # above the chart" pattern (this one used to be hidden behind a "How to Read This Chart"
+        # button, missed when that pattern was applied everywhere else).
         explanation_div = Div(
             text=f"""
             <div style="{PANEL_STYLE}">
                 <h3 style="{HEADING_STYLE}">How to Read This Chart</h3>
-                <p style="{DESCRIPTION_STYLE}">
-                    The dashed line of fairness is where you'd sit if wins were purely
-                    skill-based. Above it means you've won more than your median-based record
-                    says you "should have" (lucky); below it means fewer (unlucky). Median wins
-                    are the record you'd have if you played the league's weekly median score
-                    instead of your real opponent.
-                </p>
-                <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
-                    <strong style="color:{ACCENT};">What this means:</strong> a team well above
-                    the line has been winning close games and catching favorable matchups - their
-                    record looks better than their actual scoring suggests, and it may not last.
-                    A team well below the line has been running into buzzsaws or losing close
-                    ones - their record understates how good they actually are.
-                </p>
-                <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">
-                    This only measures schedule/matchup luck - it doesn't factor in injuries or
-                    other circumstances that affect performance.
-                </p>
+                {collapsible_description_html(
+                    short_html=f'<p style="{DESCRIPTION_STYLE}">Above the dashed line means you have won more than your underlying performance says you should have (lucky); below means fewer (unlucky).</p>',
+                    full_extra_html=f'''
+                    <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                        The dashed line of fairness is where you would sit if wins were purely
+                        skill-based. Median wins are the record you would have if you played the
+                        league's weekly median score instead of your real opponent.
+                    </p>
+                    <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                        <strong style="color:{ACCENT};">What this means:</strong> a team well above
+                        the line has been winning close games and catching favorable matchups -
+                        their record looks better than their actual scoring suggests, and it may
+                        not last. A team well below the line has been running into buzzsaws or
+                        losing close ones - their record understates how good they actually are.
+                    </p>
+                    <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">
+                        This only measures schedule/matchup luck - it does not factor in injuries
+                        or other circumstances that affect performance.
+                    </p>
+                    ''',
+                    toggle_id="luck-analysis-expl",
+                )}
             </div>
             """,
-            visible=False,
             sizing_mode="stretch_width",
             max_width=900,
             height_policy="auto",
@@ -1345,13 +1353,6 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         )
 
         # Create buttons
-        explanation_button = Button(label="How to Read This Chart", sizing_mode="stretch_width", height=44,
-                                     stylesheets=[button_stylesheet("muted")])
-        explanation_button.js_on_event("button_click", CustomJS(
-            args=dict(explanation=explanation_div),
-            code="explanation.visible = !explanation.visible;"
-        ))
-
         reset_button = Button(label="Reset Zoom", sizing_mode="stretch_width", height=44,
                                stylesheets=[button_stylesheet("ghost")])
         reset_button.js_on_event("button_click", CustomJS(
@@ -1368,16 +1369,10 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         # src/bokeh_mobile.py's module docstring for why this is done unconditionally in Python
         # rather than via a CSS media query targeting Bokeh's (version-fragile) internal layout
         # classes.
-        # 2-per-row grid, not one long row - Bokeh's row() has no flex-wrap, so 3 buttons in one
-        # stretch_width row overlap rather than wrap on a narrow phone screen.
         if show_legend_button:
-            buttons_row = bokeh_column(
-                bokeh_row(explanation_button, reset_button, spacing=10, sizing_mode="stretch_width"),
-                bokeh_row(show_legend_button, sizing_mode="stretch_width"),
-                sizing_mode="stretch_width",
-            )
+            buttons_row = bokeh_row(reset_button, show_legend_button, spacing=10, sizing_mode="stretch_width")
         else:
-            buttons_row = bokeh_row(explanation_button, reset_button, spacing=10, sizing_mode="stretch_width")
+            buttons_row = bokeh_row(reset_button, spacing=10, sizing_mode="stretch_width")
         main_content = bokeh_column(p, leaderboard_div, spacing=20, sizing_mode="stretch_width")
         layout = bokeh_column(
             buttons_row,

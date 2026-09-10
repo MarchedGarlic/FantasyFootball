@@ -221,3 +221,37 @@ HEADING_STYLE = f"margin: 0 0 12px 0; color: {INK}; font-family: 'Oswald', sans-
 # src/ai_overview.py's .section-caption.
 DESCRIPTION_STYLE = f"margin: 0; color: {INK_MUTED}; font-size: 16px; line-height: 1.55;"
 LABEL_STYLE = f"margin: 3px 0; color: {INK_MUTED}; font-size: 14px; line-height: 1.5;"
+
+
+def collapsible_description_html(short_html, full_extra_html, toggle_id):
+    """Wraps `full_extra_html` so it's collapsed by default behind a 'Read more' toggle on a
+    narrow (phone-width) viewport, while `short_html` stays always visible - on a wider viewport
+    everything just shows, same as before, with no toggle button at all. A media query, not a
+    fixed screen-size check, decides which mode applies - since this is a standalone report
+    page rendered inside an iframe, "narrow" means the iframe's own rendered width, not the
+    outer app shell's window width.
+
+    `toggle_id` must be unique per call on the page - each report typically calls this once for
+    its main explanation panel, so the report's own name (e.g. "power-rating-expl") is enough.
+    """
+    # The onclick handler below deliberately doesn't use document.getElementById() - Bokeh
+    # renders this whole Div inside its own shadow root (see this module's docstring), and
+    # getElementById on the top-level `document` can't see across that boundary, so it would
+    # silently return null and the handler would throw and do nothing (confirmed empirically:
+    # the click registered, but nothing toggled). Reaching the sibling div through the button's
+    # own local DOM position (previousElementSibling) works regardless of which shadow root -
+    # or none - this ends up in.
+    return f"""
+    {short_html}
+    <div id="{toggle_id}-full" style="display:none;">{full_extra_html}</div>
+    <button id="{toggle_id}-btn" type="button" onclick="
+        var full = this.previousElementSibling;
+        var expanded = full.style.display !== 'none';
+        full.style.display = expanded ? 'none' : 'block';
+        this.textContent = expanded ? 'Read more ▾' : 'Show less ▴';
+    " style="display:none; background:none; border:none; color:{ACCENT}; font-weight:600; font-size:14px; cursor:pointer; padding:8px 0 0; text-align:left;">Read more &#9662;</button>
+    <style>
+        @media (max-width: 640px) {{ #{toggle_id}-btn {{ display: inline-block !important; }} }}
+        @media (min-width: 641px) {{ #{toggle_id}-full {{ display: block !important; }} }}
+    </style>
+    """
