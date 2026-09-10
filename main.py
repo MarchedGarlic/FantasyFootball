@@ -41,6 +41,7 @@ from src.visualizations import (
     create_power_ranking_leaderboard
 )
 from src.ai_overview import build_ai_overview, build_draft_info
+from src.trade_value import build_trade_analyzer
 from src.draft_analysis import (
     get_primary_draft,
     reconstruct_draft_results,
@@ -670,6 +671,16 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
         storage.write_html(league_id, season, "draft_info.html", draft_info_html)
     except Exception as e:
         progress(f"[WARNING] Draft info generation failed: {e}")
+
+    progress("Building hypothetical trade analyzer...")
+    try:
+        trade_analyzer_html = build_trade_analyzer(
+            output_data, rosters, all_players, all_weekly_matchups, analyzer,
+            roster_to_manager, user_lookup, faab_ledger, waiver_impacts,
+        )
+        storage.write_html(league_id, season, "trade_analyzer.html", trade_analyzer_html)
+    except Exception as e:
+        progress(f"[WARNING] Trade analyzer generation failed: {e}")
 
     progress("Analysis complete!")
     return output_data

@@ -33,6 +33,7 @@ next candidate host — see §6.
 | `src/draft_analysis.py` | Draft Rating + Biggest Steals scoring (§5) — reconstructs actual draft results from Sleeper and scores them against ESPN's preseason rank. Rendered as its own "Draft Info" report/tab (§10), not part of the AI Overview. |
 | `src/ai_overview.py` | The seven deterministic AI Overview sections (§5) + HTML rendering, plus `build_draft_info()`/`render_draft_info_html()` for the separate Draft Info report. No LLM call. |
 | `src/median_record_calculator.py` | Median-based record calculation (unchanged logic; O(n²) lookups fixed, dead standalone `main()` removed). |
+| `src/trade_value.py` | Hypothetical Trade Analyzer (§12) — values any currently-rostered player/FAAB for "what if" trades and renders the interactive `trade_analyzer.html` builder. Separate from `trade_analysis.py`, which scores trades that already happened. |
 
 ## 1. Audit findings (2026-08) — why this rewrite happened
 
@@ -625,3 +626,84 @@ npm run build && npm run serve   # static preview of the CLI output, on :3000
 The `npm run build`/`serve` path exercises the same static-Netlify code path described in §0 —
 `npm run build` runs `build.js` to copy `main.py`'s output into `dist/`, `npm run serve` serves
 `dist/` locally. See [DEV_GUIDE.md](DEV_GUIDE.md) for the full set of `npm run` commands.
+
+## 12. Hypothetical Trade Analyzer (2026-09)
+
+A new report, `trade_analyzer.html`, distinct from everything else in §5/§9's report list: it
+values a trade that **hasn't happened** — "is this worth it before I hit send" — rather than
+scoring one that already did (that's `trade_analysis.py`, untouched by this work). Added per
+explicit user request, modeled on how tools like RotoTrade, FantasyCalc, and DraftSharks'
+trade calculators work (researched before building — see below), but computed entirely from
+data this app already collects, with no new external API or paid projections dependency.
+
+**Player value.** Established trade calculators converge on "Value Over Replacement" — a
+player's recent/projected fantasy points compared against a position baseline — for player
+value, and variance for floor/ceiling. `src/trade_value.py::calculate_player_trade_values()`
+builds exactly that from data already flowing through `main.py`, reusing two helpers
+`analyze_waiver_pickups()` already built rather than duplicating them:
+`_build_player_weekly_points()` and `_build_weekly_position_baselines()` (both imported from
+`trade_analysis.py`). For every currently-rostered QB/RB/WR/TE (kickers/DST have no ESPN-tier
+grade or meaningful position baseline here, so they're excluded rather than given a fabricated
+value):
+
+- **Recent form** — the last 4 played weeks' points (`RECENT_WEEKS_WINDOW`), position-adjusted
+  into a z-score against the league-wide weekly baseline at that position, the same way a
+  waiver pickup is scored (§4.5). Mapped onto the familiar 0–10 scale via `5 + z × 2.5`, the
+  same constant (`VALUE_Z_SCORE_SCALE`) waiver and draft scoring already use.
+- **Season-long quality** — the player's existing ESPN-tier grade (`grade_player()`, the same
+  1–10 scale used everywhere else in this app for roster/trade/draft grading).
+- **Trade value** blends the two, `0.6 × recent-form-grade + 0.4 × ESPN-tier-grade`
+  (`RECENT_FORM_WEIGHT`) — recency weighted higher than Draft Rating's 0.7/0.3 quality/value
+  split (§5 item 8), since Draft Rating is a preseason snapshot where quality should dominate,
+  while an in-season trade should care more about how someone's playing right now — but not
+  entirely, so one flukey week can't fully override an established quality level.
+- A player with zero recorded points across every recent week (hurt/inactive the whole window)
+  falls back to their ESPN-tier grade alone rather than being zeroed out, which would
+  undervalue a good player who has simply been out.
+- **Floor/ceiling** are that same player's recent-weeks points, mean ± one population standard
+  deviation — a real volatility measure from their own actual game log, not a projected range.
+
+**FAAB value.** Converted into the same grade-point scale so it can be added directly into a
+trade leg's value, using *this league's own* empirically observed "value per dollar spent" —
+`calculate_faab_value_per_dollar()` divides the total scored impact of every FAAB-funded waiver
+pickup this season (already computed by `analyze_waiver_pickups()`) by the total FAAB spent on
+them, rather than an arbitrary flat conversion. Falls back to a documented constant
+(`DEFAULT_FAAB_VALUE_PER_DOLLAR = 0.05`) when a league hasn't spent enough yet to trust its own
+rate (`MIN_FAAB_SPENT_TO_CALIBRATE = $20` total), or when that observed rate would be
+non-positive — a league whose FAAB spends happened to score below average on balance says
+something about that league's bidding, not about the intrinsic value of holding FAAB, so it's
+never allowed to make FAAB a trade *liability*. Only computed/shown for FAAB leagues
+(`is_faab_league()`, same gate as §4.3).
+
+**Multi-team trades.** Sleeper supports 3+ team trades, so the builder does too (2–5 teams, one
+card per team). Fairness is just each team's own net value — value received minus value given
+up, players and FAAB together — the same per-manager attribution `trade_analysis.py` already
+uses for real 3+ team trades (§4.1), not a bespoke N-way fairness algorithm. Every asset (a
+player checkbox, a FAAB amount) gets its own "send to" destination picker so an arbitrary
+routing between any number of teams is representable, not just "the rest of the trade."
+
+**Architecture.** A `<select>`-and-checkbox builder, entirely client-side and self-contained —
+`build_trade_analyzer_data()` embeds every tradable player's value/floor/ceiling and every
+team's roster/FAAB balance as one JSON blob directly in the page, and vanilla JS (no framework,
+no build step) does the routing math and re-renders live as selections change. This is the same
+pattern §5 already established for the AI Overview's week-interactive sections, for the same
+reason: it has to work on the static Netlify build too, where there's no server to round-trip
+to. Rendering (`render_trade_analyzer_html()`) reuses `ai_overview.py`'s `_page_shell()` for
+page chrome, so it matches the rest of the app's look with no duplicated boilerplate. Wired into
+`main.py`'s pipeline the same way Draft Info is — written to `trade_analyzer.html`, wrapped in a
+try/except so a failure here never breaks the rest of the run — and added to both `index.html`
+and `results_template.html`'s `NAV_GROUPS` under a new **Tools** group (distinct from **League
+Activity**, since this is an interactive tool, not a computed report about what already
+happened).
+
+**Mobile.** Built mobile-first from the start rather than retrofitted: team cards stack full
+width (never side-by-side), the roster checklist has its own `overflow-y: auto` so a 15-player
+list doesn't blow out the page, a search box filters that list for a long roster, and every
+value/floor/ceiling/destination-picker row was verified at a real 375px viewport during
+development, not just assumed to reflow correctly.
+
+**What was checked before building this:** RotoTrade.com's actual page couldn't be fetched
+directly (blocks automated requests), so its documented behavior and the broader trade-calculator
+landscape (FantasyCalc, DraftSharks, KeepTradeCut, DynastyCalc/RedraftCalc's multi-team support)
+were researched via search instead — the Value-Over-Replacement/variance-for-volatility approach
+above is what that research converged on, not a guess.
