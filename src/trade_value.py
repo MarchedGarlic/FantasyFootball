@@ -35,6 +35,7 @@ from datetime import datetime
 
 from src.trade_analysis import _build_weekly_position_baselines, _build_player_weekly_points
 from src.ai_overview import _page_shell
+from src.injury_severity import trade_value_discount_multiplier
 
 RECENT_WEEKS_WINDOW = 4  # "current form" - long enough to smooth one flukey week, short enough
                           # to actually reflect recent performance rather than diluting into a
@@ -119,6 +120,15 @@ def calculate_player_trade_values(rosters, all_players, all_weekly_matchups, ana
                 form_grade = max(0.0, min(10.0, 5.0 + form_z * VALUE_Z_SCORE_SCALE))
                 trade_value = RECENT_FORM_WEIGHT * form_grade + (1 - RECENT_FORM_WEIGHT) * espn_grade
 
+            # Injury discount is applied to the tradeable value only, not to floor/ceiling/
+            # espn_grade - those describe the player's real performance range and season-long
+            # quality, which don't change because they're hurt; what changes is how much of
+            # that you can actually count on getting in a trade right now.
+            injury_status = info.get('injury_status')
+            discount = trade_value_discount_multiplier(injury_status)
+            trade_value_pre_injury = trade_value
+            trade_value = trade_value * discount
+
             values[player_id] = {
                 'name': name,
                 'position': position,
@@ -130,6 +140,8 @@ def calculate_player_trade_values(rosters, all_players, all_weekly_matchups, ana
                 'ceiling': round(ceiling, 1),
                 'recent_avg': round(recent_avg, 1),
                 'espn_grade': round(espn_grade, 1),
+                'injury_status': injury_status,
+                'trade_value_pre_injury': round(trade_value_pre_injury, 2),
             }
 
     return values
@@ -243,6 +255,7 @@ _TRADE_ANALYZER_STYLE = """<style>
     .trade-player-row:last-child { border-bottom: none; }
     .trade-player-row label { flex: 1; font-size: 0.88rem; cursor: pointer; }
     .trade-player-meta { color: var(--ink-muted); font-size: 0.78rem; }
+    .trade-injury-tag { color: var(--bad); font-weight: 700; }
     .trade-player-value { font-weight: 700; color: var(--ink); font-size: 0.88rem; white-space: nowrap; }
     .trade-faab-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
     .trade-faab-row input { width: 90px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--void); color: var(--ink); font-family: var(--font-sans); }
@@ -390,13 +403,16 @@ function playerRowHtml(slotIdx, playerId) {
     const destOptions = otherPickedSlots(slotIdx).map(i =>
         `<option value="${i}" ${sendingItem && sendingItem.destSlot === i ? 'selected' : ''}>${escapeHtml(TRADE_DATA.teams[slots[i].rosterId].manager_name)}</option>`
     ).join('');
+    const injuryNote = p.injury_status
+        ? ` - <span class="trade-injury-tag">${escapeHtml(p.injury_status)}</span> (value cut from ${p.trade_value_pre_injury.toFixed(1)})`
+        : '';
     return `
         <div class="trade-player-row">
             <input type="checkbox" ${checked ? 'checked' : ''}
                 onchange="togglePlayer(${slotIdx}, '${playerId}', this.checked)">
             <label onclick="const cb=this.previousElementSibling; cb.checked=!cb.checked; togglePlayer(${slotIdx}, '${playerId}', cb.checked);">
                 ${escapeHtml(p.name)}
-                <div class="trade-player-meta">${p.position} - ${escapeHtml(p.team)} - floor ${p.floor} / ceiling ${p.ceiling}</div>
+                <div class="trade-player-meta">${p.position} - ${escapeHtml(p.team)} - floor ${p.floor} / ceiling ${p.ceiling}${injuryNote}</div>
             </label>
             <div class="trade-player-value">${p.trade_value.toFixed(1)}</div>
             ${checked ? `<select class="trade-dest-select" onchange="setDest(${slotIdx}, '${playerId}', this.value)">

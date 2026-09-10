@@ -109,6 +109,29 @@ def test_player_trade_values_rewards_recent_form_above_position_baseline():
     assert values['star']['floor'] > values['dud']['ceiling']
 
 
+def test_player_trade_values_discounts_injured_players():
+    rosters = [{'roster_id': 1, 'owner_id': 'u1', 'players': ['healthy', 'hurt_mild', 'hurt_severe']}]
+    all_players = {
+        'healthy': {'full_name': 'Healthy Guy', 'position': 'RB', 'team': 'KC'},
+        'hurt_mild': {'full_name': 'Mild Guy', 'position': 'RB', 'team': 'KC', 'injury_status': 'Questionable'},
+        'hurt_severe': {'full_name': 'Severe Guy', 'position': 'RB', 'team': 'KC', 'injury_status': 'Out'},
+    }
+    all_weekly_matchups = {1: [{'roster_id': 1, 'players_points': {
+        'healthy': 10.0, 'hurt_mild': 10.0, 'hurt_severe': 10.0,
+    }}]}
+    analyzer = _FakeAnalyzer({'Healthy Guy': 6.0, 'Mild Guy': 6.0, 'Severe Guy': 6.0})
+    values = calculate_player_trade_values(
+        rosters, all_players, all_weekly_matchups, analyzer,
+        roster_to_manager={1: 'u1'}, user_lookup={'u1': {'display_name': 'Manager1'}},
+    )
+    # Identical underlying performance/grade - only the injury status differs.
+    assert values['healthy']['trade_value_pre_injury'] == values['hurt_mild']['trade_value_pre_injury']
+    assert values['healthy']['trade_value'] > values['hurt_mild']['trade_value'] > values['hurt_severe']['trade_value']
+    # Floor/ceiling/espn_grade describe real performance and shouldn't be touched by the discount.
+    assert values['healthy']['espn_grade'] == values['hurt_severe']['espn_grade']
+    assert values['healthy']['floor'] == values['hurt_severe']['floor']
+
+
 def test_build_trade_analyzer_data_non_faab_league():
     rosters = [{'roster_id': 1, 'owner_id': 'u1', 'players': ['p1']}]
     all_players = {'p1': {'full_name': 'Some Runner', 'position': 'RB', 'team': 'KC'}}

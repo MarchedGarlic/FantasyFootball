@@ -19,6 +19,11 @@ from urllib3.util.retry import Retry
 DEFAULT_TIMEOUT = 15  # seconds
 DEFAULT_MAX_WORKERS = 8
 
+# The only confirmed disagreement between ESPN's and Sleeper's team abbreviations (checked
+# against a real week's scoreboard vs. the full Sleeper player pool) - Washington. Every other
+# team's code matches. Keyed by ESPN's abbreviation, valued as Sleeper's.
+ESPN_TO_SLEEPER_TEAM = {'WSH': 'WAS'}
+
 
 def _build_session():
     session = requests.Session()
@@ -119,6 +124,65 @@ class ESPNAPI:
             storage.cache_set(cache_key, ranks)
 
         return ranks or {}
+
+    def get_weekly_schedule(self, week, season, storage=None, cache_max_age=21600):
+        """Which NFL team played which that week, as {team_abbr: opponent_abbr} (both
+        directions included) - the input to src/start_sit.py's defense-vs-position calculation
+        and to knowing each rostered player's upcoming opponent. A completed week's schedule
+        never changes, but this is cached at a shorter 6h TTL than the season-long caches above
+        since it's also used for the *upcoming* week, whose game (bye weeks, flex scheduling)
+        can still move before kickoff.
+
+        Sleeper and ESPN don't always agree on team abbreviations (confirmed empirically:
+        ESPN's Washington is 'WSH', Sleeper's is 'WAS') - normalized here so every other module
+        can key off Sleeper's abbreviations (what `all_players[pid]['team']` uses) without
+        worrying about the mismatch.
+        """
+        cache_key = f"espn_schedule_{season}_wk{week}"
+        if storage is not None:
+            cached = storage.cache_get(cache_key, cache_max_age)
+            if cached is not None:
+                return cached
+
+        url = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+        params = {'week': week, 'seasontype': 2, 'year': season}
+        response = self.session.get(url, params=params, timeout=DEFAULT_TIMEOUT)
+        data = response.json() if response.status_code == 200 else None
+
+        schedule = {}
+        if data and isinstance(data, dict):
+            for event in data.get('events', []):
+                competitors = (event.get('competitions') or [{}])[0].get('competitors', [])
+                if len(competitors) != 2:
+                    continue
+                abbrevs = [ESPN_TO_SLEEPER_TEAM.get(
+                    c.get('team', {}).get('abbreviation'), c.get('team', {}).get('abbreviation')
+                ) for c in competitors]
+                if all(abbrevs):
+                    schedule[abbrevs[0]] = abbrevs[1]
+                    schedule[abbrevs[1]] = abbrevs[0]
+
+        if schedule and storage is not None:
+            storage.cache_set(cache_key, schedule)
+
+        return schedule
+
+    def get_weekly_schedule_bulk(self, weeks, season, storage=None, max_workers=DEFAULT_MAX_WORKERS):
+        """get_weekly_schedule() for multiple weeks concurrently - same bulk-fetch pattern as
+        SleeperAPI's matchup/transaction fetchers. Returns {week: {team: opponent}}, omitting
+        weeks with no schedule data (bye week is a "no game" gap and stays absent naturally)."""
+        results = {}
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_week = {
+                executor.submit(self.get_weekly_schedule, week, season, storage): week
+                for week in weeks
+            }
+            for future in as_completed(future_to_week):
+                week = future_to_week[future]
+                schedule = future.result()
+                if schedule:
+                    results[week] = schedule
+        return results
 
 
 class SleeperAPI:

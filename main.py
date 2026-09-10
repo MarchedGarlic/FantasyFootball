@@ -40,8 +40,9 @@ from src.visualizations import (
     create_luck_analysis_plot,
     create_power_ranking_leaderboard
 )
-from src.ai_overview import build_ai_overview, build_draft_info
+from src.ai_overview import build_ai_overview, build_draft_info, _most_recent_completed_week
 from src.trade_value import build_trade_analyzer
+from src.start_sit import build_start_sit_report
 from src.draft_analysis import (
     get_primary_draft,
     reconstruct_draft_results,
@@ -438,6 +439,9 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
     progress(f"Fetching weekly matchups (weeks 1-{weeks_to_fetch[-1]}, in parallel)...")
     all_weekly_matchups = sleeper_api.get_league_matchups_bulk(league_id, weeks_to_fetch)
 
+    progress("Fetching NFL schedule (in parallel)...")
+    schedule_by_week = espn_api.get_weekly_schedule_bulk(weeks_to_fetch, season, storage=storage)
+
     progress("Fetching league transactions (in parallel)...")
     raw_transactions_by_week = sleeper_api.get_league_transactions_bulk(league_id, weeks_to_fetch)
     transactions_by_week = {f"Week {week}": txns for week, txns in raw_transactions_by_week.items()}
@@ -681,6 +685,18 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
         storage.write_html(league_id, season, "trade_analyzer.html", trade_analyzer_html)
     except Exception as e:
         progress(f"[WARNING] Trade analyzer generation failed: {e}")
+
+    progress("Building start/sit analyzer...")
+    try:
+        completed_week = _most_recent_completed_week(matchup_results)
+        this_week = (completed_week + 1) if completed_week is not None else weeks_to_fetch[0]
+        start_sit_html = build_start_sit_report(
+            output_data, rosters, all_players, all_weekly_matchups, analyzer,
+            roster_to_manager, user_lookup, schedule_by_week, this_week,
+        )
+        storage.write_html(league_id, season, "start_sit.html", start_sit_html)
+    except Exception as e:
+        progress(f"[WARNING] Start/sit analyzer generation failed: {e}")
 
     progress("Analysis complete!")
     return output_data

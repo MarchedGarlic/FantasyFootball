@@ -24,7 +24,7 @@ next candidate host — see §6.
 | `main.py` | `run_analysis(username, season, league_id, storage, progress_cb)` — the full pipeline, called by both the CLI (`main()`) and `server.py`. No longer reads a shared config file mid-run. |
 | `server.py` | Flask app. Season/league now travel explicitly through every route (query params / POST body) instead of being hardcoded or read from a shared file. |
 | `src/storage.py` | `AnalysisStorage` — every artifact keyed by `(league_id, season)`; also the cross-league disk cache (`players.json`, ESPN rankings) and the per-`(league_id, season)` analysis lock. |
-| `src/api_clients.py` | Sleeper/ESPN HTTP clients — timeouts, retry/backoff, the bulk (`ThreadPoolExecutor`-backed) weekly matchup/transaction fetchers, draft-picks fetchers, and `ESPNAPI.get_preseason_draft_ranks()` (§5, Draft Rating). |
+| `src/api_clients.py` | Sleeper/ESPN HTTP clients — timeouts, retry/backoff, the bulk (`ThreadPoolExecutor`-backed) weekly matchup/transaction fetchers, draft-picks fetchers, `ESPNAPI.get_preseason_draft_ranks()` (§5, Draft Rating), and `ESPNAPI.get_weekly_schedule()`/`get_weekly_schedule_bulk()` (§13, the real NFL schedule behind the Start/Sit Analyzer's matchup data). |
 | `src/roster_grading.py` | ESPN-tier player grading; athlete/team/position `$ref` lookups are now parallelized and memoized. |
 | `src/power_rankings.py` | Weekly power ratings + `compute_power_rank_history()` (persisted per-week rank series, used by the AI Overview). |
 | `src/faab_analysis.py` | FAAB ledger reconstruction + relative-scarcity scoring (§4.3). Returns `{'enabled': False}` for non-FAAB leagues. |
@@ -34,6 +34,8 @@ next candidate host — see §6.
 | `src/ai_overview.py` | The seven deterministic AI Overview sections (§5) + HTML rendering, plus `build_draft_info()`/`render_draft_info_html()` for the separate Draft Info report. No LLM call. |
 | `src/median_record_calculator.py` | Median-based record calculation (unchanged logic; O(n²) lookups fixed, dead standalone `main()` removed). |
 | `src/trade_value.py` | Hypothetical Trade Analyzer (§12) — values any currently-rostered player/FAAB for "what if" trades and renders the interactive `trade_analyzer.html` builder. Separate from `trade_analysis.py`, which scores trades that already happened. |
+| `src/injury_severity.py` | Shared injury-status severity classification (§12/§13) — one place both the trade analyzer's value discount and the Start/Sit Analyzer's penalty/hard-Sit-override read from, so they never disagree on what counts as a severe vs. mild injury. |
+| `src/start_sit.py` | Start/Sit Analyzer (§13) — per-player Start/Consider/Sit recommendations with matchup/injury reasoning, renders `start_sit.html`. |
 
 ## 1. Audit findings (2026-08) — why this rewrite happened
 
@@ -662,6 +664,17 @@ value):
   undervalue a good player who has simply been out.
 - **Floor/ceiling** are that same player's recent-weeks points, mean ± one population standard
   deviation — a real volatility measure from their own actual game log, not a projected range.
+- **Injury discount** (2026-09) — a multiplicative discount on the final trade value only, from
+  a new shared module `src/injury_severity.py` (also used by §13's Start/Sit Analyzer, so the
+  two features never disagree on what counts as a severe vs. mild injury): healthy ×1.0,
+  questionable ×0.9, doubtful ×0.75, out/IR/PUP/Sus/NA ×0.5 — never zero, since even a
+  long-term-out player still has real bench/stash/handcuff value, and "Out" this week doesn't
+  mean out all season. Floor/ceiling/ESPN grade are deliberately left undiscounted (they
+  describe the player's real performance range and season-long quality, which an injury doesn't
+  retroactively change); only the number you'd actually get in a trade *right now* is reduced.
+  The trade builder shows the injury status and the pre-discount value next to the discounted
+  one, never collapsing it into an opaque single number (the same "always show the components"
+  principle §4.3 already established for FAAB).
 
 **FAAB value.** Converted into the same grade-point scale so it can be added directly into a
 trade leg's value, using *this league's own* empirically observed "value per dollar spent" —
@@ -707,3 +720,78 @@ directly (blocks automated requests), so its documented behavior and the broader
 landscape (FantasyCalc, DraftSharks, KeepTradeCut, DynastyCalc/RedraftCalc's multi-team support)
 were researched via search instead — the Value-Over-Replacement/variance-for-volatility approach
 above is what that research converged on, not a guess.
+
+## 13. Start/Sit Analyzer (2026-09)
+
+A new report, `start_sit.html`: a Start/Consider/Sit recommendation for every rostered
+QB/RB/WR/TE for the next real week on the schedule, with the reasoning shown next to each one —
+added per explicit user request that a bare verdict without an explanation wasn't good enough
+("plays a weak run defense in ___", "___ is hurt, so there's increased opportunity" were the
+literal examples given, and both appear near-verbatim in the generated reasoning text). Same
+research-first approach as §12: established start/sit tools (RotoWire, FantasyPros-style
+Defense-vs-Position charts, FantasyOmatic) converge on a multi-factor blend of projected
+points, recent form, opponent defensive matchup by position, and injury status — this builds
+that from data already in the pipeline rather than a new paid projections/matchup-ratings API.
+
+**Three signals, each shown in the reasoning text, not just baked into an opaque score:**
+
+1. **Baseline quality/form** — reuses `src/trade_value.py`'s `calculate_player_trade_values()`
+   output directly (the same 0–10 recent-form/ESPN-grade blend from §12), specifically its
+   *pre-injury* value — this module applies its own, differently-calibrated injury adjustment
+   (see below) rather than compounding trade_value.py's separate multiplicative discount.
+2. **Matchup** — `build_defense_vs_position()` computes "fantasy points allowed by position"
+   itself, per NFL team, from data this app already has: every rostered player's real weekly
+   Sleeper points, attributed to whichever opponent they played that week via a **new** real
+   NFL schedule source (`ESPNAPI.get_weekly_schedule()`/`get_weekly_schedule_bulk()`, ESPN's
+   public scoreboard endpoint — the one genuinely new external data source this feature needed,
+   since neither Sleeper nor ESPN's existing player-stats endpoints expose "points allowed by
+   position" directly). Checked empirically before relying on it: ESPN's team abbreviation for
+   Washington (`WSH`) doesn't match Sleeper's (`WAS`) — every other team matches —
+   `ESPN_TO_SLEEPER_TEAM` in `api_clients.py` normalizes it. Expressed as a z-score against the
+   league-wide distribution of team averages at that position, the same z-score-against-baseline
+   language used everywhere else in this app. This only sees players rostered somewhere in this
+   fantasy league, not the full NFL — a deliberate, documented simplification: a 10-12 team
+   league already rosters most of the fantasy-relevant players at a position, and computing this
+   from a full box-score data source would mean a whole new API dependency for a marginal
+   accuracy gain.
+3. **Injury/opportunity**, from the same new shared `src/injury_severity.py` module §12 uses —
+   a player's own injury status subtracts a start/sit-calibrated penalty (0 healthy / 1.0
+   questionable / 3.5 doubtful / 6.0 out), and a **confirmed Out is a hard override to Sit
+   regardless of the numeric score**, not just a heavy penalty — verified necessary with a test
+   case where an extreme matchup could otherwise still clear the Start threshold on points
+   alone, which would be actively wrong advice for someone not playing at all. Separately, a
+   *teammate* immediately ahead of a player on their real NFL depth chart
+   (`depth_chart_order`, a Sleeper player-data field not previously used anywhere in this app)
+   being out/doubtful adds an opportunity boost (+2.5 / +1.5) — the literal "starting RB hurt →
+   start the backup" case from the request. Only looks at the immediately-next-ranked player,
+   not everyone above, since a 4th-stringer being hurt says nothing about a 3rd-stringer's
+   opportunity. Guarded against a real bug found during testing: a player who is themselves
+   out/doubtful never gets this boost, since "your teammate being hurt means more opportunity
+   for you" is meaningless if you're equally unavailable — confirmed live, a WR on IR was
+   showing a boost from a teammate also on IR ranked ahead of him before this guard was added.
+
+**Verdict thresholds:** score ≥ 1.5 → Start, ≤ -1.5 → Sit, otherwise Consider (plus the hard
+Out/bye-week override above) — the same ±1.5-as-a-real-threshold convention already used for
+"Elite Pickup" in the waiver methodology (§4.5).
+
+**Scope decision:** this is advice per player, not a full lineup optimizer — it doesn't know a
+league's exact starting-slot/FLEX configuration and doesn't try to auto-build an optimal
+lineup, matching what was actually asked for ("give a suggestion... based on their matchup," not
+"pick my lineup for me") and the same "one tool in your decision-making process, not the only
+factor" framing §12's own research turned up for trade calculators.
+
+**Architecture.** Same client-side, embedded-JSON pattern as §12's trade analyzer and §5's
+week-interactive AI Overview sections (works on the static Netlify build with no server to
+round-trip to). A team-picker dropdown (auto-selects the first team so the page is useful
+immediately) re-renders that manager's players grouped by position, sorted by score, each as a
+card with a colored Start/Consider/Sit badge and the reasoning sentences beneath it. Reuses
+`ai_overview.py`'s `_page_shell()` for chrome. Wired into `main.py` the same try/except-wrapped
+way as the other new-in-2026-09 reports — written to `start_sit.html`, added to both
+`index.html` and `results_template.html`'s **Tools** nav group alongside the trade analyzer.
+"Next week" is `_most_recent_completed_week(matchup_results) + 1` (imported from
+`ai_overview.py` rather than re-deriving a second "what's the current week" calculation),
+falling back to the first analyzed week if no week has been completed yet.
+
+**Mobile.** Built mobile-first like the trade analyzer: stacked cards (one manager's players at
+a time, grouped by position), a compact colored verdict badge that doesn't crowd the player
+name on a narrow screen, and reasoning text below the fold of each card rather than beside it.
