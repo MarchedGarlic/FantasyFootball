@@ -390,9 +390,12 @@ Rendering uses the same Bears navy/orange light theme as the rest of the app (§
   - Net result: `runtime.txt` = `3.11` (bare, Netlify's format), `render.yaml`'s `PYTHON_VERSION`
     = `3.11.9` (fully qualified, Render's format) - these look inconsistent side by side but each
     is correct for the platform that reads it.
-- `league_config.json` contains real personal data (a real Sleeper username and league ID) and is
-  currently tracked in git (the `.gitignore` rule for it is commented out). This is not rewritten
-  automatically — flagged for the user to decide whether to scrub history.
+- `league_config.json` contains real personal data (a real Sleeper username and league ID). It was
+  tracked in git with the `.gitignore` rule for it commented out; both are now fixed (`git rm
+  --cached` + uncommented the rule), so it stops being tracked going forward. Past commits still
+  contain it — scrubbing git history was considered and explicitly declined (would need a
+  history rewrite + force-push), so anyone with an existing clone can still see the old values in
+  history.
 
 ## 8. Explicitly deferred (not in this pass)
 
@@ -616,4 +619,9 @@ npm install
 python server.py         # Flask dev server on :5000
 # or, for the CLI/offline path against league_config.json:
 python main.py
+npm run build && npm run serve   # static preview of the CLI output, on :3000
 ```
+
+The `npm run build`/`serve` path exercises the same static-Netlify code path described in §0 —
+`npm run build` runs `build.js` to copy `main.py`'s output into `dist/`, `npm run serve` serves
+`dist/` locally. See [DEV_GUIDE.md](DEV_GUIDE.md) for the full set of `npm run` commands.

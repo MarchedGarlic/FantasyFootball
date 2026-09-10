@@ -21,12 +21,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Configuration (sensitive league info - template provided)
-# league_config.json
-
-# Data folder - only track templates and organized outputs
-data/*.json
-!data/league_config.template.json
+# Configuration (sensitive league info - template provided in league_config.json.template)
+league_config.json
 
 # Build output
 dist/

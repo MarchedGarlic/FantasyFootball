@@ -1,126 +1,92 @@
-# Fantasy Football Analysis Dashboard
+# Fantasy Football Analysis
 
-This repository contains automated fantasy football analysis tools and a web dashboard for sharing results with leaguemates.
+A single-season fantasy football analysis tool for **Sleeper** leagues. Enter a Sleeper username,
+pick a season and league, and get power rankings, roster grades, trade/waiver analysis, draft
+ratings, and a deterministic AI-style overview — rendered as interactive HTML (Bokeh) plus a JSON
+API.
 
-## 📁 Project Structure
+See [CLAUDE.md](CLAUDE.md) for the full architecture, data model, and scoring formulas behind each
+report.
+
+## Features
+
+- **Power Rankings** — weekly team strength ratings with historical progression
+- **Roster Grades** — ESPN-tier player grading rolled up per team
+- **Trade Analysis** — per-player value scoring for every trade, with FAAB context where applicable
+- **Waiver Analysis** — position-adjusted points-over-replacement scoring for every pickup, plus a
+  FAAB tracker/leaderboard for FAAB leagues
+- **Manager Grades** — season report cards
+- **Luck Analysis / Median Standings** — real record vs. a median-scoring-rule record
+- **Draft Info** — a 0–10 Draft Rating leaderboard and "Biggest Steals" vs. ESPN's preseason ranks
+- **AI Overview** — top performers, upsets, power-ranking movers, upcoming matchups, and a
+  projected playoff bracket, all computed deterministically (no LLM call)
+
+## Quick start (interactive web app)
+
+```bash
+pip install -r requirements.txt
+npm install
+python server.py
+```
+
+Open `http://localhost:5000`, enter a Sleeper username, then pick a season and league. Analysis
+runs on demand; results are cached per `(league_id, season)`.
+
+## Alternative: CLI + static build
+
+For a one-off analysis without the web UI:
+
+```bash
+cp league_config.json.template league_config.json   # fill in your username/league/season
+python main.py
+npm run build && npm run serve   # local static preview at http://localhost:3000
+```
+
+See [DEV_GUIDE.md](DEV_GUIDE.md) for the full set of `npm run` commands.
+
+## Deployment
+
+This app currently deploys two ways side by side:
+
+| Target | Guide | Model |
+|---|---|---|
+| Netlify | [NETLIFY_DEPLOYMENT.md](NETLIFY_DEPLOYMENT.md) | Static: analysis pre-run, HTML/JSON committed/built |
+| Render | [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) | Live Flask server, analysis on demand |
+
+Azure App Service is prepped but not yet provisioned — see [AZURE_MIGRATION.md](AZURE_MIGRATION.md).
+
+## Project structure
 
 ```
 FantasyFootball/
-├── main.py                     # Main orchestrator script
-├── league_config.json          # League configuration (auto-generated)
-├── requirements.txt            # Python dependencies
-├── package.json                # Node.js dependencies for web interface
-├── netlify.toml               # Netlify deployment configuration
-├── build.js                   # Web interface build script
-├── index.html                 # Main dashboard
-├── src/                       # Source code modules
-│   ├── __init__.py           # Package initialization
-│   ├── api_clients.py        # ESPN and Sleeper API clients
-│   ├── roster_grading.py     # Player ranking and roster analysis
-│   ├── power_rankings.py     # Team power rating calculations
-│   ├── median_record_calculator.py # Median-based record analysis
-│   ├── trade_analysis.py     # Trade and waiver impact analysis
-│   ├── visualizations.py     # Interactive Bokeh visualizations
-│   └── tests/                # Test suite
-├── data/                     # Data storage
-│   ├── league_config.template.json # Configuration template
-│   └── *.json               # Generated analysis data files
-├── dist/                     # Built web interface (auto-generated)
-└── fantasy_analysis_output_*/ # Analysis results (auto-generated)
-    ├── html_reports/         # Interactive HTML visualizations
-    ├── json_data/            # Structured data exports
-    └── text_reports/         # Text-based analysis summaries
+├── main.py                  # Analysis pipeline (CLI entry point; also called by server.py)
+├── server.py                 # Flask app — interactive web UI + JSON API
+├── index.html / results_template.html   # Frontend shell
+├── src/
+│   ├── storage.py              # Per-(league_id, season) storage + disk cache
+│   ├── api_clients.py           # Sleeper/ESPN HTTP clients
+│   ├── roster_grading.py        # ESPN-tier player grading
+│   ├── power_rankings.py        # Weekly power ratings
+│   ├── trade_analysis.py        # Trade + waiver impact scoring, Bokeh charts
+│   ├── faab_analysis.py         # FAAB ledger + relative-scarcity scoring
+│   ├── draft_analysis.py        # Draft Rating + Biggest Steals
+│   ├── ai_overview.py           # Deterministic AI Overview + Draft Info rendering
+│   ├── median_record_calculator.py
+│   ├── bokeh_theme.py / bokeh_mobile.py
+│   └── tests/                   # Test suite
+└── fantasy_analysis_output/
+    └── leagues/<league_id>/<season>/   # Generated reports, keyed per league + season
 ```
 
-## 🏈 Features
+See [CLAUDE.md](CLAUDE.md) §0.1 for what each `src/` module does, and §3.1 for the full storage
+layout.
 
-- **Power Rankings**: Interactive progression charts showing team strength over time
-- **Roster Analysis**: Grade and compare roster quality across all teams  
-- **Trade Impact**: Detailed analysis of all trades with winner/loser scoring
-- **Waiver Wire**: Track and analyze waiver pickups and free agent moves
-- **Manager Grades**: Performance report cards for all league managers
+## API
 
-## 🚀 Quick Start
-
-### For League Managers
-
-1. **Configure your league** (one-time setup):
-   ```bash
-   # Copy the template and edit with your details
-   cp league_config.template.json league_config.json
-   # Edit league_config.json with your username and league ID
-   ```
-
-2. **Run the analysis**:
-   ```bash
-   python main.py  # Will auto-use your configured league
-   ```
-
-3. **Build the web dashboard**:
-   ```bash
-   npm install
-   npm run build
-   ```
-
-4. **Deploy to Netlify** (see deployment guide below)
-
-### For League Members
-
-Just visit the shared Netlify URL to access all interactive dashboards!
-
-## 🌐 Netlify Deployment
-
-### One-Time Setup
-
-1. **Create Netlify Account**: Sign up at [netlify.com](https://netlify.com)
-
-2. **Connect GitHub**: Link your GitHub account in Netlify settings
-
-3. **Create New Site**: 
-   - Click "New site from Git"
-   - Choose this repository
-   - Set build command: `npm run build`
-   - Set publish directory: `dist`
-
-### Updating Your Dashboard
-
-Every time you run a new analysis:
-
-1. Run `python main.py` to generate new data
-2. Run `npm run build` to prepare files
-3. Push changes to GitHub
-4. Netlify will automatically rebuild and deploy!
-
-### Manual Deploy (Alternative)
-
-If you prefer manual deployment:
-
-1. Run `npm run build`
-2. Drag the `dist` folder to Netlify's deploy area
-3. Share the generated URL with your league
-
-## 📱 Mobile Friendly
-
-All dashboards are optimized for mobile viewing, so your leaguemates can check their shame on the go!
-
-## 🔄 Auto-Updates
-
-The system automatically:
-- Uses the latest analysis data
-- Updates file timestamps
-- Creates clean URLs for sharing
-- Maintains organized file structure
-
-## 💡 Tips
-
-- Run analysis weekly for best results
-- Share the Netlify URL in your league chat
-- All visualizations are interactive - encourage exploration!
-- The "worst trades" report is perfect for league roasting 🔥
-
-## 🛠️ Technical Details
-
-- **Backend**: Python (Sleeper API, ESPN data, Bokeh visualizations)
-- **Frontend**: HTML/CSS/JS dashboard
-- **Deployment**: Netlify with automated builds
-- **Data**: JSON exports for API integration
+- `GET /api/current-season` — current NFL season (from Sleeper)
+- `GET /api/user/<username>?season=<year>` — a user's leagues for that season
+- `GET /api/seasons/<league_id>` — seasons already analyzed for a league
+- `POST /api/analyze` — start analysis for `{username, league_id, league_name, season}`
+- `GET /api/status/<analysis_id>` — analysis progress
+- `GET /api/results` — available reports for the current analysis
+- `GET /results/<path:filename>` — serve a generated report file
