@@ -13,6 +13,8 @@ other waiver_type (rolling priority / reverse standings), is_faab_league() retur
 callers should skip FAAB sections entirely.
 """
 
+from src.utils import get_manager_name
+
 FAAB_WAIVER_TYPE = 2
 MAX_SCARCITY_MULTIPLIER = 3.0  # caps the "you had almost nothing left" blowup term
 
@@ -68,7 +70,8 @@ def build_faab_ledger(transactions_by_week, rosters, league_settings):
     if not is_faab_league(league_settings):
         return {'enabled': False}
 
-    total_budget = float(league_settings.get('waiver_budget') or 100)
+    raw_budget = league_settings.get('waiver_budget')
+    total_budget = float(raw_budget) if raw_budget is not None else 100.0
     roster_ids = [r.get('roster_id') for r in rosters if r.get('roster_id') is not None]
     balances = {rid: total_budget for rid in roster_ids}
     balance_by_roster_and_week = {rid: {} for rid in roster_ids}
@@ -191,7 +194,7 @@ def faab_leaderboard(ledger, roster_to_manager, user_lookup):
     leaderboard = []
     for roster_id, remaining in ledger['balances'].items():
         manager_id = roster_to_manager.get(roster_id)
-        manager_name = user_lookup.get(manager_id, {}).get('display_name', f'Manager {manager_id}')
+        manager_name = get_manager_name(user_lookup, manager_id)
         stats = per_roster.get(roster_id, {'total_spent': 0.0, 'scores': []})
         avg_aggressiveness = round(sum(stats['scores']) / len(stats['scores']), 1) if stats['scores'] else 0.0
 

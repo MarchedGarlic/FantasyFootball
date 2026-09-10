@@ -196,34 +196,38 @@ class SleeperAPI:
 
         return data
 
-    def get_league_matchups_bulk(self, league_id, weeks, max_workers=DEFAULT_MAX_WORKERS):
-        """Fetch matchups for multiple weeks concurrently. Returns {week: matchups}, omitting
-        weeks with no data, in the same shape the old sequential loop produced."""
+    def _fetch_weeks_bulk(self, fetch_one_week, weeks, max_workers):
+        """Fetch per-week data concurrently via fetch_one_week(week). Returns {week: data},
+        omitting weeks with no data. A week whose request still fails after the Retry
+        adapter's retries are exhausted is logged and skipped rather than aborting every other
+        week's already-successful result."""
         results = {}
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_week = {
-                executor.submit(self.get_league_matchups, league_id, week): week
+                executor.submit(fetch_one_week, week): week
                 for week in weeks
             }
             for future in as_completed(future_to_week):
                 week = future_to_week[future]
-                matchups = future.result()
-                if matchups:
-                    results[week] = matchups
+                try:
+                    data = future.result()
+                except Exception as e:
+                    print(f"   [WARNING] Failed to fetch week {week}: {e}")
+                    continue
+                if data:
+                    results[week] = data
         return results
+
+    def get_league_matchups_bulk(self, league_id, weeks, max_workers=DEFAULT_MAX_WORKERS):
+        """Fetch matchups for multiple weeks concurrently. Returns {week: matchups}, omitting
+        weeks with no data, in the same shape the old sequential loop produced."""
+        return self._fetch_weeks_bulk(
+            lambda week: self.get_league_matchups(league_id, week), weeks, max_workers
+        )
 
     def get_league_transactions_bulk(self, league_id, weeks, max_workers=DEFAULT_MAX_WORKERS):
         """Fetch transactions for multiple weeks concurrently. Returns {week: transactions},
         omitting weeks with no data."""
-        results = {}
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_week = {
-                executor.submit(self.get_league_transactions, league_id, week): week
-                for week in weeks
-            }
-            for future in as_completed(future_to_week):
-                week = future_to_week[future]
-                transactions = future.result()
-                if transactions:
-                    results[week] = transactions
-        return results
+        return self._fetch_weeks_bulk(
+            lambda week: self.get_league_transactions(league_id, week), weeks, max_workers
+        )

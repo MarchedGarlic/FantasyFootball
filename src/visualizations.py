@@ -46,7 +46,14 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         # Prepare data for interactive plot and calculate current standings
         team_data = []
         leaderboard_data = []
-        
+
+        # Real per-league week range, not a hardcoded "assume 15 weeks" guess.
+        all_weeks_seen = sorted({
+            int(w) for data in roster_grade_data.values()
+            for w in (data.get('weekly_roster_grades') or data.get('weekly_grades') or {})
+        })
+        last_week = all_weeks_seen[-1] if all_weeks_seen else 15
+
         for i, (user_id, data) in enumerate(roster_grade_data.items()):
             weekly_data = data.get('weekly_roster_grades') or data.get('weekly_grades')
             if not weekly_data:
@@ -81,8 +88,8 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
                 model.fit(X, y)
                 slope = model.coef_[0]
                 
-                # Generate trend line points extending to week 15
-                trend_weeks = list(range(min(weeks), 16))
+                # Generate trend line points extending to the real last analyzed week
+                trend_weeks = list(range(min(weeks), last_week + 1))
                 trend_grades = model.predict(np.array(trend_weeks).reshape(-1, 1)).tolist()
             
             # Get real record data from team_power_data if available
@@ -172,7 +179,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             x_axis_label="Week",
             y_axis_label="Roster Grade",
             tools="pan,wheel_zoom,box_zoom,reset,save",
-            x_range=(0.5, 15.5),
+            x_range=(0.5, last_week + 0.5),
             sizing_mode="scale_width",
             max_width=1200,
             min_width=300

@@ -510,7 +510,8 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
         faab_ledger=faab_ledger,
     )
     manager_grades = calculate_manager_grades(
-        trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup
+        trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup,
+        weeks=weeks_to_fetch,
     )
     print_trade_analysis_results(trade_impacts, waiver_impacts)
 

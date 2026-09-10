@@ -22,6 +22,8 @@ failure for the rest of the pipeline.
 
 import statistics
 
+from src.utils import get_manager_name
+
 VALUE_Z_SCORE_SCALE = 2.5  # matches the waiver-scoring z-to-grade mapping for consistency
 QUALITY_WEIGHT = 0.7
 VALUE_WEIGHT = 0.3
@@ -65,7 +67,7 @@ def reconstruct_draft_results(draft_picks, roster_to_manager, user_lookup, all_p
             'pick_no': pick_no,
             'roster_id': roster_id,
             'manager_id': manager_id,
-            'manager_name': user_lookup[manager_id].get('display_name', f'Manager {manager_id}'),
+            'manager_name': get_manager_name(user_lookup, manager_id),
             'injury_status': info.get('injury_status'),
         })
 

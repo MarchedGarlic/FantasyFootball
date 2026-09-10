@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Optional
 
 from src.bokeh_mobile import make_bokeh_html_mobile_friendly
+from src.utils import get_manager_name
 
 
 def get_player_name_from_id(player_id, all_players=None):
@@ -147,7 +148,7 @@ def analyze_real_trades_only(transactions_data, team_power_data, roster_grade_da
                 if manager_id not in user_lookup:
                     continue
 
-                manager_name = user_lookup[manager_id].get('display_name', f'Manager {manager_id}')
+                manager_name = get_manager_name(user_lookup, manager_id)
                 acquired_ids = [pid for pid, rid in adds.items() if rid == roster_id]
                 gave_up_ids = [pid for pid, rid in drops.items() if rid == roster_id]
 
@@ -396,7 +397,7 @@ def analyze_waiver_pickups(transactions_data, user_lookup, roster_to_manager,
                 if manager_id not in user_lookup:
                     continue
 
-                manager_name = user_lookup[manager_id].get('display_name', f'Manager {manager_id}')
+                manager_name = get_manager_name(user_lookup, manager_id)
                 player_ids_added = [pid for pid, rid in adds.items() if rid == roster_id]
                 players_added = [get_player_name_from_id(pid, all_players) for pid in player_ids_added]
                 players_dropped = [get_player_name_from_id(pid, all_players) for pid, rid in drops.items() if rid == roster_id]
@@ -500,7 +501,7 @@ def calculate_improved_trade_impact(manager_id, trade_week, team_power_data, ros
     }
 
 
-def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup, matchup_data=None):
+def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup, matchup_data=None, weeks=None):
     """Calculate comprehensive manager grades based on trades, waivers, and lineup decisions"""
     print("\nCalculating Manager Performance Grades...")
     
@@ -586,8 +587,10 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
                         lineup_score = max(0, min(10, 5 + relative_performance))
                         lineup_scores[manager_id].append(lineup_score)
     
-    # Calculate weekly manager grades and records using real data
-    for week in range(1, 16):  # Weeks 1-15
+    # Calculate weekly manager grades and records using real data. `weeks` should be the
+    # league's real analyzed range (main.py's _determine_analysis_weeks()) - falling back to
+    # 1-15 only protects callers that don't pass it, not this pipeline's real run.
+    for week in (weeks or range(1, 16)):
         # First pass: collect all scores for median calculation
         week_scores = []
         for manager_id in manager_grades.keys():
@@ -645,16 +648,24 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
             
             manager_grades[manager_id]['weekly_grades'][week] = max(0, min(10, weekly_grade))
             
-            # Use real win/loss records from power data if available
+            # Use real win/loss records from power data if available. Only overwrite the
+            # running record on a week that actually has real cumulative win/loss data for
+            # this manager - a bye/eliminated-from-playoffs week (common once the real
+            # analyzed range extends into the fantasy playoffs, weeks 16+) has no matchup, and
+            # unconditionally doing `.get(week, 0)` on those weeks was resetting an otherwise
+            # correct record back to 0-0 whenever such a week was the last one processed.
             power_team_data = team_power_data.get(manager_id, {})
-            if 'cumulative_wins' in power_team_data and 'cumulative_losses' in power_team_data:
-                week_wins = power_team_data['cumulative_wins'].get(week, 0)
-                week_losses = power_team_data['cumulative_losses'].get(week, 0)
-                
+            cumulative_wins_by_week = power_team_data.get('cumulative_wins', {})
+            cumulative_losses_by_week = power_team_data.get('cumulative_losses', {})
+
+            if week in cumulative_wins_by_week and week in cumulative_losses_by_week:
+                week_wins = cumulative_wins_by_week[week]
+                week_losses = cumulative_losses_by_week[week]
+
                 # Update real record
                 manager_grades[manager_id]['record']['wins'] = week_wins
                 manager_grades[manager_id]['record']['losses'] = week_losses
-                
+
                 # Use combined record if available
                 combined_record = power_team_data.get('combined_record', {})
                 if combined_record:
@@ -665,11 +676,13 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
                     theoretical_wins = 1 if power_data > median_score else 0
                     combined_wins = week_wins + (theoretical_wins * week)  # Add theoretical wins for each week
                     combined_losses = (week * 2) - combined_wins  # Total possible games minus wins
-                    
+
                     manager_grades[manager_id]['combined_record']['wins'] = combined_wins
                     manager_grades[manager_id]['combined_record']['losses'] = combined_losses
-            else:
-                # Fallback to performance-based simulation
+            elif not cumulative_wins_by_week:
+                # No real power data for this manager for any week (not just this one) -
+                # fall back to a performance-based simulation rather than leaving their
+                # record at 0-0 for the whole season.
                 if weekly_grade > 5.5:
                     manager_grades[manager_id]['record']['wins'] += 1
                     manager_grades[manager_id]['combined_record']['wins'] += 1
@@ -718,7 +731,10 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     if not trade_impacts:
         print("\n⚠️  No trade data for visualization")
         return
-    
+
+    # Real last analyzed week, not a hardcoded "assume 15 weeks" guess.
+    last_week = max((impact['week'] for impact in trade_impacts), default=15)
+
     if output_dirs:
         plot_filename = os.path.join(output_dirs['html'], "trade_analysis.html")
     else:
@@ -957,13 +973,13 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         x_axis_label="Week",
         y_axis_label="Combined Impact Score",
         tools="pan,wheel_zoom,box_zoom,reset,save",
-        x_range=(0.5, 15.5),
+        x_range=(0.5, last_week + 0.5),
         y_range=(-30, 45)
     )
     style_figure(p)
-    
+
     # Add zero reference line
-    p.line([0.5, 15.5], [0, 0], line_color=LINE, line_width=1, line_dash='dashed', alpha=0.8)
+    p.line([0.5, last_week + 0.5], [0, 0], line_color=LINE, line_width=1, line_dash='dashed', alpha=0.8)
 
     # Create collapsible explanation panel
     explanation_text = f"""
@@ -1162,9 +1178,9 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
 
     reset_button = Button(label="Reset Zoom", sizing_mode="stretch_width", height=44,
                            stylesheets=[button_stylesheet("ghost")])
-    reset_button.js_on_event("button_click", CustomJS(args=dict(plot=p), code="""
+    reset_button.js_on_event("button_click", CustomJS(args=dict(plot=p, x_end=last_week + 0.5), code="""
         plot.x_range.start = 0.5;
-        plot.x_range.end = 15.5;
+        plot.x_range.end = x_end;
         plot.y_range.start = -30;
         plot.y_range.end = 45;
     """))
@@ -1221,7 +1237,10 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     if not waiver_impacts:
         print("\n⚠️  No waiver data for visualization")
         return
-    
+
+    # Real last analyzed week, not a hardcoded "assume 15 weeks" guess.
+    last_week = max((impact['week'] for impact in waiver_impacts), default=15)
+
     if output_dirs:
         plot_filename = os.path.join(output_dirs['html'], "waiver_analysis.html")
     else:
@@ -1360,13 +1379,13 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         x_axis_label="Week",
         y_axis_label="Position-Adjusted Score (std. deviations vs. position average)",
         tools="pan,wheel_zoom,box_zoom,reset,save",
-        x_range=(0.5, 15.5),
+        x_range=(0.5, last_week + 0.5),
         y_range=(-4, 4)
     )
     style_figure(p)
 
     # Add zero reference line
-    p.line([0.5, 15.5], [0, 0], line_color=LINE, line_width=1, line_dash='dashed', alpha=0.8)
+    p.line([0.5, last_week + 0.5], [0, 0], line_color=LINE, line_width=1, line_dash='dashed', alpha=0.8)
     
     # Create collapsible explanation panel
     explanation_text = f"""
@@ -1574,9 +1593,9 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
 
     reset_button = Button(label="Reset Zoom", sizing_mode="stretch_width", height=44,
                            stylesheets=[button_stylesheet("ghost")])
-    reset_button.js_on_event("button_click", CustomJS(args=dict(plot=p), code="""
+    reset_button.js_on_event("button_click", CustomJS(args=dict(plot=p, x_end=last_week + 0.5), code="""
         plot.x_range.start = 0.5;
-        plot.x_range.end = 15.5;
+        plot.x_range.end = x_end;
         plot.y_range.start = -4;
         plot.y_range.end = 4;
     """))
@@ -1633,7 +1652,13 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     if not manager_grades:
         print("\n⚠️  No manager grade data for visualization")
         return
-    
+
+    # Real last analyzed week, not a hardcoded "assume 15 weeks" guess.
+    last_week = max(
+        (int(w) for data in manager_grades.values() for w in data.get('weekly_grades', {})),
+        default=15
+    )
+
     if output_dirs:
         plot_filename = os.path.join(output_dirs['html'], "manager_grades.html")
     else:
@@ -1701,8 +1726,8 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             model.fit(X, y)
             slope = model.coef_[0]
             
-            # Extend trend line through week 15
-            trend_weeks = list(range(min(weeks), 16))
+            # Extend trend line through the real last analyzed week
+            trend_weeks = list(range(min(weeks), last_week + 1))
             trend_grades = model.predict(np.array(trend_weeks).reshape(-1, 1)).tolist()
         
         # Calculate proper records using actual data structure
@@ -1797,7 +1822,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         x_axis_label="Week",
         y_axis_label="Manager Grade (0-10 Scale)",
         tools="pan,wheel_zoom,box_zoom,reset,save",
-        x_range=(0.5, 15.5),
+        x_range=(0.5, last_week + 0.5),
         y_range=(0, 10)
     )
     style_figure(p)
@@ -1973,9 +1998,9 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         cb_obj.label = all_visible ? "Show All Trends" : "Hide All Trends";
     """)
     
-    reset_callback = CustomJS(args=dict(plot=p), code="""
+    reset_callback = CustomJS(args=dict(plot=p, x_end=last_week + 0.5), code="""
         plot.x_range.start = 0.5;
-        plot.x_range.end = 15.5;
+        plot.x_range.end = x_end;
         plot.y_range.start = 0;
         plot.y_range.end = 10;
     """)

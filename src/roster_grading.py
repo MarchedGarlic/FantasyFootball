@@ -56,6 +56,11 @@ class FantasyAnalyzer:
         print(f"Initializing ESPN player rankings for {season} season...")
         self.nfl_leaders = self.espn_api.get_nfl_leaders(season, storage=storage)
         self._build_position_rankings()
+        if not any(self.position_rankings.get(pos) for pos in ['QB', 'RB', 'WR', 'TE']):
+            raise RuntimeError(
+                f"ESPN player rankings for {season} came back empty - grading would silently "
+                "give every player the same flat default grade instead of a real one."
+            )
     
     def _build_position_rankings(self):
         """Build position rankings from NFL leaders data"""
@@ -421,67 +426,3 @@ def get_grade_tier(grade):
         return "Flex"
     else:
         return "Streamer"
-
-
-def _calculate_manager_grade(roster, roster_analysis):
-    """Calculate manager effectiveness grade"""
-    wins = roster.get('settings', {}).get('wins', 0)
-    losses = roster.get('settings', {}).get('losses', 0)
-    total_games = wins + losses
-    
-    if total_games == 0:
-        return "N/A - No games played"
-    
-    win_rate = wins / total_games
-    roster_grade = roster_analysis.get('overall_grade', 5.0)
-    
-    # Expected wins based on roster grade
-    # Grade 8.0+ should win 70%+, Grade 6.0-7.9 should win 50-70%, etc.
-    if roster_grade >= 8.0:
-        expected_win_rate = 0.70
-    elif roster_grade >= 6.5:
-        expected_win_rate = 0.60
-    elif roster_grade >= 5.5:
-        expected_win_rate = 0.50
-    elif roster_grade >= 4.5:
-        expected_win_rate = 0.40
-    else:
-        expected_win_rate = 0.30
-    
-    # Compare actual vs expected
-    performance_ratio = win_rate / expected_win_rate if expected_win_rate > 0 else 1.0
-    
-    if performance_ratio >= 1.2:
-        return "A - Overachieving"
-    elif performance_ratio >= 1.0:
-        return "B - Meeting Expectations"
-    elif performance_ratio >= 0.8:
-        return "C - Underperforming"
-    else:
-        return "D - Significantly Underperforming"
-
-
-def _get_roster_construction_notes(roster_analysis):
-    """Get roster construction insights"""
-    notes = []
-    tier_dist = roster_analysis.get('tier_distribution', {})
-    pos_grades = roster_analysis.get('position_grades', {})
-    
-    # Strength analysis
-    strong_positions = [pos for pos, grade in pos_grades.items() if grade >= 7.0 and pos != 'Other']
-    weak_positions = [pos for pos, grade in pos_grades.items() if grade < 5.0 and pos != 'Other']
-    
-    if strong_positions:
-        notes.append(f"Strong at: {', '.join(strong_positions)}")
-    if weak_positions:
-        notes.append(f"Weak at: {', '.join(weak_positions)}")
-    
-    # Tier distribution insights
-    if tier_dist.get('elite', 0) >= 3:
-        notes.append("Elite-heavy roster")
-    if tier_dist.get('solid', 0) >= 6:
-        notes.append("Deep and consistent")
-    if tier_dist.get('unranked', 0) >= 5:
-        notes.append("Many unproven players")
-    
-    return notes if notes else ["Balanced roster construction"]
