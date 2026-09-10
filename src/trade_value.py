@@ -497,11 +497,28 @@ function renderResults() {
     container.innerHTML = cards + (verdict ? `<div class="trade-verdict">${verdict}</div>` : '');
 }
 
+function autosizeSelf() {
+    // This report's height changes constantly as the user builds out a trade (adding teams,
+    // expanding a roster list) - long after the embedding page's own wireIframeAutosize() has
+    // stopped watching (it disconnects its ResizeObserver ~8s after load, tuned for Bokeh's
+    // brief async reflow on other reports, not a page that's interactive indefinitely). Same
+    // origin, so this page can just resize its own iframe directly instead. Called synchronously
+    // right after the DOM mutation that might have changed the page's height, not deferred via
+    // requestAnimationFrame - reading a layout property like scrollHeight forces the browser to
+    // resolve layout on demand, so the value is already correct without waiting for a paint.
+    try {
+        if (window.frameElement) {
+            window.frameElement.style.height = document.documentElement.scrollHeight + 'px';
+        }
+    } catch (e) { /* not embedded in an iframe (e.g. opened via "Open full size") - fine */ }
+}
+
 function render() {
     document.getElementById('tradeTeams').innerHTML = slots.map((_, i) => teamCardHtml(i)).join('');
     document.getElementById('addTeamBtn').disabled = slots.length >= MAX_TEAMS;
     slots.forEach((slot, i) => { if (slot.rosterId != null) renderTeamList(i); });
     renderResults();
+    autosizeSelf();
 }
 
 document.addEventListener('DOMContentLoaded', function () {
