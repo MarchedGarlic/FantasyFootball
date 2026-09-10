@@ -301,6 +301,18 @@ def build_ai_overview(output_data, detailed_data, roster_data, league_settings, 
 
 # ---- rendering (server-rendered sections) ----
 
+# "Show all columns" toggle for a table with class="col-secondary" cells (see the CSS in
+# _SHARED_STYLE). Reveals them by toggling .expanded on the table itself - reached via
+# previousElementSibling since this button always sits immediately after </table>, not by id,
+# so it works the same way regardless of how many tables on the page use it.
+RESPONSIVE_TABLE_TOGGLE = (
+    '<button class="rtable-toggle" onclick="'
+    "var t=this.previousElementSibling; var exp=t.classList.toggle('expanded'); "
+    "this.textContent = exp ? 'Fewer columns' : 'Show all columns ▸';"
+    '">Show all columns &#9656;</button>'
+)
+
+
 def _card(title, body_html, extra_attrs="", section_id=None):
     id_attr = f'id="{section_id}"' if section_id else ""
     return f"""
@@ -378,13 +390,16 @@ def _render_median_standings(rows):
     if not rows:
         return "<p class='empty'>No median standings available yet.</p>"
 
+    # "vs. Median" and "Combined" record are marked col-secondary (hidden by default on a
+    # phone, behind "Show all columns") - Real Record and Combined % are the two numbers that
+    # answer "how are they actually doing" and "were they lucky," the rest is how you get there.
     table_rows = "".join(
         f"""<tr>
             <td>#{r['rank']}</td>
             <td>{r['name']}</td>
             <td class="num">{r['regular_wins']}-{r['regular_losses']}{'-' + str(r['regular_ties']) if r['regular_ties'] else ''}</td>
-            <td class="num">{r['median_wins']}-{r['median_losses']}</td>
-            <td class="num">{r['combined_wins']}-{r['combined_losses']}</td>
+            <td class="num col-secondary">{r['median_wins']}-{r['median_losses']}</td>
+            <td class="num col-secondary">{r['combined_wins']}-{r['combined_losses']}</td>
             <td class="num">{r['combined_pct'] * 100:.1f}%</td>
         </tr>"""
         for r in rows
@@ -394,11 +409,13 @@ def _render_median_standings(rows):
     <p class="section-caption">If every week also counted as a win/loss against the league median score</p>
     <div class="table-scroll"><table>
         <tr>
-            <th>Rank</th><th>Manager</th><th>Real Record</th><th>vs. Median</th>
-            <th>Combined</th><th>Combined %</th>
+            <th>Rank</th><th>Manager</th><th>Real Record</th><th class="col-secondary">vs. Median</th>
+            <th class="col-secondary">Combined</th><th>Combined %</th>
         </tr>
         {table_rows}
-    </table></div>
+    </table>
+    {RESPONSIVE_TABLE_TOGGLE}
+    </div>
     <p class="notes" style="margin-top: 10px;">
         Each week, the top half of scorers league-wide also get a bonus win against "the median" and the
         bottom half get a bonus loss - regardless of who they actually played. Beat both your real
@@ -412,13 +429,15 @@ def _render_draft_ratings(ratings):
     if not ratings:
         return "<p class='empty'>No draft data available (the league may not have used Sleeper's own draft tool, or ESPN's preseason rankings weren't available for this season).</p>"
 
+    # Quality/Value (the two components Draft Rating is built from) are marked col-secondary -
+    # the headline number and the pick count stay visible by default on a phone.
     rows = "".join(
         f"""<tr>
             <td>#{r['rank']}</td>
             <td>{r['manager_name']}</td>
             <td class="num"><strong>{r['draft_rating']:.1f}</strong></td>
-            <td class="num">{r['quality_score']:.1f}</td>
-            <td class="num">{r['value_score']:.1f}</td>
+            <td class="num col-secondary">{r['quality_score']:.1f}</td>
+            <td class="num col-secondary">{r['value_score']:.1f}</td>
             <td class="num">{r['num_picks']}</td>
         </tr>"""
         for r in ratings
@@ -426,9 +445,11 @@ def _render_draft_ratings(ratings):
     return f"""
     <p class="section-caption">70% player quality (ESPN-tier grade of every player drafted) + 30% draft value (how much better than ESPN's preseason rank they drafted, relative to the rest of the league) - both on a 0-10 scale</p>
     <div class="table-scroll"><table>
-        <tr><th>Rank</th><th>Manager</th><th>Draft Rating</th><th>Quality</th><th>Value</th><th>Picks</th></tr>
+        <tr><th>Rank</th><th>Manager</th><th>Draft Rating</th><th class="col-secondary">Quality</th><th class="col-secondary">Value</th><th>Picks</th></tr>
         {rows}
-    </table></div>
+    </table>
+    {RESPONSIVE_TABLE_TOGGLE}
+    </div>
     """
 
 
@@ -436,12 +457,14 @@ def _render_biggest_steals(steals):
     if not steals:
         return "<p class='empty'>No steals to show yet (need draft results plus ESPN preseason rankings for this season).</p>"
 
+    # Actual Pick/Expected Rank (the two inputs "Beat Rank By" is computed from) are marked
+    # col-secondary - Beat Rank By is the number that actually answers "how big a steal."
     rows = "".join(
         f"""<tr>
             <td>{s['player_name']} <span class="notes">({s['position']})</span></td>
             <td>{s['manager_name']}</td>
-            <td class="num">Pick {s['pick_no']}</td>
-            <td class="num">#{s['expected_rank']}</td>
+            <td class="num col-secondary">Pick {s['pick_no']}</td>
+            <td class="num col-secondary">#{s['expected_rank']}</td>
             <td class="num positive">+{s['discrepancy']}</td>
         </tr>"""
         for s in steals
@@ -449,9 +472,11 @@ def _render_biggest_steals(steals):
     return f"""
     <p class="section-caption">Biggest gaps between a player's actual draft pick and ESPN's preseason expert-consensus rank (not crowd-sourced ADP - see CLAUDE.md) - a bigger number means they were still on the board long after experts expected them gone. Currently-injured players are excluded.</p>
     <div class="table-scroll"><table>
-        <tr><th>Player</th><th>Manager</th><th>Actual Pick</th><th>Expected Rank</th><th>Beat Rank By</th></tr>
+        <tr><th>Player</th><th>Manager</th><th class="col-secondary">Actual Pick</th><th class="col-secondary">Expected Rank</th><th>Beat Rank By</th></tr>
         {rows}
-    </table></div>
+    </table>
+    {RESPONSIVE_TABLE_TOGGLE}
+    </div>
     """
 
 
@@ -589,21 +614,25 @@ function renderTopPerformers(week) {
         };
     }).sort((a, b) => b.winnerScore - a.winnerScore);
 
+    // Lost To/loser score/Margin are secondary on a phone - #, Winner, and their score are the
+    // headline read ("who won and by how much they scored"), the rest is supporting context.
     const body = rows.map((r, i) => `
         <tr>
             <td>${i + 1}</td>
             <td><strong>${r.winner}</strong></td>
             <td class="num">${r.winnerScore.toFixed(1)}</td>
-            <td>${r.loser}</td>
-            <td class="num">${r.loserScore.toFixed(1)}</td>
-            <td class="num">${r.margin.toFixed(1)}</td>
+            <td class="col-secondary">${r.loser}</td>
+            <td class="num col-secondary">${r.loserScore.toFixed(1)}</td>
+            <td class="num col-secondary">${r.margin.toFixed(1)}</td>
         </tr>
     `).join('');
     container.innerHTML = `
         <div class="table-scroll"><table>
-            <tr><th>#</th><th>Winner</th><th>Score</th><th>Lost To</th><th>Score</th><th>Margin</th></tr>
+            <tr><th>#</th><th>Winner</th><th>Score</th><th class="col-secondary">Lost To</th><th class="col-secondary">Score</th><th class="col-secondary">Margin</th></tr>
             ${body}
-        </table></div>
+        </table>
+        __RESPONSIVE_TABLE_TOGGLE__
+        </div>
     `;
 }
 
@@ -714,6 +743,7 @@ def _render_week_interactive_script(matchup_results, manager_names, weeks_availa
     js = js.replace('__WEEKS_AVAILABLE__', json.dumps(weeks_available))
     js = js.replace('__PLAYOFF_TEAMS_COUNT__', json.dumps(playoff_teams_count))
     js = js.replace('__CURRENT_WEEK__', json.dumps(current_week))
+    js = js.replace('__RESPONSIVE_TABLE_TOGGLE__', RESPONSIVE_TABLE_TOGGLE)
     return f"<script>{js}</script>"
 
 
@@ -867,6 +897,14 @@ _SHARED_STYLE = """<style>
     .positive { color: var(--good); }
     .negative { color: var(--bad); }
     .empty { color: var(--ink-muted); font-style: italic; }
+    /* Secondary columns on the widest tables (Median Standings, Draft Rating) hide by default
+       on a phone instead of forcing horizontal scroll, behind a "Show all columns" tap -
+       see RESPONSIVE_TABLE_TOGGLE below. */
+    .rtable-toggle { display: none; background: none; border: none; color: var(--accent); font-weight: 600; font-size: 0.82rem; cursor: pointer; padding: 6px 0 0; text-align: left; }
+    @media (max-width: 640px) {
+        .rtable-toggle { display: inline-block; }
+        table:not(.expanded) .col-secondary { display: none; }
+    }
     ul.upset-list, ul.matchup-list { list-style: none; padding: 0; margin: 0; }
     ul.upset-list li, ul.matchup-list li { padding: 12px 0; border-bottom: 1px solid var(--line); }
     ul.upset-list li:last-child, ul.matchup-list li:last-child { border-bottom: none; }

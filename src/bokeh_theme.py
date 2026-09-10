@@ -255,3 +255,29 @@ def collapsible_description_html(short_html, full_extra_html, toggle_id):
         @media (min-width: 641px) {{ #{toggle_id}-full {{ display: block !important; }} }}
     </style>
     """
+
+
+def responsive_table_toggle_html(table_id):
+    """A 'Show all columns'/'Fewer columns' toggle for a table that marks its less-critical
+    `<th>`/`<td>` cells with `class="col-secondary"`. On a narrow (phone-width) viewport those
+    cells are hidden by default; on a wider viewport they're always shown and this toggle stays
+    hidden, matching collapsible_description_html's split. Call this once immediately after the
+    `</table>` tag it applies to - the toggle finds the table via `this.previousElementSibling`
+    (see collapsible_description_html's docstring for why not document.getElementById).
+
+    The `<table>` itself must carry `id="{table_id}"` - `table_id` must be unique per call on
+    the page.
+    """
+    return f"""
+    <button id="{table_id}-toggle" type="button" onclick="
+        var table = this.previousElementSibling;
+        var expanded = table.classList.toggle('col-secondary-visible');
+        this.textContent = expanded ? 'Fewer columns' : 'Show all columns ▸';
+    " style="display:none; background:none; border:none; color:{ACCENT}; font-weight:600; font-size:13px; cursor:pointer; padding:6px 0 0; text-align:left;">Show all columns &#9656;</button>
+    <style>
+        @media (max-width: 640px) {{
+            #{table_id}-toggle {{ display: inline-block !important; }}
+            #{table_id}:not(.col-secondary-visible) .col-secondary {{ display: none; }}
+        }}
+    </style>
+    """

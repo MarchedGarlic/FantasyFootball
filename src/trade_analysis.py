@@ -723,7 +723,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
-            collapsible_description_html,
+            collapsible_description_html, responsive_table_toggle_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh and/or sklearn not available for trade visualization")
@@ -1014,17 +1014,20 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
 
     explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1200, height=0, visible=False)
 
-    # Create leaderboard
+    # Create leaderboard. "Total Gain"/"Total Trades"/"Success Rate" are marked col-secondary
+    # (hidden by default on a phone, behind the "Show all columns" toggle) - #, Manager, Avg
+    # Impact, and Trend are the four numbers that actually answer "is this manager good at
+    # trading," the rest is supporting detail.
     leaderboard_html = f"""
     <h3 style="{HEADING_STYLE}">Trade Performance Leaderboard</h3>
-    <table style="border-collapse: collapse; width: 100%; font-size: 13px; margin: 5px 0; color: {INK};">
+    <table id="trade-leaderboard-table" style="border-collapse: collapse; width: 100%; font-size: 13px; margin: 5px 0; color: {INK};">
     <tr style="background-color: {SURFACE_RAISED};">
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">#</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Manager</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Avg Impact</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Gain</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Trades</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Success Rate</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Gain</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Trades</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Success Rate</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Trend</th>
     </tr>
     """
@@ -1038,14 +1041,15 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; font-weight: 700; color: {rank_color};">{row[0]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[1]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[2]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[3]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[4]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[5]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[3]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[4]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[5]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[6]}</td>
         </tr>"""
 
     leaderboard_html += f"""
     </table>
+    {responsive_table_toggle_html("trade-leaderboard-table")}
     <div style="margin-top: 10px; font-size: 12px; color: {INK_MUTED};">
         <strong>Legend:</strong> Avg Impact = average net effect per trade &middot; Total Gain = sum of all trade impacts &middot;
         Success Rate = % of trades with positive impact &middot; Trend = overall performance direction
@@ -1253,7 +1257,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
-            collapsible_description_html,
+            collapsible_description_html, responsive_table_toggle_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh not available for waiver visualization")
@@ -1445,21 +1449,23 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
 
     explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1200, height=0, visible=False)
 
-    # Create leaderboard
+    # Create leaderboard. This is the widest leaderboard in the app (10 columns) - only #,
+    # Manager, Avg Impact, and Trend stay visible by default on a phone; the other six are
+    # supporting detail behind the "Show all columns" toggle.
     leaderboard_html = f"""
     <h3 style="{HEADING_STYLE}">Waiver Wire Performance Leaderboard</h3>
-    <table style="border-collapse: collapse; width: 100%; font-size: 13px; margin: 5px 0; color: {INK};">
+    <table id="waiver-leaderboard-table" style="border-collapse: collapse; width: 100%; font-size: 13px; margin: 5px 0; color: {INK};">
     <tr style="background-color: {SURFACE_RAISED};">
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">#</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Manager</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Avg Impact</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Gain</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Moves</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Success Rate</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Best Pickup</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Gain</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Moves</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Success Rate</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Best Pickup</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Trend</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">FAAB Spent</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Impact/$</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">FAAB Spent</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Impact/$</th>
     </tr>
     """
 
@@ -1472,17 +1478,18 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; font-weight: 700; color: {rank_color};">{row[0]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[1]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[2]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[3]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[4]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[5]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[6]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[3]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[4]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[5]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[6]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[7]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[8]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[9]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[8]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[9]}</td>
         </tr>"""
 
     leaderboard_html += f"""
     </table>
+    {responsive_table_toggle_html("waiver-leaderboard-table")}
     <div style="margin-top: 10px; font-size: 12px; color: {INK_MUTED};">
         <strong>Legend:</strong> Avg Impact = average position-adjusted z-score per waiver move (std. deviations vs. the position's weekly average) &middot;
         Total Gain = sum of all pickups' position-adjusted scores &middot; Success Rate = % of moves with a positive score &middot;
@@ -1682,7 +1689,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
-            collapsible_description_html,
+            collapsible_description_html, responsive_table_toggle_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh or scikit-learn not available for manager grade visualization")
