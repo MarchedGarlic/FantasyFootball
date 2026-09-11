@@ -96,8 +96,8 @@ def test_player_trade_values_rewards_recent_form_above_position_baseline():
     # Same position baseline both weeks; 'star' consistently outscores it, 'dud' consistently
     # underperforms it.
     all_weekly_matchups = {
-        1: [{'roster_id': 1, 'players_points': {'star': 25.0, 'dud': 2.0}}],
-        2: [{'roster_id': 1, 'players_points': {'star': 23.0, 'dud': 3.0}}],
+        1: [{'roster_id': 1, 'points': 27.0, 'players_points': {'star': 25.0, 'dud': 2.0}}],
+        2: [{'roster_id': 1, 'points': 26.0, 'players_points': {'star': 23.0, 'dud': 3.0}}],
     }
     analyzer = _FakeAnalyzer({'Star Player': 5.0, 'Dud Player': 5.0})  # identical ESPN grade
     values = calculate_player_trade_values(
@@ -107,6 +107,33 @@ def test_player_trade_values_rewards_recent_form_above_position_baseline():
     # Same season-long grade, but recent form should clearly separate them.
     assert values['star']['trade_value'] > values['dud']['trade_value']
     assert values['star']['floor'] > values['dud']['ceiling']
+
+
+def test_player_trade_values_ignores_future_placeholder_weeks():
+    # Regression: only week 1 has actually been played, but weeks 2-4 are already present in
+    # the fetched data (Sleeper pre-fills the whole season's matchup skeleton up front) with
+    # every player at a 0.0 placeholder. Before this was fixed, "last 4 weeks" resolved to
+    # weeks 2-4 (all zeros) instead of the one real played week, so every player's floor/
+    # ceiling/recent_avg silently came out as 0.0 regardless of how they actually played.
+    rosters = [{'roster_id': 1, 'owner_id': 'u1', 'players': ['p1']}]
+    all_players = {'p1': {'full_name': 'Real Player', 'position': 'WR', 'team': 'KC'}}
+    all_weekly_matchups = {
+        1: [{'roster_id': 1, 'points': 20.0, 'players_points': {'p1': 20.0}}],
+        2: [{'roster_id': 1, 'points': 0.0, 'players_points': {'p1': 0.0}}],
+        3: [{'roster_id': 1, 'points': 0.0, 'players_points': {'p1': 0.0}}],
+        4: [{'roster_id': 1, 'points': 0.0, 'players_points': {'p1': 0.0}}],
+    }
+    analyzer = _FakeAnalyzer({'Real Player': 5.0})
+    values = calculate_player_trade_values(
+        rosters, all_players, all_weekly_matchups, analyzer,
+        roster_to_manager={1: 'u1'}, user_lookup={'u1': {'display_name': 'Manager1'}},
+    )
+    # A single real data point falls back to a +/-30% stdev heuristic (see calculate_player_
+    # trade_values' recent_stdev branch) rather than 0 - the point of this test is that the
+    # real week 1 score drives these numbers at all, not that they exactly equal 20.0.
+    assert values['p1']['recent_avg'] == 20.0
+    assert values['p1']['floor'] == 14.0
+    assert values['p1']['ceiling'] == 26.0
 
 
 def test_player_trade_values_discounts_injured_players():

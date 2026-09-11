@@ -34,6 +34,7 @@ from datetime import datetime
 from src.trade_value import TRADABLE_POSITIONS, calculate_player_trade_values
 from src.injury_severity import injury_severity_tier, start_sit_penalty
 from src.ai_overview import _page_shell
+from src.utils import week_has_been_played
 
 MATCHUP_WEIGHT = 1.0  # matchup z-score contributes point-for-point alongside the 0-10 quality scale
 START_THRESHOLD = 1.5
@@ -61,6 +62,15 @@ def build_defense_vs_position(all_weekly_matchups, all_players, schedule_by_week
     points_allowed = defaultdict(lambda: defaultdict(list))
 
     for week, matchups in (all_weekly_matchups or {}).items():
+        # A future week's real NFL opponent is already known (ESPN publishes the schedule months
+        # ahead), but the *points* Sleeper reports for it are a 0.0 placeholder for every
+        # rostered player until the games are actually played - not missing, not None (confirmed
+        # against live data). Without this guard, every unplayed week would attribute a wave of
+        # fake "0 points against this future opponent" games to whoever's on the schedule that
+        # week, diluting every team's real points-allowed average toward zero for the rest of
+        # the season. See week_has_been_played()'s docstring.
+        if not week_has_been_played(matchups):
+            continue
         week_schedule = schedule_by_week.get(week) or {}
         if not week_schedule:
             continue

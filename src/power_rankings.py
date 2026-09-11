@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Dict, List
 
 from src.bokeh_mobile import make_bokeh_html_mobile_friendly
-from src.utils import get_manager_name
+from src.utils import get_manager_name, week_has_been_played
 
 
 def calculate_power_rating(scores, wins, losses, week_num, combined_wins=None, combined_losses=None):
@@ -77,9 +77,16 @@ def calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup, ou
     # from a concurrent bulk fetch (src/api_clients.py), so dict insertion order isn't
     # guaranteed to be week order, and the incremental running totals above depend on it being.
     for week, matchups in sorted(all_weekly_matchups.items()):
-        if not matchups:
+        # `matchups` is never empty for a future week - Sleeper pre-populates every rostered
+        # player with 0.0 points before the games happen, rather than omitting the week - so an
+        # unplayed week must be detected by score, not by an empty list (see
+        # week_has_been_played()'s docstring). Skipping it here, not just excluding it from
+        # wins/losses below, matters: otherwise every future week still lands in
+        # weekly_scores/cumulative_scores as a phantom 0-point week, dragging the season-long
+        # average and rating trend toward zero long before those weeks are ever played.
+        if not matchups or not week_has_been_played(matchups):
             continue
-            
+
         print(f"   Processing Week {week}: {len(matchups)} teams")
         
         # Record this week's scores and determine wins/losses

@@ -36,6 +36,7 @@ from datetime import datetime
 from src.trade_analysis import _build_weekly_position_baselines, _build_player_weekly_points
 from src.ai_overview import _page_shell
 from src.injury_severity import trade_value_discount_multiplier
+from src.utils import week_has_been_played
 
 RECENT_WEEKS_WINDOW = 4  # "current form" - long enough to smooth one flukey week, short enough
                           # to actually reflect recent performance rather than diluting into a
@@ -58,6 +59,19 @@ def _recent_weeks(weeks_sorted, window=RECENT_WEEKS_WINDOW):
     return weeks_sorted[-window:] if weeks_sorted else []
 
 
+def _played_weeks(all_weekly_matchups):
+    """Weeks that have actually happened, not just been fetched. `all_weekly_matchups` covers
+    the whole season's week range up front, but Sleeper pre-populates every future/unplayed
+    week with 0.0 points for every rostered player rather than omitting it - so every player's
+    "last 4 weeks" would otherwise silently resolve to the *last 4 weeks of the season*
+    (all zeros) any time this runs before the season is over, not their last 4 real games.
+    See week_has_been_played()'s docstring."""
+    return sorted(
+        week for week, matchups in (all_weekly_matchups or {}).items()
+        if week_has_been_played(matchups)
+    )
+
+
 def calculate_player_trade_values(rosters, all_players, all_weekly_matchups, analyzer,
                                    roster_to_manager, user_lookup):
     """Every tradable (QB/RB/WR/TE) rostered player's current trade value, floor, and ceiling.
@@ -65,7 +79,7 @@ def calculate_player_trade_values(rosters, all_players, all_weekly_matchups, ana
     Returns {player_id: {name, position, team, roster_id, manager_name, trade_value, floor,
     ceiling, recent_avg, espn_grade}}.
     """
-    weeks_sorted = sorted((all_weekly_matchups or {}).keys())
+    weeks_sorted = _played_weeks(all_weekly_matchups)
     recent = _recent_weeks(weeks_sorted)
     player_weekly_points = _build_player_weekly_points(all_weekly_matchups)
     position_baselines = _build_weekly_position_baselines(all_weekly_matchups, all_players)

@@ -26,9 +26,9 @@ def test_defense_vs_position_flags_a_weak_defense():
     # CAR's defense faces rb_a and rb_b across two weeks and allows big games both times;
     # the rest of the league (facing DEN) allows much less.
     all_weekly_matchups = {
-        1: [{'roster_id': 1, 'players_points': {'rb_a': 30.0}}],
-        2: [{'roster_id': 1, 'players_points': {'rb_b': 28.0}}],
-        3: [{'roster_id': 1, 'players_points': {'rb_c': 8.0}}],
+        1: [{'roster_id': 1, 'points': 30.0, 'players_points': {'rb_a': 30.0}}],
+        2: [{'roster_id': 1, 'points': 28.0, 'players_points': {'rb_b': 28.0}}],
+        3: [{'roster_id': 1, 'points': 8.0, 'players_points': {'rb_c': 8.0}}],
     }
     schedule_by_week = {
         1: {'KC': 'CAR', 'CAR': 'KC'},
@@ -38,6 +38,26 @@ def test_defense_vs_position_flags_a_weak_defense():
     dvp = build_defense_vs_position(all_weekly_matchups, all_players, schedule_by_week)
     assert dvp['CAR']['RB']['avg_allowed'] == 29.0
     assert dvp['CAR']['RB']['z_score'] > dvp['SEA']['RB']['z_score']
+
+
+def test_defense_vs_position_ignores_future_placeholder_weeks():
+    # Regression: ESPN's real schedule for a future week is already known (published months
+    # ahead), but Sleeper still pre-fills that week's players_points with 0.0 for every
+    # rostered player. Before this was fixed, every future week attributed a fake "allowed 0
+    # points" game to whoever's on the schedule that week, diluting every real defense's
+    # points-allowed average toward zero long before those games were played.
+    all_players = {'rb_a': {'full_name': 'RB A', 'position': 'RB', 'team': 'KC'}}
+    all_weekly_matchups = {
+        1: [{'roster_id': 1, 'points': 30.0, 'players_points': {'rb_a': 30.0}}],
+        2: [{'roster_id': 1, 'points': 0.0, 'players_points': {'rb_a': 0.0}}],
+    }
+    schedule_by_week = {
+        1: {'KC': 'CAR', 'CAR': 'KC'},
+        2: {'KC': 'SEA', 'SEA': 'KC'},  # not played yet
+    }
+    dvp = build_defense_vs_position(all_weekly_matchups, all_players, schedule_by_week)
+    assert dvp['CAR']['RB']['avg_allowed'] == 30.0
+    assert 'SEA' not in dvp
 
 
 def test_out_player_always_sits_regardless_of_matchup():

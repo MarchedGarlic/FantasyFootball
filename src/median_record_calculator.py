@@ -8,7 +8,7 @@ then combines with regular record for comprehensive team evaluation.
 import statistics
 from typing import Dict, List
 
-from src.utils import get_manager_name
+from src.utils import get_manager_name, week_has_been_played
 
 
 def calculate_median_records(all_weekly_matchups: Dict, rosters: List, user_lookup: Dict) -> Dict:
@@ -52,9 +52,15 @@ def calculate_median_records(all_weekly_matchups: Dict, rosters: List, user_look
 
     # Process each week
     for week, matchups in all_weekly_matchups.items():
-        if not matchups:
+        # A future/unplayed week isn't an empty list - Sleeper pre-fills every rostered player
+        # with 0.0 points before kickoff - so it must be detected by score, not list length (see
+        # week_has_been_played()). Without this, every team's score ties the week's "median" of
+        # 0.0 for every unplayed week, which the exactly-at-median branch below scores as a free
+        # win, and the identical head-to-head score is recorded as a free regular-season tie -
+        # both compounding for every remaining week of the season before it's even played.
+        if not matchups or not week_has_been_played(matchups):
             continue
-            
+
         print(f"   Processing Week {week}...")
         
         # Collect all scores for this week
