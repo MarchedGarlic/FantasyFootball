@@ -80,6 +80,22 @@ def _format_standings_md(median_standings):
     return "\n".join(lines)
 
 
+def _format_playoff_odds_md(playoff_odds):
+    teams = (playoff_odds or {}).get('teams') or []
+    if not teams:
+        return "_Not enough data yet to simulate the rest of the season._"
+    show_champ = playoff_odds.get('has_bracket_template')
+    header = "| Manager | Record | Playoff Odds | Championship Odds |" if show_champ else "| Manager | Record | Playoff Odds |"
+    sep = "|---|---|---|---|" if show_champ else "|---|---|---|"
+    lines = [header, sep]
+    for t in teams:
+        row = f"| {t['manager_name']} | {t['current_record']} | {t['playoff_odds']:.1f}% |"
+        if show_champ:
+            row += f" {t['championship_odds']:.1f}% |"
+        lines.append(row)
+    return "\n".join(lines)
+
+
 def _format_trades_md(trade_impacts, week):
     this_week = [t for t in (trade_impacts or []) if t.get('week') == week]
     if not this_week:
@@ -149,6 +165,17 @@ def _format_injury_notes_md(start_sit_players):
     return "\n".join(lines)
 
 
+def _format_awards_md(weekly_awards_data, week, exclude_ids=frozenset({'upset'})):
+    """Pulls from src/weekly_awards.py's already-computed award list for this week. 'upset' is
+    excluded here since the digest already has its own dedicated Biggest Upset section right
+    above this one - showing it twice in the same newsletter draft would just be repetitive."""
+    awards = ((weekly_awards_data or {}).get('weeks') or {}).get(week) or []
+    awards = [a for a in awards if a['id'] not in exclude_ids]
+    if not awards:
+        return "_No awards computed for this week._"
+    return "\n".join(f"- {a['emoji']} **{a['title']}**: {a['winner']} - {a['detail']}" for a in awards)
+
+
 def _format_faab_tracker_md(faab_ledger, roster_to_manager, manager_names):
     if not faab_ledger or not faab_ledger.get('enabled'):
         return None
@@ -163,7 +190,7 @@ def _format_faab_tracker_md(faab_ledger, roster_to_manager, manager_names):
 
 
 def build_weekly_digest_markdown(output_data, detailed_data, roster_data, league_settings,
-                                  faab_ledger, start_sit_data):
+                                  faab_ledger, start_sit_data, weekly_awards_data=None):
     """The actual Markdown text - everything else in this module is UI chrome around this."""
     ctx = compute_overview_context(output_data, detailed_data, roster_data, league_settings)
     analysis_info = ctx['analysis_info']
@@ -185,6 +212,9 @@ def build_weekly_digest_markdown(output_data, detailed_data, roster_data, league
         f"## Week {week} Results" if week is not None else "## Results",
         _format_matchups_md(ctx['matchup_results'], week),
         "",
+        "## Weekly Awards",
+        _format_awards_md(weekly_awards_data, week),
+        "",
         "## Biggest Upset",
         _format_upsets_md(ctx['sections']['upsets'], week),
         "",
@@ -193,6 +223,9 @@ def build_weekly_digest_markdown(output_data, detailed_data, roster_data, league
         "",
         "## Standings (Real Record vs. Median Record)",
         _format_standings_md(ctx['sections']['median_standings']),
+        "",
+        "## Playoff & Championship Odds",
+        _format_playoff_odds_md(ctx['sections'].get('playoff_odds')),
         "",
         "## Trades This Week",
         _format_trades_md((output_data.get('trade_analysis') or {}).get('trade_impacts'), week),
@@ -295,13 +328,14 @@ def render_weekly_digest_html(markdown_text, analysis_info, filename):
 
 
 def build_weekly_digest_report(output_data, detailed_data, roster_data, league_settings,
-                                faab_ledger, start_sit_data):
+                                faab_ledger, start_sit_data, weekly_awards_data=None):
     """Entry point mirroring build_trade_analyzer()/build_start_sit_report() - called from
     main.py. Returns (markdown_text, html_page) so main.py can write both a raw .md file (for
     direct download / feeding to another tool) and the copy/download UI page.
     """
     markdown_text = build_weekly_digest_markdown(
-        output_data, detailed_data, roster_data, league_settings, faab_ledger, start_sit_data
+        output_data, detailed_data, roster_data, league_settings, faab_ledger, start_sit_data,
+        weekly_awards_data,
     )
     html_page = render_weekly_digest_html(
         markdown_text, output_data.get('analysis_info') or {}, filename="weekly_digest.md"

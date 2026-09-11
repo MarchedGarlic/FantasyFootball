@@ -21,6 +21,8 @@ interactive.
 import json
 from datetime import datetime
 
+from src.playoff_odds import simulate_playoff_odds
+
 
 def biggest_upsets(matchup_results, power_rank_history, manager_names, limit=5):
     """Wins by the team that entered the week ranked worse in power rating than their
@@ -292,6 +294,10 @@ def compute_overview_context(output_data, detailed_data, roster_data, league_set
         'waiver_pickups': top_waiver_pickups(
             (output_data.get('trade_analysis') or {}).get('waiver_impacts') or [], faab_enabled
         ),
+        'playoff_odds': simulate_playoff_odds(
+            matchup_results, manager_names, playoff_teams_count,
+            league_settings.get('playoff_week_start'), current_week,
+        ),
     }
 
     return {
@@ -533,6 +539,60 @@ def _render_waiver_pickups(section):
     number means the pickup was a real difference-maker, not just a warm body filling a roster
     spot.</p>
     <div class="table-scroll"><table>{header}{season_rows}</table></div>
+    """
+
+
+def _render_playoff_odds(section):
+    teams = (section or {}).get('teams') or []
+    if not teams:
+        return "<p class='empty'>Not enough data yet to simulate the rest of the season.</p>"
+
+    remaining = len(section.get('remaining_weeks') or [])
+    trials = section.get('trials', 0)
+    if remaining:
+        caption = (
+            f"A {trials:,}-trial simulation of the {remaining} remaining regular-season week"
+            f"{'s' if remaining != 1 else ''}, using each manager's own real scoring average and "
+            f"week-to-week variance so far - not just their current record. <strong>What this "
+            f"means:</strong> a team on a hot streak with tough games left can have lower odds "
+            f"than their record alone suggests, and vice versa."
+        )
+    else:
+        caption = (
+            f"The regular season is over, so playoff seeding below is final - the {trials:,}-trial "
+            f"simulation only covers the playoff bracket itself."
+        )
+
+    show_bye = any(t.get('bye_odds') is not None for t in teams)
+    show_champ = section.get('has_bracket_template') and any(t.get('championship_odds') is not None for t in teams)
+
+    header = "<tr><th>Manager</th><th>Record</th><th>Playoff Odds</th>"
+    if show_bye:
+        header += "<th class='col-secondary'>Bye Odds</th>"
+    header += "<th class='col-secondary'>Avg Seed</th>"
+    if show_champ:
+        header += "<th>Championship Odds</th>"
+    header += "</tr>"
+
+    rows = []
+    for t in teams:
+        row = f"""<tr>
+            <td>{t['manager_name']}</td>
+            <td>{t['current_record']}</td>
+            <td class="num"><strong>{t['playoff_odds']:.1f}%</strong></td>"""
+        if show_bye:
+            row += f"<td class='num col-secondary'>{t['bye_odds']:.1f}%</td>" if t.get('bye_odds') is not None else "<td class='num col-secondary'>-</td>"
+        row += f"<td class='num col-secondary'>{t['avg_seed']:.1f}</td>" if t.get('avg_seed') is not None else "<td class='num col-secondary'>-</td>"
+        if show_champ:
+            row += f"<td class='num'>{t['championship_odds']:.1f}%</td>" if t.get('championship_odds') is not None else "<td class='num'>-</td>"
+        row += "</tr>"
+        rows.append(row)
+
+    return f"""
+    <p class="section-caption">{caption}</p>
+    <div class="table-scroll"><table>{header}{''.join(rows)}</table>
+    {RESPONSIVE_TABLE_TOGGLE}
+    </div>
     """
 
 
@@ -806,6 +866,7 @@ def render_ai_overview_html(analysis_info, sections, faab_ledger, roster_to_mana
         + _card("Power Ranking Movers: Last Week vs This Week", _render_power_movers(sections['power_movers']), section_id="power-movers")
         + _card("Matchups to Watch", _render_matchups_to_watch(sections['matchups_to_watch']), section_id="matchups-to-watch")
         + bracket_card
+        + _card("Playoff Odds", _render_playoff_odds(sections.get('playoff_odds')), section_id="playoff-odds")
         + _card("Median Standings", _render_median_standings(sections['median_standings']), section_id="median-standings")
         + _card("Top Waiver Pickups", _render_waiver_pickups(sections['waiver_pickups']), section_id="waiver-pickups")
         + _render_faab_tracker(faab_ledger, roster_to_manager, manager_names)

@@ -564,29 +564,10 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
                 waiver_scores[manager_id] = []
             waiver_scores[manager_id].append(waiver_score)
     
-    # Calculate lineup performance (start/sit accuracy) - weight: 15%
-    # For now, simulate based on power rating performance vs league average
-    lineup_scores = {}
-    if team_power_data:
-        all_power_ratings = []
-        for manager_data in team_power_data.values():
-            all_power_ratings.extend(manager_data.get('weekly_power_ratings', {}).values())
-        
-        if all_power_ratings:
-            league_avg_power = sum(all_power_ratings) / len(all_power_ratings)
-            
-            for manager_id in manager_grades.keys():
-                if manager_id in team_power_data:
-                    manager_power_data = team_power_data[manager_id]['weekly_power_ratings']
-                    lineup_scores[manager_id] = []
-                    
-                    for week, power_rating in manager_power_data.items():
-                        # Lineup skill based on how well power translates to actual performance
-                        # Higher than average = good lineup decisions
-                        relative_performance = (power_rating - league_avg_power) / 20  # Normalize
-                        lineup_score = max(0, min(10, 5 + relative_performance))
-                        lineup_scores[manager_id].append(lineup_score)
-    
+    # Populated inside the per-week loop below, then averaged into data['lineup_performance']
+    # in the final summary pass - same pattern trade_scores/waiver_scores already use.
+    lineup_scores_by_manager = defaultdict(list)
+
     # Calculate weekly manager grades and records using real data. `weeks` should be the
     # league's real analyzed range (main.py's _determine_analysis_weeks()) - falling back to
     # 1-15 only protects callers that don't pass it, not this pipeline's real run.
@@ -601,7 +582,33 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
         
         # Calculate median for combined record
         median_score = sorted(week_scores)[len(week_scores)//2] if week_scores else 100
-        
+
+        # This week's league-wide power-rating spread, for z-scoring each manager's power_score
+        # below - power ratings have no intrinsic 0-10 meaning on their own, only relative to how
+        # everyone else did that same week (same z-score-against-baseline convention as waiver/
+        # draft/trade scoring elsewhere in this app - see the bugfix note on power_score below).
+        week_power_mean = statistics.mean(week_scores) if week_scores else None
+        week_power_stdev = statistics.pstdev(week_scores) if len(week_scores) > 1 else 0.0
+
+        # This week's league-wide *raw fantasy score* spread (distinct from the cumulative power
+        # rating above), used for lineup_score below - how well a manager's actual lineup scored
+        # that single week relative to everyone else that week, not their season-long team
+        # strength (which power_score/base_score already covers). The old lineup_score z-scored
+        # each manager's *cumulative* power rating against a baseline pooled across every manager
+        # AND every week of the season - confirmed against real data that this made nearly every
+        # manager's lineup_performance cluster at ~8.5-9.0/10 regardless of real quality: a power
+        # rating is a running season-to-date average, so almost every manager's later-season
+        # values sit above a baseline dragged down by everyone's low early-season values, making
+        # "above the pooled average" nearly universal rather than a real per-week signal.
+        week_raw_scores = []
+        for manager_id in manager_grades.keys():
+            raw_weekly = team_power_data.get(manager_id, {}).get('weekly_scores', {})
+            raw_score = raw_weekly.get(week, raw_weekly.get(str(week), None))
+            if raw_score is not None:
+                week_raw_scores.append(raw_score)
+        week_raw_mean = statistics.mean(week_raw_scores) if week_raw_scores else None
+        week_raw_stdev = statistics.pstdev(week_raw_scores) if len(week_raw_scores) > 1 else 0.0
+
         for manager_id in manager_grades.keys():
             # Get real performance data
             power_weekly = team_power_data.get(manager_id, {}).get('weekly_power_ratings', {})
@@ -614,13 +621,37 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
             if power_data is None and grade_data is None:
                 continue
             
-            # Use defaults for missing data, but don't skip if we have at least one value
-            power_data = power_data if power_data is not None else 100
-            grade_data = grade_data if grade_data is not None else 25
-            
-            # Normalize to 0-10 scale using realistic ranges
-            power_score = max(0, min(10, (power_data - 80) / 20)) if power_data else 5
-            roster_score = max(0, min(10, (grade_data - 20) / 5)) if grade_data else 5
+            # Use defaults for missing data, but don't skip if we have at least one value.
+            # grade_data's neutral default is 5.0, not the old 25 - see the bugfix note below on
+            # why 25 was itself a symptom of the stale-scale bug, not a deliberate "roughly
+            # average" choice.
+            power_data = power_data if power_data is not None else week_power_mean
+            grade_data = grade_data if grade_data is not None else 5.0
+
+            # power_score/roster_score used to assume power ratings run ~80-280 and roster
+            # grades run ~20-70 ("(power_data - 80) / 20", "(grade_data - 20) / 5") - stale
+            # constants left over from an earlier scale, never updated when power_rankings.py and
+            # roster_grading.py were rewritten (CLAUDE.md). Real power ratings in a live league
+            # run roughly 90-200 and roster grades are already the same 0-10 ESPN-tier weighted
+            # average used everywhere else in this app - confirmed against real data: every
+            # manager's roster_score was silently clamping to 0 every single week (grade_data
+            # could never reach the old formula's assumed 20 floor), and power_score was
+            # compressed into roughly the bottom half of the 0-10 range no matter how good a team
+            # was. Together this was dragging every manager's overall grade down to ~3-4 instead
+            # of centering near 5, and made "Season Average" (a z-score-based figure from the
+            # chart's own separate recalculation) diverge sharply from "Overall Grade" (this raw
+            # average) in the hover tooltip - the same manager could show a Season Average of 8.3
+            # next to an Overall Grade of 4.0 with no indication these measure different things.
+            # Fixed the actual bug (the grade calculation) rather than papering over it by only
+            # relabeling the chart. power_score is z-scored against the league that same week
+            # (same convention lineup_score below uses, against real weekly scores instead of
+            # power ratings, and the same convention waiver/draft/trade scoring use elsewhere);
+            # roster_score needs no rescaling since grade_data is already 0-10 by construction.
+            if power_data is not None and week_power_stdev > 0:
+                power_score = max(0, min(10, 5 + (power_data - week_power_mean) / week_power_stdev * 2.5))
+            else:
+                power_score = 5.0
+            roster_score = max(0, min(10, grade_data))
             base_score = (power_score + roster_score) / 2
             
             # Trade performance for this week
@@ -633,10 +664,20 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
             if manager_id in waiver_scores and waiver_scores[manager_id]:
                 week_waiver_score = sum(waiver_scores[manager_id]) / len(waiver_scores[manager_id])
             
-            # Lineup performance for this week
-            week_lineup_score = 5.0  # Default neutral
-            if manager_id in lineup_scores and week <= len(lineup_scores[manager_id]):
-                week_lineup_score = lineup_scores[manager_id][week-1]
+            # Lineup performance for this week - a proxy for "how well did this manager's
+            # lineup do this specific week" (real per-player start/sit accuracy isn't tracked
+            # historically anywhere in this app - src/start_sit.py only ever recommends for the
+            # upcoming week). z-scored against real single-week scores league-wide that same
+            # week, not the cumulative power rating power_score already uses above - reusing the
+            # same input would make this 15%-weighted "lineup" component just a copy of
+            # power_score's 20%, not an independent signal.
+            raw_weekly = team_power_data.get(manager_id, {}).get('weekly_scores', {})
+            raw_score = raw_weekly.get(week, raw_weekly.get(str(week), None))
+            if raw_score is not None and week_raw_stdev > 0:
+                week_lineup_score = max(0, min(10, 5 + (raw_score - week_raw_mean) / week_raw_stdev * 2.5))
+            else:
+                week_lineup_score = 5.0
+            lineup_scores_by_manager[manager_id].append(week_lineup_score)
             
             # Calculate composite manager grade (0-10 scale)
             weekly_grade = (
@@ -700,8 +741,8 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
                 data['trade_performance'] = sum(trade_scores[manager_id]) / len(trade_scores[manager_id])
             if manager_id in waiver_scores and waiver_scores[manager_id]:
                 data['waiver_performance'] = sum(waiver_scores[manager_id]) / len(waiver_scores[manager_id])
-            if manager_id in lineup_scores and lineup_scores[manager_id]:
-                data['lineup_performance'] = sum(lineup_scores[manager_id]) / len(lineup_scores[manager_id])
+            if manager_id in lineup_scores_by_manager and lineup_scores_by_manager[manager_id]:
+                data['lineup_performance'] = sum(lineup_scores_by_manager[manager_id]) / len(lineup_scores_by_manager[manager_id])
         
         manager_name = data.get('name', manager_id)  # Get name or use ID as fallback
         print(f"     {manager_name}: Overall Grade {data['overall_grade']:.1f}/10 " +
@@ -1677,7 +1718,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     return plot_filename
 
 
-def create_manager_grade_visualization(manager_grades, output_dirs=None):
+def create_manager_grade_visualization(manager_grades, output_dirs=None, team_power_data=None):
     """Create comprehensive manager grade visualization with enhanced features"""
     try:
         from bokeh.plotting import figure, show, output_file
@@ -1776,40 +1817,35 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             trend_weeks = list(range(min(weeks), last_week + 1))
             trend_grades = model.predict(np.array(trend_weeks).reshape(-1, 1)).tolist()
         
-        # Calculate proper records using actual data structure
         avg_grades = [statistics.mean(enhanced_grades[:i+1]) for i in range(len(enhanced_grades))]
-        
-        # Use actual record data from manager_grades structure
-        actual_wins = data.get('record', {}).get('wins', 0)
-        actual_losses = data.get('record', {}).get('losses', 0)
-        combined_wins = data.get('combined_record', {}).get('wins', actual_wins)
-        combined_losses = data.get('combined_record', {}).get('losses', actual_losses)
-        
-        # Build weekly record progression from actual data
+
+        # Build the weekly record progression from real per-week data (team_power_data is keyed
+        # by the same manager_id as manager_grades, so no name-matching lookup is needed). This
+        # used to fabricate a progression instead of reconstructing the real one: regular record
+        # assumed a manager wins every week until hitting their final season win total then loses
+        # every week after ("wins_through_week = min(actual_wins, weeks_played)"), and combined
+        # record just clamped the final season-end total to weeks_played*2 - neither is what
+        # actually happened week to week. Real cumulative wins/losses (already used the same way
+        # by create_roster_grade_plot/create_power_rating_plot) and the real per-week median
+        # result give the genuine historical record at each week instead.
         records = []
         combined_records = []
-        
-        # Get power data for real records if available
-        power_data = None
-        for pid, pdata in manager_grades.items():
-            if pdata.get('name') == manager_name:
-                # Found matching manager, get their power data for records
-                for key, value in manager_grades.items():
-                    if key == pid:
-                        break
-                break
-        
-        for j, week in enumerate(weeks):
-            # Calculate cumulative records through this week
-            weeks_played = j + 1
-            wins_through_week = min(actual_wins, weeks_played)  
-            losses_through_week = weeks_played - wins_through_week
-            
-            combined_wins_through_week = min(combined_wins, weeks_played * 2)  # Max 2 per week
-            combined_losses_through_week = (weeks_played * 2) - combined_wins_through_week
-            
-            records.append(f"{wins_through_week}-{losses_through_week}")
-            combined_records.append(f"{combined_wins_through_week}-{combined_losses_through_week}")
+        power_team_data = (team_power_data or {}).get(manager_id, {})
+        weekly_median_results = power_team_data.get('weekly_median_results', {})
+        median_wins_so_far = 0
+        median_losses_so_far = 0
+
+        for week in weeks:
+            cumulative_wins = power_team_data.get('cumulative_wins', {}).get(week, 0)
+            cumulative_losses = power_team_data.get('cumulative_losses', {}).get(week, 0)
+            records.append(f"{cumulative_wins}-{cumulative_losses}")
+
+            median_result = weekly_median_results.get(week, weekly_median_results.get(str(week)))
+            if median_result == 'W':
+                median_wins_so_far += 1
+            elif median_result == 'L':
+                median_losses_so_far += 1
+            combined_records.append(f"{cumulative_wins + median_wins_so_far}-{cumulative_losses + median_losses_so_far}")
         
         team_data.append({
             'name': manager_name,

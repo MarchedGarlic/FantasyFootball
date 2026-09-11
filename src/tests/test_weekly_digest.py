@@ -6,6 +6,7 @@ from src.weekly_digest import (
     _format_upsets_md,
     _format_trades_md,
     _format_injury_notes_md,
+    _format_playoff_odds_md,
     render_weekly_digest_html,
 )
 
@@ -65,6 +66,33 @@ def test_format_injury_notes_handles_no_data():
 def test_format_injury_notes_shows_no_significant_when_league_is_healthy():
     players = {'p1': {'name': 'Fine Guy', 'position': 'WR', 'manager_name': 'Bob', 'injury_status': None, 'reasoning': []}}
     assert 'No significant' in _format_injury_notes_md(players)
+
+
+def test_format_playoff_odds_includes_championship_column_when_bracket_available():
+    playoff_odds = {
+        'has_bracket_template': True,
+        'teams': [
+            {'manager_name': 'Alice', 'current_record': '5-1', 'playoff_odds': 92.5, 'championship_odds': 30.0},
+            {'manager_name': 'Bob', 'current_record': '2-4', 'playoff_odds': 10.0, 'championship_odds': 1.0},
+        ],
+    }
+    text = _format_playoff_odds_md(playoff_odds)
+    assert 'Championship Odds' in text
+    assert 'Alice' in text and '92.5%' in text and '30.0%' in text
+
+
+def test_format_playoff_odds_omits_championship_column_without_bracket_template():
+    playoff_odds = {
+        'has_bracket_template': False,
+        'teams': [{'manager_name': 'Alice', 'current_record': '5-1', 'playoff_odds': 92.5, 'championship_odds': None}],
+    }
+    text = _format_playoff_odds_md(playoff_odds)
+    assert 'Championship Odds' not in text
+
+
+def test_format_playoff_odds_handles_no_data():
+    assert 'Not enough data' in _format_playoff_odds_md(None)
+    assert 'Not enough data' in _format_playoff_odds_md({})
 
 
 def test_render_html_escapes_special_characters_in_manager_names():

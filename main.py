@@ -43,6 +43,7 @@ from src.visualizations import (
 from src.ai_overview import build_ai_overview, build_draft_info, _most_recent_completed_week
 from src.trade_value import build_trade_analyzer
 from src.start_sit import build_start_sit_data, render_start_sit_html
+from src.weekly_awards import build_weekly_awards_report
 from src.weekly_digest import build_weekly_digest_report
 from src.draft_analysis import (
     get_primary_draft,
@@ -534,7 +535,7 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
     if manager_grades:
         valid_managers = {mid: d for mid, d in manager_grades.items() if d.get('weekly_grades')}
         if valid_managers:
-            create_manager_grade_visualization(valid_managers, output_dirs)
+            create_manager_grade_visualization(valid_managers, output_dirs, team_power_data)
 
     progress("Collecting weekly player/matchup data for the AI overview...")
     weekly_top_players = _collect_weekly_top_players(all_weekly_matchups, roster_to_manager, user_lookup, all_players)
@@ -704,10 +705,23 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
     except Exception as e:
         progress(f"[WARNING] Start/sit analyzer generation failed: {e}")
 
+    progress("Building weekly awards...")
+    weekly_awards_data = None
+    try:
+        weekly_awards_data, weekly_awards_html = build_weekly_awards_report(
+            output_data, rosters, all_players, all_weekly_matchups, matchup_results,
+            league_info.get('roster_positions'), roster_to_manager, user_lookup,
+            power_rank_history, waiver_impacts, faab_ledger,
+        )
+        storage.write_html(league_id, season, "weekly_awards.html", weekly_awards_html)
+    except Exception as e:
+        progress(f"[WARNING] Weekly awards generation failed: {e}")
+
     progress("Building weekly digest export...")
     try:
         digest_markdown, digest_html = build_weekly_digest_report(
             output_data, detailed_data, roster_data, league_settings, faab_ledger, start_sit_data,
+            weekly_awards_data,
         )
         storage.write_text(league_id, season, "weekly_digest.md", digest_markdown)
         storage.write_html(league_id, season, "weekly_digest.html", digest_html)

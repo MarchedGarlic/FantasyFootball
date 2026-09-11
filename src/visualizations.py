@@ -95,27 +95,39 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             # Get real record data from team_power_data if available
             regular_records = []
             combined_records = []
-            
+            median_results = []
+
             if team_power_data and user_id in team_power_data:
                 power_data = team_power_data[user_id]
+                weekly_median_results = power_data.get('weekly_median_results', {})
+                # Running combined-record tally, cumulative *through this week* - power_data's
+                # own 'combined_record' is only the final season-end total (median_record_
+                # calculator.py never persists a per-week series of it), so using it directly
+                # here stamped the same end-of-season number onto every week's hover, including
+                # week 1 - confirmed against real data (a manager 7 games into the season was
+                # showing a combined "13-19", 32 games, more than double what's possible through
+                # week 7). Built here the same way regular_record already is: real cumulative
+                # wins/losses plus a running tally of each week's real result vs the median.
+                median_wins_so_far = 0
+                median_losses_so_far = 0
                 for week in weeks:
                     cumulative_wins = power_data.get('cumulative_wins', {}).get(week, 0)
                     cumulative_losses = power_data.get('cumulative_losses', {}).get(week, 0)
                     regular_records.append(f"{cumulative_wins}-{cumulative_losses}")
-                    
-                    # Use combined record if available, otherwise fall back to regular
-                    combined_record = power_data.get('combined_record', {})
-                    if combined_record:
-                        combined_wins = combined_record.get('wins', cumulative_wins)
-                        combined_losses = combined_record.get('losses', cumulative_losses)
-                        combined_records.append(f"{combined_wins}-{combined_losses}")
-                    else:
-                        combined_records.append(f"{cumulative_wins}-{cumulative_losses}")
+
+                    median_result = weekly_median_results.get(week, weekly_median_results.get(str(week)))
+                    median_results.append(median_result or "N/A")
+                    if median_result == 'W':
+                        median_wins_so_far += 1
+                    elif median_result == 'L':
+                        median_losses_so_far += 1
+                    combined_records.append(f"{cumulative_wins + median_wins_so_far}-{cumulative_losses + median_losses_so_far}")
             else:
                 # Fallback to placeholder records
                 for j, week in enumerate(weeks):
                     regular_records.append(f"{j+1}-0")
                     combined_records.append(f"{j+1}-0")
+                    median_results.append("N/A")
             
             team_data.append({
                 'name': data.get('name', data.get('manager_name', f'Manager {i+1}')),
@@ -133,7 +145,8 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
                     'high_grade': [high_grade] * len(grades),
                     'low_grade': [low_grade] * len(grades),
                     'regular_record': regular_records,
-                    'combined_record': combined_records
+                    'combined_record': combined_records,
+                    'median_result': median_results
                 }),
                 'trend_source': ColumnDataSource(data={
                     'trend_week': trend_weeks,
@@ -1149,7 +1162,12 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
             # Calculate luck metrics
             total_games = regular_wins + regular_losses
             expected_wins = median_wins  # How many wins they "deserved" vs median
-            luck_factor = regular_wins - expected_wins if expected_wins > 0 else 0
+            # No guard needed here - subtraction never divides by anything, so there's no
+            # zero-denominator risk to protect against. The old `if expected_wins > 0 else 0`
+            # silently forced luck_factor to 0 ("Fair") for any team with exactly 0 median wins,
+            # when the correct read for a team that still won real games despite never beating
+            # the median once is that they were *very* lucky, not neutral.
+            luck_factor = regular_wins - expected_wins
             
             # Determine team name
             team_name = data.get('name', f'Team {user_id}')

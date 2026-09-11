@@ -269,38 +269,52 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
             combined_records = []
             power_ranking_spots = []
             
+            # Real per-week median result ('W'/'L' vs the league median score that week),
+            # already computed correctly by median_record_calculator.py and merged into
+            # team_power_data by main.py - used below instead of the fabricated
+            # "median_wins = min(cumulative_wins + 1, week)" placeholder this chart's hover
+            # data used to show, which had nothing to do with actually beating the median (a
+            # leftover "rough estimate" that was never replaced once the real median calculation
+            # existed - confirmed against real data: it doesn't move in step with the real
+            # median_wins figure the AI Overview's Median Standings section reports for the same
+            # manager/week).
+            weekly_median_results = data.get('weekly_median_results', {})
+            running_median_wins = 0
+            running_median_losses = 0
+
             for week in weeks:
                 cumulative_scores = data['cumulative_scores'].get(week, [])
                 cumulative_wins = data['cumulative_wins'].get(week, 0)
                 cumulative_losses = data['cumulative_losses'].get(week, 0)
-                
+
                 wins_data.append(cumulative_wins)
                 losses_data.append(cumulative_losses)
-                
+
                 # Calculate regular record (just wins-losses)
                 regular_records.append(f"{cumulative_wins}-{cumulative_losses}")
-                
-                # Calculate median record (simulated - wins against median score each week)
+
                 if cumulative_scores:
                     avg_scores.append(round(sum(cumulative_scores) / len(cumulative_scores), 1))
                     high_scores.append(max(cumulative_scores))
                     low_scores.append(min(cumulative_scores))
-                    
-                    # For median wins, estimate based on avg score vs league avg (simplified)
-                    median_wins = max(0, min(cumulative_wins + 1, week))  # Rough estimate
-                    median_losses = week - median_wins
-                    median_records.append(f"{median_wins}-{median_losses}")
-                    
-                    # Combined record is regular + median
-                    combined_wins = cumulative_wins + median_wins
-                    combined_losses = cumulative_losses + median_losses
-                    combined_records.append(f"{combined_wins}-{combined_losses}")
                 else:
                     avg_scores.append(0)
                     high_scores.append(0)
                     low_scores.append(0)
-                    median_records.append(f"0-{week}")
-                    combined_records.append(f"{cumulative_wins}-{cumulative_losses + week}")
+
+                # Cumulative median record, built from the real per-week result - not tied to
+                # cumulative_scores being present, since a manager can have a real median result
+                # for a week even if their score list for that exact week was empty upstream.
+                median_result = weekly_median_results.get(week, weekly_median_results.get(str(week)))
+                if median_result == 'W':
+                    running_median_wins += 1
+                elif median_result == 'L':
+                    running_median_losses += 1
+                median_records.append(f"{running_median_wins}-{running_median_losses}")
+
+                combined_wins = cumulative_wins + running_median_wins
+                combined_losses = cumulative_losses + running_median_losses
+                combined_records.append(f"{combined_wins}-{combined_losses}")
             
             # This team's rank each week, looked up from the league-wide rank_by_week computed
             # once above instead of being re-derived per team.
