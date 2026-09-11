@@ -36,6 +36,7 @@ next candidate host — see §6.
 | `src/trade_value.py` | Hypothetical Trade Analyzer (§12) — values any currently-rostered player/FAAB for "what if" trades and renders the interactive `trade_analyzer.html` builder. Separate from `trade_analysis.py`, which scores trades that already happened. |
 | `src/injury_severity.py` | Shared injury-status severity classification (§12/§13) — one place both the trade analyzer's value discount and the Start/Sit Analyzer's penalty/hard-Sit-override read from, so they never disagree on what counts as a severe vs. mild injury. |
 | `src/start_sit.py` | Start/Sit Analyzer (§13) — per-player Start/Consider/Sit recommendations with matchup/injury reasoning, renders `start_sit.html`. |
+| `src/weekly_digest.py` | Weekly Digest export (§14) — a Markdown summary of the week for manually feeding to an LLM elsewhere, renders `weekly_digest.html`. Makes no outbound calls of its own (deliberately not wired to any LLM API). |
 
 ## 1. Audit findings (2026-08) — why this rewrite happened
 
@@ -795,3 +796,52 @@ falling back to the first analyzed week if no week has been completed yet.
 **Mobile.** Built mobile-first like the trade analyzer: stacked cards (one manager's players at
 a time, grouped by position), a compact colored verdict badge that doesn't crowd the player
 name on a narrow screen, and reasoning text below the fold of each card rather than beside it.
+
+## 14. Weekly Digest export (2026-09)
+
+A new report, `weekly_digest.html` (plus the raw `weekly_digest.md` it's built from, written
+alongside it in `text_reports/`): a clean Markdown summary of the week, meant to be copied and
+pasted into a separate Claude conversation to write a newsletter. **Explicit user requirement:
+no LLM API call from this app at all** ("I don't want you to use Claude API calls or anything, I
+plan on doing that manually") — `src/weekly_digest.py` only formats data this app already
+computes into Markdown; unlike every other module in this codebase, it makes zero outbound
+network calls of its own.
+
+**No new computation.** Every section reuses data `ai_overview.py` already computes for the
+Overview page — `src/ai_overview.py::compute_overview_context()` was factored out of
+`build_ai_overview()` (a pure extraction, no behavior change) specifically so the digest and the
+Overview page can never disagree about what "this week" means or what the biggest upset was.
+Trades/waivers are the same `trade_impacts`/`waiver_impacts` lists filtered to the current week;
+the injury/opportunity section reads directly from the Start/Sit Analyzer's already-generated
+per-player `reasoning` text (§13) rather than writing a third copy of that commentary. `main.py`
+computes `start_sit_data` once and passes the same dict to both `render_start_sit_html()` and
+the digest builder.
+
+**Sections:** this week's results, biggest upset (or "none," rather than a season-wide upset
+that didn't happen this week), power ranking movers, full standings (real vs. median record),
+trades this week, waiver pickups this week, an injury/opportunity report, next week's matchups
+to watch, and a FAAB tracker table (FAAB leagues only). A one-line usage note sits at the top of
+the generated text itself suggesting a prompt to pair it with.
+
+**UI: copy and download, no server file-serving needed.** The page shows the full Markdown in a
+read-only `<textarea>` with two buttons - "Copy to Clipboard" (`navigator.clipboard.writeText()`,
+falling back to selecting the textarea's text with a "press Ctrl+C" prompt if the Clipboard API
+refuses, which it legitimately can depending on focus/permissions - confirmed this fallback path
+directly, not just written defensively) and "Download .md" (builds the file **client-side** from
+a `Blob`/`URL.createObjectURL`, not a link to a server path). The download deliberately isn't a
+link to `/results/weekly_digest.md`: `server.py`'s `/results/<filename>` route only knows how to
+serve `html_reports/` and `json_data/` (checked before assuming otherwise), not the separate
+`text_reports/` directory `write_text()` uses, and a client-side Blob works identically on the
+static Netlify build too, with no server involved either way - the same reasoning behind every
+other week-interactive/client-side feature in this app (§5, §12, §13).
+
+Manager and player display names are real Sleeper values this app doesn't control and could
+contain HTML-significant characters, so the Markdown is HTML-escaped before landing inside the
+raw `<textarea>` content (the Clipboard/download buttons still read the textarea's live `.value`,
+which the browser gives back already unescaped, so the copied/downloaded text is the real
+Markdown, not the escaped HTML).
+
+`build.js`'s text-report copying step (previously `.txt`-only, for `worst_trades_report.txt`)
+now also copies `.md` files to `dist/reports/` for the static build, for consistency - the
+Weekly Digest page itself doesn't depend on this (its buttons work entirely from the text
+already embedded in the page), but the raw file is still archived alongside the other reports.

@@ -62,14 +62,16 @@ async function build() {
       }
     }
 
-    // Copy text reports
+    // Copy text reports (.txt and .md - the latter added for weekly_digest.md, the raw
+    // Markdown behind the Weekly Digest export page's copy/download buttons)
     const textDir = path.join(analysisFolder, 'text_reports');
     if (await fs.pathExists(textDir)) {
       await fs.ensureDir('dist/reports');
       const textFiles = await fs.readdir(textDir);
       for (const file of textFiles) {
-        if (file.endsWith('.txt')) {
-          const newName = file.replace('.txt', '_latest.txt');
+        const ext = file.endsWith('.txt') ? '.txt' : file.endsWith('.md') ? '.md' : null;
+        if (ext) {
+          const newName = file.replace(ext, `_latest${ext}`);
           await fs.copy(path.join(textDir, file), path.join('dist/reports', newName));
           console.log(`Copied ${file} -> reports/${newName}`);
         }

@@ -42,7 +42,8 @@ from src.visualizations import (
 )
 from src.ai_overview import build_ai_overview, build_draft_info, _most_recent_completed_week
 from src.trade_value import build_trade_analyzer
-from src.start_sit import build_start_sit_report
+from src.start_sit import build_start_sit_data, render_start_sit_html
+from src.weekly_digest import build_weekly_digest_report
 from src.draft_analysis import (
     get_primary_draft,
     reconstruct_draft_results,
@@ -687,16 +688,31 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
         progress(f"[WARNING] Trade analyzer generation failed: {e}")
 
     progress("Building start/sit analyzer...")
+    start_sit_data = None
     try:
         completed_week = _most_recent_completed_week(matchup_results)
         this_week = (completed_week + 1) if completed_week is not None else weeks_to_fetch[0]
-        start_sit_html = build_start_sit_report(
-            output_data, rosters, all_players, all_weekly_matchups, analyzer,
+        # Computed separately from rendering (rather than through build_start_sit_report's
+        # combined wrapper) so the same start_sit_data can also feed the weekly digest export
+        # below without recomputing it a second time.
+        start_sit_data = build_start_sit_data(
+            rosters, all_players, all_weekly_matchups, analyzer,
             roster_to_manager, user_lookup, schedule_by_week, this_week,
         )
+        start_sit_html = render_start_sit_html(start_sit_data, output_data.get('analysis_info') or {})
         storage.write_html(league_id, season, "start_sit.html", start_sit_html)
     except Exception as e:
         progress(f"[WARNING] Start/sit analyzer generation failed: {e}")
+
+    progress("Building weekly digest export...")
+    try:
+        digest_markdown, digest_html = build_weekly_digest_report(
+            output_data, detailed_data, roster_data, league_settings, faab_ledger, start_sit_data,
+        )
+        storage.write_text(league_id, season, "weekly_digest.md", digest_markdown)
+        storage.write_html(league_id, season, "weekly_digest.html", digest_html)
+    except Exception as e:
+        progress(f"[WARNING] Weekly digest generation failed: {e}")
 
     progress("Analysis complete!")
     return output_data

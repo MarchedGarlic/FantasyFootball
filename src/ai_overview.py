@@ -251,8 +251,12 @@ def _next_scheduled_week(matchup_results, after_week):
     return candidate or None
 
 
-def build_ai_overview(output_data, detailed_data, roster_data, league_settings, faab_ledger=None):
-    """Compute every section and render them as one HTML page."""
+def compute_overview_context(output_data, detailed_data, roster_data, league_settings):
+    """Everything build_ai_overview() needs to render the page, factored out so
+    src/weekly_digest.py can reuse the exact same computed sections (manager names, this
+    week's matchup results, upsets, power movers, etc.) for the newsletter export instead of
+    re-deriving a second, possibly-divergent copy of "what happened this week."
+    """
     manager_names = {
         uid: data.get('manager_name', 'Unknown')
         for uid, data in (output_data.get('power_ratings') or {}).items()
@@ -290,12 +294,30 @@ def build_ai_overview(output_data, detailed_data, roster_data, league_settings, 
         ),
     }
 
-    weeks_available = sorted(matchup_results.keys())
+    return {
+        'manager_names': manager_names,
+        'power_rank_history': power_rank_history,
+        'matchup_results': matchup_results,
+        'rosters': rosters,
+        'roster_to_manager': roster_to_manager,
+        'analysis_info': analysis_info,
+        'playoff_teams_count': playoff_teams_count,
+        'faab_enabled': faab_enabled,
+        'current_week': current_week,
+        'real_standings': real_standings,
+        'sections': sections,
+        'weeks_available': sorted(matchup_results.keys()),
+    }
+
+
+def build_ai_overview(output_data, detailed_data, roster_data, league_settings, faab_ledger=None):
+    """Compute every section and render them as one HTML page."""
+    ctx = compute_overview_context(output_data, detailed_data, roster_data, league_settings)
 
     return render_ai_overview_html(
-        analysis_info, sections, faab_ledger, roster_to_manager, manager_names,
-        matchup_results=matchup_results, weeks_available=weeks_available,
-        current_week=current_week, playoff_teams_count=playoff_teams_count,
+        ctx['analysis_info'], ctx['sections'], faab_ledger, ctx['roster_to_manager'], ctx['manager_names'],
+        matchup_results=ctx['matchup_results'], weeks_available=ctx['weeks_available'],
+        current_week=ctx['current_week'], playoff_teams_count=ctx['playoff_teams_count'],
     )
 
 
