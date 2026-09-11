@@ -1124,7 +1124,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
             <p style="{DESCRIPTION_STYLE}"><strong>Step 2:</strong> Value Acquired = sum of acquired players grades</p>
             <p style="{DESCRIPTION_STYLE}"><strong>Step 3:</strong> Value Given Up = sum of given-up players grades</p>
             <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Combined Impact = Value Acquired - Value Given Up</p>
-            <p style="{DESCRIPTION_STYLE}"><strong>Context only:</strong> Team Trend (hover) compares this manager\'s power rating/roster grade the week before vs. the week of the trade - it is not part of the score</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Context only:</strong> Team Trend (hover) compares this manager's power rating/roster grade the week before vs. the week of the trade - it is not part of the score</p>
             <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
                 <strong style="color:{ACCENT};">What this means:</strong> a manager with several
                 points above the zero line has consistently won their trades - they are finding
