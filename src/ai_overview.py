@@ -443,7 +443,7 @@ def _render_draft_ratings(ratings):
         for r in ratings
     )
     return f"""
-    <p class="section-caption">70% player quality (ESPN-tier grade of every player drafted) + 30% draft value (how much better than ESPN's preseason rank they drafted, relative to the rest of the league) - both on a 0-10 scale</p>
+    <p class="section-caption">70% player quality (ESPN-tier grade of every player drafted) + 30% draft value (how much better than ESPN's preseason rank they drafted, relative to the rest of the league) - both on a 0-10 scale. <strong>What this means:</strong> the manager on top didn't just get lucky with one pick - they drafted well from top to bottom.</p>
     <div class="table-scroll"><table>
         <tr><th>Rank</th><th>Manager</th><th>Draft Rating</th><th class="col-secondary">Quality</th><th class="col-secondary">Value</th><th>Picks</th></tr>
         {rows}
@@ -470,7 +470,7 @@ def _render_biggest_steals(steals):
         for s in steals
     )
     return f"""
-    <p class="section-caption">Biggest gaps between a player's actual draft pick and ESPN's preseason expert-consensus rank (not crowd-sourced ADP - see CLAUDE.md) - a bigger number means they were still on the board long after experts expected them gone. Currently-injured players are excluded.</p>
+    <p class="section-caption">Biggest gaps between a player's actual draft pick and ESPN's preseason expert-consensus rank (not crowd-sourced ADP - see CLAUDE.md) - a bigger number means they were still on the board long after experts expected them gone. Currently-injured players are excluded. <strong>What this means:</strong> whoever drafted these players got a top talent at a discount - worth remembering next draft.</p>
     <div class="table-scroll"><table>
         <tr><th>Player</th><th>Manager</th><th class="col-secondary">Actual Pick</th><th class="col-secondary">Expected Rank</th><th>Beat Rank By</th></tr>
         {rows}

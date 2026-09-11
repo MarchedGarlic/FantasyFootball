@@ -1413,7 +1413,7 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         import numpy as np
         from src.bokeh_theme import (
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
-            PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE,
+            PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, collapsible_description_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh not available - install with: pip install bokeh")
@@ -1515,15 +1515,23 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
 
         leaderboard_html += "</table>"
 
-        # Create explanation - larger, higher-contrast description text (explicit user request)
+        # Explanation panel - moved above the table (it used to render below it, which is
+        # inconsistent with every other chart's "prominent panel above the content" layout,
+        # per CLAUDE.md section 10 - missed when that pattern was applied everywhere else).
         explanation_html = f"""
-        <div style='margin-top: 24px; {CALLOUT_STYLE}'>
+        <div style='margin-bottom: 20px; {CALLOUT_STYLE}'>
             <h3 style='{HEADING_STYLE}'>How Power Rating Works</h3>
-            <p style='{DESCRIPTION_STYLE}'>
-                <strong>Formula:</strong> (average score &times;6 + (high + low) &times;2 + (win% &times;200) &times;2) &divide; 10
-            </p>
-            <p style='{DESCRIPTION_STYLE}'><strong>H2H Record:</strong> head-to-head wins/losses from your actual schedule</p>
-            <p style='{DESCRIPTION_STYLE}'><strong>Combined Record:</strong> H2H record + theoretical median record</p>
+            {collapsible_description_html(
+                short_html=f"<p style='{DESCRIPTION_STYLE}'>A single number blending scoring average, high/low range, and win percentage - higher means a stronger overall team, same rankings as the Power Rankings chart.</p>",
+                full_extra_html=f'''
+                <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                    <strong>Formula:</strong> (average score &times;6 + (high + low) &times;2 + (win% &times;200) &times;2) &divide; 10
+                </p>
+                <p style="{DESCRIPTION_STYLE}"><strong>H2H Record:</strong> head-to-head wins/losses from your actual schedule</p>
+                <p style="{DESCRIPTION_STYLE}"><strong>Combined Record:</strong> H2H record + theoretical median record</p>
+                ''',
+                toggle_id="power-leaderboard-expl",
+            )}
         </div>
         """
         
@@ -1541,7 +1549,7 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         # and just falls back to the table's own natural (too-wide) size - confirmed by measuring
         # the actual rendered boxes. Viewport units don't have that circularity.
         main_content = Div(
-            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;background-color:{SURFACE};border:1px solid {LINE};border-radius:20px;padding:20px 22px;box-sizing:border-box;">{leaderboard_html}</div>' + explanation_html,
+            text=explanation_html + f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;background-color:{SURFACE};border:1px solid {LINE};border-radius:20px;padding:20px 22px;box-sizing:border-box;">{leaderboard_html}</div>',
             height_policy="auto",
             sizing_mode="stretch_width",
             max_width=1000

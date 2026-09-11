@@ -2332,6 +2332,11 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
         
         <div class="methodology">
             <h3>Methodology</h3>
+            <p style="margin-bottom: 10px;">
+                <strong>What this means:</strong> every trade is scored by the actual players exchanged -
+                not by how the team happened to be trending that week. The trades below are the ones
+                where a manager gave up meaningfully more talent than they got back.
+            </p>
             <ul>
                 <li><strong>Combined Impact</strong> = Net Player Value = Value Acquired − Value Given Up</li>
                 <li><strong>Player value</strong> comes from ESPN's season stat-leader tiers (~1-10 scale per player)</li>
@@ -2434,6 +2439,11 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
 
         <div class="detailed-section">
             <h2>Worst Power Impact Trades</h2>
+            <p style="text-align: center; color: #8DA0BC; margin-bottom: 4px;">
+                Supplementary context, not a second "worst trades" ranking - the official ranking is
+                the Combined Impact list above. This just shows whether the manager's team was
+                already trending down around the same time they made this trade.
+            </p>
             <p style="text-align: center; color: #52607A; margin-bottom: 20px;">
                 Trades ranked by most negative impact on weekly scoring potential
             </p>
@@ -2477,6 +2487,10 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
 
         <div class="detailed-section">
             <h2>Worst Roster Grade Impact Trades</h2>
+            <p style="text-align: center; color: #8DA0BC; margin-bottom: 4px;">
+                Also supplementary context, not an independent ranking - same caveat as the section
+                above, just measuring roster grade instead of power rating.
+            </p>
             <p style="text-align: center; color: #52607A; margin-bottom: 20px;">
                 Trades ranked by most negative impact on roster construction quality
             </p>
