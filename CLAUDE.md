@@ -24,7 +24,7 @@ next candidate host — see §6.
 | `main.py` | `run_analysis(username, season, league_id, storage, progress_cb)` — the full pipeline, called by both the CLI (`main()`) and `server.py`. No longer reads a shared config file mid-run. |
 | `server.py` | Flask app. Season/league now travel explicitly through every route (query params / POST body) instead of being hardcoded or read from a shared file. |
 | `src/storage.py` | `AnalysisStorage` — every artifact keyed by `(league_id, season)`; also the cross-league disk cache (`players.json`, ESPN rankings) and the per-`(league_id, season)` analysis lock. |
-| `src/api_clients.py` | Sleeper/ESPN HTTP clients — timeouts, retry/backoff, the bulk (`ThreadPoolExecutor`-backed) weekly matchup/transaction fetchers, draft-picks fetchers, and `ESPNAPI.get_preseason_draft_ranks()` (§5, Draft Rating). |
+| `src/api_clients.py` | Sleeper/ESPN HTTP clients — timeouts, retry/backoff, the bulk (`ThreadPoolExecutor`-backed) weekly matchup/transaction fetchers, draft-picks fetchers, `ESPNAPI.get_preseason_draft_ranks()` (§5, Draft Rating), and `ESPNAPI.get_weekly_schedule()`/`get_weekly_schedule_bulk()` (§13, the real NFL schedule behind the Start/Sit Analyzer's matchup data). |
 | `src/roster_grading.py` | ESPN-tier player grading; athlete/team/position `$ref` lookups are now parallelized and memoized. |
 | `src/power_rankings.py` | Weekly power ratings + `compute_power_rank_history()` (persisted per-week rank series, used by the AI Overview). |
 | `src/faab_analysis.py` | FAAB ledger reconstruction + relative-scarcity scoring (§4.3). Returns `{'enabled': False}` for non-FAAB leagues. |
@@ -33,6 +33,10 @@ next candidate host — see §6.
 | `src/draft_analysis.py` | Draft Rating + Biggest Steals scoring (§5) — reconstructs actual draft results from Sleeper and scores them against ESPN's preseason rank. Rendered as its own "Draft Info" report/tab (§10), not part of the AI Overview. |
 | `src/ai_overview.py` | The seven deterministic AI Overview sections (§5) + HTML rendering, plus `build_draft_info()`/`render_draft_info_html()` for the separate Draft Info report. No LLM call. |
 | `src/median_record_calculator.py` | Median-based record calculation (unchanged logic; O(n²) lookups fixed, dead standalone `main()` removed). |
+| `src/trade_value.py` | Hypothetical Trade Analyzer (§12) — values any currently-rostered player/FAAB for "what if" trades and renders the interactive `trade_analyzer.html` builder. Separate from `trade_analysis.py`, which scores trades that already happened. |
+| `src/injury_severity.py` | Shared injury-status severity classification (§12/§13) — one place both the trade analyzer's value discount and the Start/Sit Analyzer's penalty/hard-Sit-override read from, so they never disagree on what counts as a severe vs. mild injury. |
+| `src/start_sit.py` | Start/Sit Analyzer (§13) — per-player Start/Consider/Sit recommendations with matchup/injury reasoning, renders `start_sit.html`. |
+| `src/weekly_digest.py` | Weekly Digest export (§14) — a Markdown summary of the week for manually feeding to an LLM elsewhere, renders `weekly_digest.html`. Makes no outbound calls of its own (deliberately not wired to any LLM API). |
 
 ## 1. Audit findings (2026-08) — why this rewrite happened
 
@@ -390,9 +394,12 @@ Rendering uses the same Bears navy/orange light theme as the rest of the app (§
   - Net result: `runtime.txt` = `3.11` (bare, Netlify's format), `render.yaml`'s `PYTHON_VERSION`
     = `3.11.9` (fully qualified, Render's format) - these look inconsistent side by side but each
     is correct for the platform that reads it.
-- `league_config.json` contains real personal data (a real Sleeper username and league ID) and is
-  currently tracked in git (the `.gitignore` rule for it is commented out). This is not rewritten
-  automatically — flagged for the user to decide whether to scrub history.
+- `league_config.json` contains real personal data (a real Sleeper username and league ID). It was
+  tracked in git with the `.gitignore` rule for it commented out; both are now fixed (`git rm
+  --cached` + uncommented the rule), so it stops being tracked going forward. Past commits still
+  contain it — scrubbing git history was considered and explicitly declined (would need a
+  history rewrite + force-push), so anyone with an existing clone can still see the old values in
+  history.
 
 ## 8. Explicitly deferred (not in this pass)
 
@@ -616,4 +623,225 @@ npm install
 python server.py         # Flask dev server on :5000
 # or, for the CLI/offline path against league_config.json:
 python main.py
+npm run build && npm run serve   # static preview of the CLI output, on :3000
 ```
+
+The `npm run build`/`serve` path exercises the same static-Netlify code path described in §0 —
+`npm run build` runs `build.js` to copy `main.py`'s output into `dist/`, `npm run serve` serves
+`dist/` locally. See [DEV_GUIDE.md](DEV_GUIDE.md) for the full set of `npm run` commands.
+
+## 12. Hypothetical Trade Analyzer (2026-09)
+
+A new report, `trade_analyzer.html`, distinct from everything else in §5/§9's report list: it
+values a trade that **hasn't happened** — "is this worth it before I hit send" — rather than
+scoring one that already did (that's `trade_analysis.py`, untouched by this work). Added per
+explicit user request, modeled on how tools like RotoTrade, FantasyCalc, and DraftSharks'
+trade calculators work (researched before building — see below), but computed entirely from
+data this app already collects, with no new external API or paid projections dependency.
+
+**Player value.** Established trade calculators converge on "Value Over Replacement" — a
+player's recent/projected fantasy points compared against a position baseline — for player
+value, and variance for floor/ceiling. `src/trade_value.py::calculate_player_trade_values()`
+builds exactly that from data already flowing through `main.py`, reusing two helpers
+`analyze_waiver_pickups()` already built rather than duplicating them:
+`_build_player_weekly_points()` and `_build_weekly_position_baselines()` (both imported from
+`trade_analysis.py`). For every currently-rostered QB/RB/WR/TE (kickers/DST have no ESPN-tier
+grade or meaningful position baseline here, so they're excluded rather than given a fabricated
+value):
+
+- **Recent form** — the last 4 played weeks' points (`RECENT_WEEKS_WINDOW`), position-adjusted
+  into a z-score against the league-wide weekly baseline at that position, the same way a
+  waiver pickup is scored (§4.5). Mapped onto the familiar 0–10 scale via `5 + z × 2.5`, the
+  same constant (`VALUE_Z_SCORE_SCALE`) waiver and draft scoring already use.
+- **Season-long quality** — the player's existing ESPN-tier grade (`grade_player()`, the same
+  1–10 scale used everywhere else in this app for roster/trade/draft grading).
+- **Trade value** blends the two, `0.6 × recent-form-grade + 0.4 × ESPN-tier-grade`
+  (`RECENT_FORM_WEIGHT`) — recency weighted higher than Draft Rating's 0.7/0.3 quality/value
+  split (§5 item 8), since Draft Rating is a preseason snapshot where quality should dominate,
+  while an in-season trade should care more about how someone's playing right now — but not
+  entirely, so one flukey week can't fully override an established quality level.
+- A player with zero recorded points across every recent week (hurt/inactive the whole window)
+  falls back to their ESPN-tier grade alone rather than being zeroed out, which would
+  undervalue a good player who has simply been out.
+- **Floor/ceiling** are that same player's recent-weeks points, mean ± one population standard
+  deviation — a real volatility measure from their own actual game log, not a projected range.
+- **Injury discount** (2026-09) — a multiplicative discount on the final trade value only, from
+  a new shared module `src/injury_severity.py` (also used by §13's Start/Sit Analyzer, so the
+  two features never disagree on what counts as a severe vs. mild injury): healthy ×1.0,
+  questionable ×0.9, doubtful ×0.75, out/IR/PUP/Sus/NA ×0.5 — never zero, since even a
+  long-term-out player still has real bench/stash/handcuff value, and "Out" this week doesn't
+  mean out all season. Floor/ceiling/ESPN grade are deliberately left undiscounted (they
+  describe the player's real performance range and season-long quality, which an injury doesn't
+  retroactively change); only the number you'd actually get in a trade *right now* is reduced.
+  The trade builder shows the injury status and the pre-discount value next to the discounted
+  one, never collapsing it into an opaque single number (the same "always show the components"
+  principle §4.3 already established for FAAB).
+
+**FAAB value.** Converted into the same grade-point scale so it can be added directly into a
+trade leg's value, using *this league's own* empirically observed "value per dollar spent" —
+`calculate_faab_value_per_dollar()` divides the total scored impact of every FAAB-funded waiver
+pickup this season (already computed by `analyze_waiver_pickups()`) by the total FAAB spent on
+them, rather than an arbitrary flat conversion. Falls back to a documented constant
+(`DEFAULT_FAAB_VALUE_PER_DOLLAR = 0.05`) when a league hasn't spent enough yet to trust its own
+rate (`MIN_FAAB_SPENT_TO_CALIBRATE = $20` total), or when that observed rate would be
+non-positive — a league whose FAAB spends happened to score below average on balance says
+something about that league's bidding, not about the intrinsic value of holding FAAB, so it's
+never allowed to make FAAB a trade *liability*. Only computed/shown for FAAB leagues
+(`is_faab_league()`, same gate as §4.3).
+
+**Multi-team trades.** Sleeper supports 3+ team trades, so the builder does too (2–5 teams, one
+card per team). Fairness is just each team's own net value — value received minus value given
+up, players and FAAB together — the same per-manager attribution `trade_analysis.py` already
+uses for real 3+ team trades (§4.1), not a bespoke N-way fairness algorithm. Every asset (a
+player checkbox, a FAAB amount) gets its own "send to" destination picker so an arbitrary
+routing between any number of teams is representable, not just "the rest of the trade."
+
+**Architecture.** A `<select>`-and-checkbox builder, entirely client-side and self-contained —
+`build_trade_analyzer_data()` embeds every tradable player's value/floor/ceiling and every
+team's roster/FAAB balance as one JSON blob directly in the page, and vanilla JS (no framework,
+no build step) does the routing math and re-renders live as selections change. This is the same
+pattern §5 already established for the AI Overview's week-interactive sections, for the same
+reason: it has to work on the static Netlify build too, where there's no server to round-trip
+to. Rendering (`render_trade_analyzer_html()`) reuses `ai_overview.py`'s `_page_shell()` for
+page chrome, so it matches the rest of the app's look with no duplicated boilerplate. Wired into
+`main.py`'s pipeline the same way Draft Info is — written to `trade_analyzer.html`, wrapped in a
+try/except so a failure here never breaks the rest of the run — and added to both `index.html`
+and `results_template.html`'s `NAV_GROUPS` under a new **Tools** group (distinct from **League
+Activity**, since this is an interactive tool, not a computed report about what already
+happened).
+
+**Mobile.** Built mobile-first from the start rather than retrofitted: team cards stack full
+width (never side-by-side), the roster checklist has its own `overflow-y: auto` so a 15-player
+list doesn't blow out the page, a search box filters that list for a long roster, and every
+value/floor/ceiling/destination-picker row was verified at a real 375px viewport during
+development, not just assumed to reflow correctly.
+
+**What was checked before building this:** RotoTrade.com's actual page couldn't be fetched
+directly (blocks automated requests), so its documented behavior and the broader trade-calculator
+landscape (FantasyCalc, DraftSharks, KeepTradeCut, DynastyCalc/RedraftCalc's multi-team support)
+were researched via search instead — the Value-Over-Replacement/variance-for-volatility approach
+above is what that research converged on, not a guess.
+
+## 13. Start/Sit Analyzer (2026-09)
+
+A new report, `start_sit.html`: a Start/Consider/Sit recommendation for every rostered
+QB/RB/WR/TE for the next real week on the schedule, with the reasoning shown next to each one —
+added per explicit user request that a bare verdict without an explanation wasn't good enough
+("plays a weak run defense in ___", "___ is hurt, so there's increased opportunity" were the
+literal examples given, and both appear near-verbatim in the generated reasoning text). Same
+research-first approach as §12: established start/sit tools (RotoWire, FantasyPros-style
+Defense-vs-Position charts, FantasyOmatic) converge on a multi-factor blend of projected
+points, recent form, opponent defensive matchup by position, and injury status — this builds
+that from data already in the pipeline rather than a new paid projections/matchup-ratings API.
+
+**Three signals, each shown in the reasoning text, not just baked into an opaque score:**
+
+1. **Baseline quality/form** — reuses `src/trade_value.py`'s `calculate_player_trade_values()`
+   output directly (the same 0–10 recent-form/ESPN-grade blend from §12), specifically its
+   *pre-injury* value — this module applies its own, differently-calibrated injury adjustment
+   (see below) rather than compounding trade_value.py's separate multiplicative discount.
+2. **Matchup** — `build_defense_vs_position()` computes "fantasy points allowed by position"
+   itself, per NFL team, from data this app already has: every rostered player's real weekly
+   Sleeper points, attributed to whichever opponent they played that week via a **new** real
+   NFL schedule source (`ESPNAPI.get_weekly_schedule()`/`get_weekly_schedule_bulk()`, ESPN's
+   public scoreboard endpoint — the one genuinely new external data source this feature needed,
+   since neither Sleeper nor ESPN's existing player-stats endpoints expose "points allowed by
+   position" directly). Checked empirically before relying on it: ESPN's team abbreviation for
+   Washington (`WSH`) doesn't match Sleeper's (`WAS`) — every other team matches —
+   `ESPN_TO_SLEEPER_TEAM` in `api_clients.py` normalizes it. Expressed as a z-score against the
+   league-wide distribution of team averages at that position, the same z-score-against-baseline
+   language used everywhere else in this app. This only sees players rostered somewhere in this
+   fantasy league, not the full NFL — a deliberate, documented simplification: a 10-12 team
+   league already rosters most of the fantasy-relevant players at a position, and computing this
+   from a full box-score data source would mean a whole new API dependency for a marginal
+   accuracy gain.
+3. **Injury/opportunity**, from the same new shared `src/injury_severity.py` module §12 uses —
+   a player's own injury status subtracts a start/sit-calibrated penalty (0 healthy / 1.0
+   questionable / 3.5 doubtful / 6.0 out), and a **confirmed Out is a hard override to Sit
+   regardless of the numeric score**, not just a heavy penalty — verified necessary with a test
+   case where an extreme matchup could otherwise still clear the Start threshold on points
+   alone, which would be actively wrong advice for someone not playing at all. Separately, a
+   *teammate* immediately ahead of a player on their real NFL depth chart
+   (`depth_chart_order`, a Sleeper player-data field not previously used anywhere in this app)
+   being out/doubtful adds an opportunity boost (+2.5 / +1.5) — the literal "starting RB hurt →
+   start the backup" case from the request. Only looks at the immediately-next-ranked player,
+   not everyone above, since a 4th-stringer being hurt says nothing about a 3rd-stringer's
+   opportunity. Guarded against a real bug found during testing: a player who is themselves
+   out/doubtful never gets this boost, since "your teammate being hurt means more opportunity
+   for you" is meaningless if you're equally unavailable — confirmed live, a WR on IR was
+   showing a boost from a teammate also on IR ranked ahead of him before this guard was added.
+
+**Verdict thresholds:** score ≥ 1.5 → Start, ≤ -1.5 → Sit, otherwise Consider (plus the hard
+Out/bye-week override above) — the same ±1.5-as-a-real-threshold convention already used for
+"Elite Pickup" in the waiver methodology (§4.5).
+
+**Scope decision:** this is advice per player, not a full lineup optimizer — it doesn't know a
+league's exact starting-slot/FLEX configuration and doesn't try to auto-build an optimal
+lineup, matching what was actually asked for ("give a suggestion... based on their matchup," not
+"pick my lineup for me") and the same "one tool in your decision-making process, not the only
+factor" framing §12's own research turned up for trade calculators.
+
+**Architecture.** Same client-side, embedded-JSON pattern as §12's trade analyzer and §5's
+week-interactive AI Overview sections (works on the static Netlify build with no server to
+round-trip to). A team-picker dropdown (auto-selects the first team so the page is useful
+immediately) re-renders that manager's players grouped by position, sorted by score, each as a
+card with a colored Start/Consider/Sit badge and the reasoning sentences beneath it. Reuses
+`ai_overview.py`'s `_page_shell()` for chrome. Wired into `main.py` the same try/except-wrapped
+way as the other new-in-2026-09 reports — written to `start_sit.html`, added to both
+`index.html` and `results_template.html`'s **Tools** nav group alongside the trade analyzer.
+"Next week" is `_most_recent_completed_week(matchup_results) + 1` (imported from
+`ai_overview.py` rather than re-deriving a second "what's the current week" calculation),
+falling back to the first analyzed week if no week has been completed yet.
+
+**Mobile.** Built mobile-first like the trade analyzer: stacked cards (one manager's players at
+a time, grouped by position), a compact colored verdict badge that doesn't crowd the player
+name on a narrow screen, and reasoning text below the fold of each card rather than beside it.
+
+## 14. Weekly Digest export (2026-09)
+
+A new report, `weekly_digest.html` (plus the raw `weekly_digest.md` it's built from, written
+alongside it in `text_reports/`): a clean Markdown summary of the week, meant to be copied and
+pasted into a separate Claude conversation to write a newsletter. **Explicit user requirement:
+no LLM API call from this app at all** ("I don't want you to use Claude API calls or anything, I
+plan on doing that manually") — `src/weekly_digest.py` only formats data this app already
+computes into Markdown; unlike every other module in this codebase, it makes zero outbound
+network calls of its own.
+
+**No new computation.** Every section reuses data `ai_overview.py` already computes for the
+Overview page — `src/ai_overview.py::compute_overview_context()` was factored out of
+`build_ai_overview()` (a pure extraction, no behavior change) specifically so the digest and the
+Overview page can never disagree about what "this week" means or what the biggest upset was.
+Trades/waivers are the same `trade_impacts`/`waiver_impacts` lists filtered to the current week;
+the injury/opportunity section reads directly from the Start/Sit Analyzer's already-generated
+per-player `reasoning` text (§13) rather than writing a third copy of that commentary. `main.py`
+computes `start_sit_data` once and passes the same dict to both `render_start_sit_html()` and
+the digest builder.
+
+**Sections:** this week's results, biggest upset (or "none," rather than a season-wide upset
+that didn't happen this week), power ranking movers, full standings (real vs. median record),
+trades this week, waiver pickups this week, an injury/opportunity report, next week's matchups
+to watch, and a FAAB tracker table (FAAB leagues only). A one-line usage note sits at the top of
+the generated text itself suggesting a prompt to pair it with.
+
+**UI: copy and download, no server file-serving needed.** The page shows the full Markdown in a
+read-only `<textarea>` with two buttons - "Copy to Clipboard" (`navigator.clipboard.writeText()`,
+falling back to selecting the textarea's text with a "press Ctrl+C" prompt if the Clipboard API
+refuses, which it legitimately can depending on focus/permissions - confirmed this fallback path
+directly, not just written defensively) and "Download .md" (builds the file **client-side** from
+a `Blob`/`URL.createObjectURL`, not a link to a server path). The download deliberately isn't a
+link to `/results/weekly_digest.md`: `server.py`'s `/results/<filename>` route only knows how to
+serve `html_reports/` and `json_data/` (checked before assuming otherwise), not the separate
+`text_reports/` directory `write_text()` uses, and a client-side Blob works identically on the
+static Netlify build too, with no server involved either way - the same reasoning behind every
+other week-interactive/client-side feature in this app (§5, §12, §13).
+
+Manager and player display names are real Sleeper values this app doesn't control and could
+contain HTML-significant characters, so the Markdown is HTML-escaped before landing inside the
+raw `<textarea>` content (the Clipboard/download buttons still read the textarea's live `.value`,
+which the browser gives back already unescaped, so the copied/downloaded text is the real
+Markdown, not the escaped HTML).
+
+`build.js`'s text-report copying step (previously `.txt`-only, for `worst_trades_report.txt`)
+now also copies `.md` files to `dist/reports/` for the static build, for consistency - the
+Weekly Digest page itself doesn't depend on this (its buttons work entirely from the text
+already embedded in the page), but the raw file is still archived alongside the other reports.

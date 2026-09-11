@@ -40,7 +40,11 @@ from src.visualizations import (
     create_luck_analysis_plot,
     create_power_ranking_leaderboard
 )
-from src.ai_overview import build_ai_overview, build_draft_info
+from src.ai_overview import build_ai_overview, build_draft_info, _most_recent_completed_week
+from src.trade_value import build_trade_analyzer
+from src.start_sit import build_start_sit_data, render_start_sit_html
+from src.weekly_awards import build_weekly_awards_report
+from src.weekly_digest import build_weekly_digest_report
 from src.draft_analysis import (
     get_primary_draft,
     reconstruct_draft_results,
@@ -437,6 +441,9 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
     progress(f"Fetching weekly matchups (weeks 1-{weeks_to_fetch[-1]}, in parallel)...")
     all_weekly_matchups = sleeper_api.get_league_matchups_bulk(league_id, weeks_to_fetch)
 
+    progress("Fetching NFL schedule (in parallel)...")
+    schedule_by_week = espn_api.get_weekly_schedule_bulk(weeks_to_fetch, season, storage=storage)
+
     progress("Fetching league transactions (in parallel)...")
     raw_transactions_by_week = sleeper_api.get_league_transactions_bulk(league_id, weeks_to_fetch)
     transactions_by_week = {f"Week {week}": txns for week, txns in raw_transactions_by_week.items()}
@@ -510,7 +517,8 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
         faab_ledger=faab_ledger,
     )
     manager_grades = calculate_manager_grades(
-        trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup
+        trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup,
+        weeks=weeks_to_fetch,
     )
     print_trade_analysis_results(trade_impacts, waiver_impacts)
 
@@ -527,7 +535,7 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
     if manager_grades:
         valid_managers = {mid: d for mid, d in manager_grades.items() if d.get('weekly_grades')}
         if valid_managers:
-            create_manager_grade_visualization(valid_managers, output_dirs)
+            create_manager_grade_visualization(valid_managers, output_dirs, team_power_data)
 
     progress("Collecting weekly player/matchup data for the AI overview...")
     weekly_top_players = _collect_weekly_top_players(all_weekly_matchups, roster_to_manager, user_lookup, all_players)
@@ -669,6 +677,56 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
         storage.write_html(league_id, season, "draft_info.html", draft_info_html)
     except Exception as e:
         progress(f"[WARNING] Draft info generation failed: {e}")
+
+    progress("Building hypothetical trade analyzer...")
+    try:
+        trade_analyzer_html = build_trade_analyzer(
+            output_data, rosters, all_players, all_weekly_matchups, analyzer,
+            roster_to_manager, user_lookup, faab_ledger, waiver_impacts,
+        )
+        storage.write_html(league_id, season, "trade_analyzer.html", trade_analyzer_html)
+    except Exception as e:
+        progress(f"[WARNING] Trade analyzer generation failed: {e}")
+
+    progress("Building start/sit analyzer...")
+    start_sit_data = None
+    try:
+        completed_week = _most_recent_completed_week(matchup_results)
+        this_week = (completed_week + 1) if completed_week is not None else weeks_to_fetch[0]
+        # Computed separately from rendering (rather than through build_start_sit_report's
+        # combined wrapper) so the same start_sit_data can also feed the weekly digest export
+        # below without recomputing it a second time.
+        start_sit_data = build_start_sit_data(
+            rosters, all_players, all_weekly_matchups, analyzer,
+            roster_to_manager, user_lookup, schedule_by_week, this_week,
+        )
+        start_sit_html = render_start_sit_html(start_sit_data, output_data.get('analysis_info') or {})
+        storage.write_html(league_id, season, "start_sit.html", start_sit_html)
+    except Exception as e:
+        progress(f"[WARNING] Start/sit analyzer generation failed: {e}")
+
+    progress("Building weekly awards...")
+    weekly_awards_data = None
+    try:
+        weekly_awards_data, weekly_awards_html = build_weekly_awards_report(
+            output_data, rosters, all_players, all_weekly_matchups, matchup_results,
+            league_info.get('roster_positions'), roster_to_manager, user_lookup,
+            power_rank_history, waiver_impacts, faab_ledger,
+        )
+        storage.write_html(league_id, season, "weekly_awards.html", weekly_awards_html)
+    except Exception as e:
+        progress(f"[WARNING] Weekly awards generation failed: {e}")
+
+    progress("Building weekly digest export...")
+    try:
+        digest_markdown, digest_html = build_weekly_digest_report(
+            output_data, detailed_data, roster_data, league_settings, faab_ledger, start_sit_data,
+            weekly_awards_data,
+        )
+        storage.write_text(league_id, season, "weekly_digest.md", digest_markdown)
+        storage.write_html(league_id, season, "weekly_digest.html", digest_html)
+    except Exception as e:
+        progress(f"[WARNING] Weekly digest generation failed: {e}")
 
     progress("Analysis complete!")
     return output_data

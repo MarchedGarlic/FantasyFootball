@@ -128,9 +128,19 @@
         .nav-item .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-faint); flex-shrink: 0; }
         .nav-item.active .dot { background: var(--accent); }
 
+        .nav-subitem {
+            display: block; width: 100%;
+            padding: 7px 12px 7px 34px; border-radius: var(--radius-md);
+            background: transparent; border: none; color: var(--ink-faint);
+            font-family: var(--font-body); font-weight: 500; font-size: 0.8rem;
+            text-align: left; cursor: pointer;
+        }
+        .nav-subitem:hover { background: var(--surface-hover); color: var(--ink-muted); }
+        .nav-subitem.active { color: var(--accent); }
+
         .main-content { flex: 1; min-width: 0; padding: 20px 16px 64px; }
         @media (min-width: 960px) {
-            .sidebar { position: sticky; transform: none; height: 100vh; }
+            .sidebar { position: sticky; top: 0; transform: none; height: 100vh; }
             .sidebar-scrim { display: none; }
             .topbar { display: none; }
             .main-content { padding: 40px 44px 80px; }
@@ -206,9 +216,23 @@
         const NAV_GROUPS = [
             { label: 'Overview', items: [
                 { id: 'overview', title: 'Overview', file: 'ai_overview_latest.html',
-                  description: "Head-to-head top performers by week, biggest upsets, power ranking movers, matchups to watch, a projected playoff bracket, median standings, and top waiver pickups." },
+                  description: "Head-to-head top performers by week, biggest upsets, power ranking movers, matchups to watch, a projected playoff bracket, playoff/championship odds, median standings, and top waiver pickups.",
+                  sections: [
+                      { id: 'top-performers', title: 'Top Performers' },
+                      { id: 'upsets', title: 'Biggest Upsets' },
+                      { id: 'power-movers', title: 'Power Ranking Movers' },
+                      { id: 'matchups-to-watch', title: 'Matchups to Watch' },
+                      { id: 'bracket', title: 'Playoff Bracket' },
+                      { id: 'playoff-odds', title: 'Playoff Odds' },
+                      { id: 'median-standings', title: 'Median Standings' },
+                      { id: 'waiver-pickups', title: 'Top Waiver Pickups' },
+                  ] },
                 { id: 'draft', title: 'Draft Info', file: 'draft_info_latest.html',
-                  description: "Every manager's Draft Rating and the season's Biggest Steals - the largest gaps between a player's actual draft pick and where experts expected them to go." },
+                  description: "Every manager's Draft Rating and the season's Biggest Steals - the largest gaps between a player's actual draft pick and where experts expected them to go.",
+                  sections: [
+                      { id: 'draft-rating', title: 'Draft Rating' },
+                      { id: 'biggest-steals', title: 'Biggest Steals' },
+                  ] },
             ]},
             { label: 'Team Analysis', items: [
                 { id: 'power', title: 'Power Rankings', file: 'power_rating_interactive_latest.html',
@@ -229,6 +253,16 @@
                   description: "Comprehensive manager performance grades based on trades, waivers, and overall strategy." },
                 { id: 'worst', title: 'Worst Trades', file: 'worst_trades_report_latest.html',
                   description: "The worst trades in your league with detailed impact analysis." },
+            ]},
+            { label: 'Tools', items: [
+                { id: 'trade-analyzer', title: 'Trade Analyzer', file: 'trade_analyzer_latest.html',
+                  description: "Build a hypothetical trade - any players, any teams, FAAB included - and see who comes out ahead before you actually propose it." },
+                { id: 'start-sit', title: 'Start/Sit', file: 'start_sit_latest.html',
+                  description: "Every rostered player's Start/Consider/Sit recommendation for the upcoming week, with the matchup and injury reasoning behind each one." },
+                { id: 'weekly-awards', title: 'Weekly Awards', file: 'weekly_awards_latest.html',
+                  description: "A lighthearted per-week recap - top score, biggest blowout, closest call, best waiver pickup, and who left the most points on their bench." },
+                { id: 'weekly-digest', title: 'Weekly Digest', file: 'weekly_digest_latest.html',
+                  description: "A copy-paste-ready summary of this week's league activity - feed it to Claude yourself to write a newsletter." },
             ]},
         ];
 
@@ -252,6 +286,50 @@
             document.getElementById('topbarTitle').textContent = active ? active.dataset.title : 'Fantasy Football';
             if (window._closeSidebar) window._closeSidebar();
             window.scrollTo({ top: 0, behavior: 'auto' });
+        }
+
+        // Scrolls to a section id *inside* an embedded report's iframe - used by the Overview/
+        // Draft Info sub-nav so a click can jump straight to one of the several sections those
+        // reports bundle onto one page. The iframe may still be `loading="lazy"` and not
+        // started yet (its panel was `display:none` until this same click's activateTab() just
+        // made it visible), so this waits for its 'load' event rather than assuming the
+        // content is already there.
+        function scrollToSectionInIframe(iframe, sectionId) {
+            const tryScroll = () => {
+                try {
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+                    const el = doc.getElementById(sectionId);
+                    if (!el) return;
+                    // wireIframeAutosize() sizes this iframe to its full content height, so it
+                    // has no scroll position of its own to move (the OUTER page is what
+                    // actually scrolls through it) - scrollIntoView() inside the iframe's own
+                    // document would be a no-op. Scroll the outer window to the section's
+                    // position instead: its own offset within the iframe, plus the iframe's
+                    // offset within this page.
+                    const targetY = window.scrollY + iframe.getBoundingClientRect().top
+                        + el.getBoundingClientRect().top - 12;
+                    window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+                } catch (e) { /* not ready yet - ignore */ }
+            };
+            if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+                tryScroll();
+                // Bokeh content can reflow asynchronously after 'load' (see wireIframeAutosize's
+                // own ResizeObserver), which can shift the iframe's height and throw off the
+                // target position computed above - one cheap follow-up corrects for that
+                // without needing to track every possible reflow.
+                setTimeout(tryScroll, 400);
+            } else {
+                iframe.addEventListener('load', () => { tryScroll(); setTimeout(tryScroll, 400); }, { once: true });
+            }
+        }
+
+        function activateSection(tabId, sectionId) {
+            activateTab(tabId);
+            document.querySelectorAll('.nav-subitem').forEach(el => {
+                el.classList.toggle('active', el.dataset.tab === tabId && el.dataset.section === sectionId);
+            });
+            const iframe = document.querySelector(`.tab-panel[data-tab="${tabId}"] .panel-frame-wrap iframe`);
+            if (iframe) scrollToSectionInIframe(iframe, sectionId);
         }
 
         function autosizeIframe(iframe, force) {
@@ -321,6 +399,18 @@
                     navBtn.innerHTML = `<span class="dot"></span><span>${item.title}</span>`;
                     navBtn.addEventListener('click', () => activateTab(item.id));
                     navScroll.appendChild(navBtn);
+
+                    if (item.sections) {
+                        item.sections.forEach(section => {
+                            const subBtn = document.createElement('button');
+                            subBtn.className = 'nav-subitem';
+                            subBtn.dataset.tab = item.id;
+                            subBtn.dataset.section = section.id;
+                            subBtn.textContent = section.title;
+                            subBtn.addEventListener('click', () => activateSection(item.id, section.id));
+                            navScroll.appendChild(subBtn);
+                        });
+                    }
 
                     const panel = document.createElement('section');
                     panel.className = 'tab-panel';

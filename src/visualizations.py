@@ -18,12 +18,12 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         from bokeh.plotting import figure, show, output_file
         from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS, CheckboxGroup
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
-        from bokeh.models import Div
+        from bokeh.models import Div, LabelSet
         import numpy as np
         from src.bokeh_theme import (
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
-            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
+            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE, collapsible_description_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh not available - install with: pip install bokeh")
@@ -46,7 +46,14 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         # Prepare data for interactive plot and calculate current standings
         team_data = []
         leaderboard_data = []
-        
+
+        # Real per-league week range, not a hardcoded "assume 15 weeks" guess.
+        all_weeks_seen = sorted({
+            int(w) for data in roster_grade_data.values()
+            for w in (data.get('weekly_roster_grades') or data.get('weekly_grades') or {})
+        })
+        last_week = all_weeks_seen[-1] if all_weeks_seen else 15
+
         for i, (user_id, data) in enumerate(roster_grade_data.items()):
             weekly_data = data.get('weekly_roster_grades') or data.get('weekly_grades')
             if not weekly_data:
@@ -81,34 +88,46 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
                 model.fit(X, y)
                 slope = model.coef_[0]
                 
-                # Generate trend line points extending to week 15
-                trend_weeks = list(range(min(weeks), 16))
+                # Generate trend line points extending to the real last analyzed week
+                trend_weeks = list(range(min(weeks), last_week + 1))
                 trend_grades = model.predict(np.array(trend_weeks).reshape(-1, 1)).tolist()
             
             # Get real record data from team_power_data if available
             regular_records = []
             combined_records = []
-            
+            median_results = []
+
             if team_power_data and user_id in team_power_data:
                 power_data = team_power_data[user_id]
+                weekly_median_results = power_data.get('weekly_median_results', {})
+                # Running combined-record tally, cumulative *through this week* - power_data's
+                # own 'combined_record' is only the final season-end total (median_record_
+                # calculator.py never persists a per-week series of it), so using it directly
+                # here stamped the same end-of-season number onto every week's hover, including
+                # week 1 - confirmed against real data (a manager 7 games into the season was
+                # showing a combined "13-19", 32 games, more than double what's possible through
+                # week 7). Built here the same way regular_record already is: real cumulative
+                # wins/losses plus a running tally of each week's real result vs the median.
+                median_wins_so_far = 0
+                median_losses_so_far = 0
                 for week in weeks:
                     cumulative_wins = power_data.get('cumulative_wins', {}).get(week, 0)
                     cumulative_losses = power_data.get('cumulative_losses', {}).get(week, 0)
                     regular_records.append(f"{cumulative_wins}-{cumulative_losses}")
-                    
-                    # Use combined record if available, otherwise fall back to regular
-                    combined_record = power_data.get('combined_record', {})
-                    if combined_record:
-                        combined_wins = combined_record.get('wins', cumulative_wins)
-                        combined_losses = combined_record.get('losses', cumulative_losses)
-                        combined_records.append(f"{combined_wins}-{combined_losses}")
-                    else:
-                        combined_records.append(f"{cumulative_wins}-{cumulative_losses}")
+
+                    median_result = weekly_median_results.get(week, weekly_median_results.get(str(week)))
+                    median_results.append(median_result or "N/A")
+                    if median_result == 'W':
+                        median_wins_so_far += 1
+                    elif median_result == 'L':
+                        median_losses_so_far += 1
+                    combined_records.append(f"{cumulative_wins + median_wins_so_far}-{cumulative_losses + median_losses_so_far}")
             else:
                 # Fallback to placeholder records
                 for j, week in enumerate(weeks):
                     regular_records.append(f"{j+1}-0")
                     combined_records.append(f"{j+1}-0")
+                    median_results.append("N/A")
             
             team_data.append({
                 'name': data.get('name', data.get('manager_name', f'Manager {i+1}')),
@@ -126,7 +145,8 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
                     'high_grade': [high_grade] * len(grades),
                     'low_grade': [low_grade] * len(grades),
                     'regular_record': regular_records,
-                    'combined_record': combined_records
+                    'combined_record': combined_records,
+                    'median_result': median_results
                 }),
                 'trend_source': ColumnDataSource(data={
                     'trend_week': trend_weeks,
@@ -172,7 +192,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
             x_axis_label="Week",
             y_axis_label="Roster Grade",
             tools="pan,wheel_zoom,box_zoom,reset,save",
-            x_range=(0.5, 15.5),
+            x_range=(0.5, last_week + 0.5),
             sizing_mode="scale_width",
             max_width=1200,
             min_width=300
@@ -185,13 +205,24 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         summary_text = f"""
         <div style="{PANEL_STYLE}">
             <h3 style="{HEADING_STYLE}">How Roster Grade Works</h3>
-            <p style="{DESCRIPTION_STYLE}">
-                Every player on a roster is graded from ESPN's weekly statistical leaders by
-                position, starters counted in full and bench players at half value. Scores
-                typically land 15-35 - higher means stronger overall roster talent, not just one
-                big name. Click a team's name in the legend to isolate their line, or use the
-                buttons below.
-            </p>
+            {collapsible_description_html(
+                short_html=f'<p style="{DESCRIPTION_STYLE}">Every player is graded from ESPN weekly stat leaders - higher means stronger overall roster talent, not just one big name.</p>',
+                full_extra_html=f'''
+                <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                    Starters count in full, bench players at half value. Scores typically land
+                    15-35. Click a team's name in the legend to isolate their line, or use the
+                    buttons below.
+                </p>
+                <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                    <strong style="color:{ACCENT};">What this means:</strong> this measures roster
+                    <em>talent</em>, not results - a team with a high roster grade but a losing
+                    record has the pieces to turn things around (bad luck or poor lineup decisions
+                    are more likely culprits than a weak roster). A low grade with a winning record
+                    is overperforming their talent and may be due for a regression.
+                </p>
+                ''',
+                toggle_id="roster-grade-expl",
+            )}
         </div>
         """
         summary_div = Div(text=summary_text, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
@@ -309,7 +340,7 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
         trend_renderers = []
         
         # Add each team's data to the plot
-        for team in team_data:
+        for i, team in enumerate(team_data):
             # Plot the data points
             scatter_renderer = p.scatter(
                 x='week', y='grade',
@@ -352,7 +383,28 @@ def create_roster_grade_plot(roster_grade_data, output_dirs=None, team_power_dat
                 
                 # Add to trend legend
                 trend_legend_items.append((f"{team['name']} {trend_direction} ({team['slope']:+.1f}/wk)", [trend_renderer]))
-            
+
+            # Manager name next to the most recent point only (see power_rankings.py's
+            # create_power_rating_plot for why not every week's point). Always visible
+            # regardless of legend toggle state - Bokeh's Legend only accepts GlyphRenderers,
+            # not a LabelSet, in an item's renderer list.
+            last_point_source = ColumnDataSource(data={
+                'week': [team['source'].data['week'][-1]],
+                'grade': [team['source'].data['grade'][-1]],
+                'name': [team['name']],
+            })
+            # Anchored to the right of the label (x_offset negative, text_align right) so the
+            # text extends back toward the chart instead of off its right edge, where the
+            # season's final week - and therefore every one of these labels - sits. y_offset
+            # cycles per team since every label shares that same final week and would otherwise
+            # stack on top of each other for teams with a similar current grade.
+            p.add_layout(LabelSet(
+                x='week', y='grade', text='name', source=last_point_source,
+                x_offset=-8, y_offset=[8, -20, 18, -32][i % 4], text_align='right',
+                text_font_size='9px', text_color=team['color'],
+                background_fill_color=SURFACE, background_fill_alpha=0.65,
+            ))
+
             # Add to data legend
             data_legend_items.append((f"{team['name']} ({team['current_grade']:.1f})", [scatter_renderer, line_renderer]))
         
@@ -1070,12 +1122,12 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         from bokeh.plotting import figure, show, output_file
         from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
-        from bokeh.models import Div, Line, Slope
+        from bokeh.models import Div, Line, Slope, LabelSet
         import numpy as np
         from src.bokeh_theme import (
             style_figure, style_legend, legend_toggle_button, button_stylesheet,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
-            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE,
+            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, collapsible_description_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh not available - install with: pip install bokeh")
@@ -1110,7 +1162,12 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
             # Calculate luck metrics
             total_games = regular_wins + regular_losses
             expected_wins = median_wins  # How many wins they "deserved" vs median
-            luck_factor = regular_wins - expected_wins if expected_wins > 0 else 0
+            # No guard needed here - subtraction never divides by anything, so there's no
+            # zero-denominator risk to protect against. The old `if expected_wins > 0 else 0`
+            # silently forced luck_factor to 0 ("Fair") for any team with exactly 0 median wins,
+            # when the correct read for a team that still won real games despite never beating
+            # the median once is that they were *very* lucky, not neutral.
+            luck_factor = regular_wins - expected_wins
             
             # Determine team name
             team_name = data.get('name', f'Team {user_id}')
@@ -1152,10 +1209,20 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         
         # Sort by luck factor for display
         luck_data.sort(key=lambda x: x['luck_factor'], reverse=True)
-        
+
+        # Teams with similar records land at nearly the same (median_wins, regular_wins) spot,
+        # so a fixed label offset stacks their names into an unreadable pile (confirmed by
+        # rendering this at a real 375px width - see the mobile-review notes). Cycling the
+        # vertical offset per point is a cheap, imperfect declutter - it spreads most
+        # collisions apart without true overlap detection, which isn't worth the complexity
+        # for ~12 points. Hover still gives the exact team when labels do still touch.
+        label_y_offsets = [8, -20, 18, -32]
+        label_offsets = [label_y_offsets[i % len(label_y_offsets)] for i in range(len(luck_data))]
+
         # Create Bokeh data source
         source = ColumnDataSource(data={
             'team_name': [d['team_name'] for d in luck_data],
+            'label_y_offset': label_offsets,
             'regular_wins': [d['regular_wins'] for d in luck_data],
             'median_wins': [d['median_wins'] for d in luck_data],
             'regular_losses': [d['regular_losses'] for d in luck_data],
@@ -1195,7 +1262,17 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         scatter = p.scatter('median_wins', 'regular_wins', source=source,
                           size=15, color='luck_color', alpha=0.8,
                           line_color='white', line_width=2)
-        
+
+        # Manager name next to each point - only ~12 points on this chart (one per manager,
+        # not one per week), so labeling every one stays readable even on a phone. A small,
+        # fixed font size (not viewport-relative - Bokeh has no media-query equivalent) keeps
+        # it unobtrusive at any width.
+        p.add_layout(LabelSet(
+            x='median_wins', y='regular_wins', text='team_name', source=source,
+            x_offset=8, y_offset='label_y_offset', text_font_size='9px', text_color=INK,
+            background_fill_color=SURFACE, background_fill_alpha=0.65,
+        ))
+
         # Add hover tool
         hover = HoverTool(tooltips=[
             ("Team", "@team_name"),
@@ -1214,26 +1291,37 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
             style_legend(p.legend[0])
             show_legend_button = legend_toggle_button(p.legend[0])
 
-        # Create explanation div - larger, higher-contrast description text (explicit user
-        # request), auto-height so a toggle can never overlap the layout below it.
+        # Always-visible explanation div, matching every other chart's "prominent, larger panel
+        # above the chart" pattern (this one used to be hidden behind a "How to Read This Chart"
+        # button, missed when that pattern was applied everywhere else).
         explanation_div = Div(
             text=f"""
             <div style="{PANEL_STYLE}">
                 <h3 style="{HEADING_STYLE}">How to Read This Chart</h3>
-                <p style="{DESCRIPTION_STYLE}">
-                    The dashed line of fairness is where you'd sit if wins were purely
-                    skill-based. Above it means you've won more than your median-based record
-                    says you "should have" (lucky); below it means fewer (unlucky). Median wins
-                    are the record you'd have if you played the league's weekly median score
-                    instead of your real opponent.
-                </p>
-                <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">
-                    This only measures schedule/matchup luck - it doesn't factor in injuries or
-                    other circumstances that affect performance.
-                </p>
+                {collapsible_description_html(
+                    short_html=f'<p style="{DESCRIPTION_STYLE}">Above the dashed line means you have won more than your underlying performance says you should have (lucky); below means fewer (unlucky).</p>',
+                    full_extra_html=f'''
+                    <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                        The dashed line of fairness is where you would sit if wins were purely
+                        skill-based. Median wins are the record you would have if you played the
+                        league's weekly median score instead of your real opponent.
+                    </p>
+                    <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                        <strong style="color:{ACCENT};">What this means:</strong> a team well above
+                        the line has been winning close games and catching favorable matchups -
+                        their record looks better than their actual scoring suggests, and it may
+                        not last. A team well below the line has been running into buzzsaws or
+                        losing close ones - their record understates how good they actually are.
+                    </p>
+                    <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">
+                        This only measures schedule/matchup luck - it does not factor in injuries
+                        or other circumstances that affect performance.
+                    </p>
+                    ''',
+                    toggle_id="luck-analysis-expl",
+                )}
             </div>
             """,
-            visible=False,
             sizing_mode="stretch_width",
             max_width=900,
             height_policy="auto",
@@ -1283,13 +1371,6 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         )
 
         # Create buttons
-        explanation_button = Button(label="How to Read This Chart", sizing_mode="stretch_width", height=44,
-                                     stylesheets=[button_stylesheet("muted")])
-        explanation_button.js_on_event("button_click", CustomJS(
-            args=dict(explanation=explanation_div),
-            code="explanation.visible = !explanation.visible;"
-        ))
-
         reset_button = Button(label="Reset Zoom", sizing_mode="stretch_width", height=44,
                                stylesheets=[button_stylesheet("ghost")])
         reset_button.js_on_event("button_click", CustomJS(
@@ -1306,16 +1387,10 @@ def create_luck_analysis_plot(team_power_data, output_dirs=None):
         # src/bokeh_mobile.py's module docstring for why this is done unconditionally in Python
         # rather than via a CSS media query targeting Bokeh's (version-fragile) internal layout
         # classes.
-        # 2-per-row grid, not one long row - Bokeh's row() has no flex-wrap, so 3 buttons in one
-        # stretch_width row overlap rather than wrap on a narrow phone screen.
         if show_legend_button:
-            buttons_row = bokeh_column(
-                bokeh_row(explanation_button, reset_button, spacing=10, sizing_mode="stretch_width"),
-                bokeh_row(show_legend_button, sizing_mode="stretch_width"),
-                sizing_mode="stretch_width",
-            )
+            buttons_row = bokeh_row(reset_button, show_legend_button, spacing=10, sizing_mode="stretch_width")
         else:
-            buttons_row = bokeh_row(explanation_button, reset_button, spacing=10, sizing_mode="stretch_width")
+            buttons_row = bokeh_row(reset_button, spacing=10, sizing_mode="stretch_width")
         main_content = bokeh_column(p, leaderboard_div, spacing=20, sizing_mode="stretch_width")
         layout = bokeh_column(
             buttons_row,
@@ -1356,7 +1431,7 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         import numpy as np
         from src.bokeh_theme import (
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
-            PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE,
+            PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, collapsible_description_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh not available - install with: pip install bokeh")
@@ -1458,15 +1533,23 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
 
         leaderboard_html += "</table>"
 
-        # Create explanation - larger, higher-contrast description text (explicit user request)
+        # Explanation panel - moved above the table (it used to render below it, which is
+        # inconsistent with every other chart's "prominent panel above the content" layout,
+        # per CLAUDE.md section 10 - missed when that pattern was applied everywhere else).
         explanation_html = f"""
-        <div style='margin-top: 24px; {CALLOUT_STYLE}'>
+        <div style='margin-bottom: 20px; {CALLOUT_STYLE}'>
             <h3 style='{HEADING_STYLE}'>How Power Rating Works</h3>
-            <p style='{DESCRIPTION_STYLE}'>
-                <strong>Formula:</strong> (average score &times;6 + (high + low) &times;2 + (win% &times;200) &times;2) &divide; 10
-            </p>
-            <p style='{DESCRIPTION_STYLE}'><strong>H2H Record:</strong> head-to-head wins/losses from your actual schedule</p>
-            <p style='{DESCRIPTION_STYLE}'><strong>Combined Record:</strong> H2H record + theoretical median record</p>
+            {collapsible_description_html(
+                short_html=f"<p style='{DESCRIPTION_STYLE}'>A single number blending scoring average, high/low range, and win percentage - higher means a stronger overall team, same rankings as the Power Rankings chart.</p>",
+                full_extra_html=f'''
+                <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                    <strong>Formula:</strong> (average score &times;6 + (high + low) &times;2 + (win% &times;200) &times;2) &divide; 10
+                </p>
+                <p style="{DESCRIPTION_STYLE}"><strong>H2H Record:</strong> head-to-head wins/losses from your actual schedule</p>
+                <p style="{DESCRIPTION_STYLE}"><strong>Combined Record:</strong> H2H record + theoretical median record</p>
+                ''',
+                toggle_id="power-leaderboard-expl",
+            )}
         </div>
         """
         
@@ -1484,7 +1567,7 @@ def create_power_ranking_leaderboard(team_power_data, output_dirs=None):
         # and just falls back to the table's own natural (too-wide) size - confirmed by measuring
         # the actual rendered boxes. Viewport units don't have that circularity.
         main_content = Div(
-            text=f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;background-color:{SURFACE};border:1px solid {LINE};border-radius:20px;padding:20px 22px;box-sizing:border-box;">{leaderboard_html}</div>' + explanation_html,
+            text=explanation_html + f'<div style="display:block;width:100vw;overflow-x:auto;-webkit-overflow-scrolling:touch;background-color:{SURFACE};border:1px solid {LINE};border-radius:20px;padding:20px 22px;box-sizing:border-box;">{leaderboard_html}</div>',
             height_policy="auto",
             sizing_mode="stretch_width",
             max_width=1000

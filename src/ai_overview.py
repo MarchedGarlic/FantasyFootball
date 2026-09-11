@@ -21,6 +21,8 @@ interactive.
 import json
 from datetime import datetime
 
+from src.playoff_odds import simulate_playoff_odds
+
 
 def biggest_upsets(matchup_results, power_rank_history, manager_names, limit=5):
     """Wins by the team that entered the week ranked worse in power rating than their
@@ -251,8 +253,12 @@ def _next_scheduled_week(matchup_results, after_week):
     return candidate or None
 
 
-def build_ai_overview(output_data, detailed_data, roster_data, league_settings, faab_ledger=None):
-    """Compute every section and render them as one HTML page."""
+def compute_overview_context(output_data, detailed_data, roster_data, league_settings):
+    """Everything build_ai_overview() needs to render the page, factored out so
+    src/weekly_digest.py can reuse the exact same computed sections (manager names, this
+    week's matchup results, upsets, power movers, etc.) for the newsletter export instead of
+    re-deriving a second, possibly-divergent copy of "what happened this week."
+    """
     manager_names = {
         uid: data.get('manager_name', 'Unknown')
         for uid, data in (output_data.get('power_ratings') or {}).items()
@@ -288,22 +294,57 @@ def build_ai_overview(output_data, detailed_data, roster_data, league_settings, 
         'waiver_pickups': top_waiver_pickups(
             (output_data.get('trade_analysis') or {}).get('waiver_impacts') or [], faab_enabled
         ),
+        'playoff_odds': simulate_playoff_odds(
+            matchup_results, manager_names, playoff_teams_count,
+            league_settings.get('playoff_week_start'), current_week,
+        ),
     }
 
-    weeks_available = sorted(matchup_results.keys())
+    return {
+        'manager_names': manager_names,
+        'power_rank_history': power_rank_history,
+        'matchup_results': matchup_results,
+        'rosters': rosters,
+        'roster_to_manager': roster_to_manager,
+        'analysis_info': analysis_info,
+        'playoff_teams_count': playoff_teams_count,
+        'faab_enabled': faab_enabled,
+        'current_week': current_week,
+        'real_standings': real_standings,
+        'sections': sections,
+        'weeks_available': sorted(matchup_results.keys()),
+    }
+
+
+def build_ai_overview(output_data, detailed_data, roster_data, league_settings, faab_ledger=None):
+    """Compute every section and render them as one HTML page."""
+    ctx = compute_overview_context(output_data, detailed_data, roster_data, league_settings)
 
     return render_ai_overview_html(
-        analysis_info, sections, faab_ledger, roster_to_manager, manager_names,
-        matchup_results=matchup_results, weeks_available=weeks_available,
-        current_week=current_week, playoff_teams_count=playoff_teams_count,
+        ctx['analysis_info'], ctx['sections'], faab_ledger, ctx['roster_to_manager'], ctx['manager_names'],
+        matchup_results=ctx['matchup_results'], weeks_available=ctx['weeks_available'],
+        current_week=ctx['current_week'], playoff_teams_count=ctx['playoff_teams_count'],
     )
 
 
 # ---- rendering (server-rendered sections) ----
 
-def _card(title, body_html, extra_attrs=""):
+# "Show all columns" toggle for a table with class="col-secondary" cells (see the CSS in
+# _SHARED_STYLE). Reveals them by toggling .expanded on the table itself - reached via
+# previousElementSibling since this button always sits immediately after </table>, not by id,
+# so it works the same way regardless of how many tables on the page use it.
+RESPONSIVE_TABLE_TOGGLE = (
+    '<button class="rtable-toggle" onclick="'
+    "var t=this.previousElementSibling; var exp=t.classList.toggle('expanded'); "
+    "this.textContent = exp ? 'Fewer columns' : 'Show all columns ▸';"
+    '">Show all columns &#9656;</button>'
+)
+
+
+def _card(title, body_html, extra_attrs="", section_id=None):
+    id_attr = f'id="{section_id}"' if section_id else ""
     return f"""
-    <div class="section-card" {extra_attrs}>
+    <div class="section-card" {id_attr} {extra_attrs}>
         <h2>{title}</h2>
         {body_html}
     </div>
@@ -321,7 +362,12 @@ def _render_upsets(upsets):
         </li>"""
         for u in upsets
     )
-    return f"<ul class='upset-list'>{items}</ul>"
+    return f"""
+    <p class="section-caption">A lower-ranked team beating a higher-ranked one - the upset score
+    weighs how big the rank gap was and how decisively they won, so a bigger number means a
+    more surprising result.</p>
+    <ul class='upset-list'>{items}</ul>
+    """
 
 
 def _render_power_movers(section):
@@ -339,7 +385,10 @@ def _render_power_movers(section):
         for m in section['movers']
     )
     return f"""
-    <p class="section-caption">Week {section['last_week']} to Week {section['this_week']}</p>
+    <p class="section-caption">Week {section['last_week']} to Week {section['this_week']} - a big
+    positive change means that manager is trending up fast (a hot streak or a team finally
+    finding its groove); a big negative change is a warning sign, even if their record still
+    looks fine.</p>
     <div class="table-scroll"><table>
         <tr><th>Manager</th><th>Last Week</th><th>This Week</th><th>Change</th></tr>
         {rows}
@@ -358,20 +407,27 @@ def _render_matchups_to_watch(matchups):
         </li>"""
         for m in matchups
     )
-    return f"<ul class='matchup-list'>{items}</ul>"
+    return f"""
+    <p class="section-caption">Next week's matchups that carry real standings stakes - two teams
+    fighting for the same playoff spot, or a bubble team that needs a win.</p>
+    <ul class='matchup-list'>{items}</ul>
+    """
 
 
 def _render_median_standings(rows):
     if not rows:
         return "<p class='empty'>No median standings available yet.</p>"
 
+    # "vs. Median" and "Combined" record are marked col-secondary (hidden by default on a
+    # phone, behind "Show all columns") - Real Record and Combined % are the two numbers that
+    # answer "how are they actually doing" and "were they lucky," the rest is how you get there.
     table_rows = "".join(
         f"""<tr>
             <td>#{r['rank']}</td>
             <td>{r['name']}</td>
             <td class="num">{r['regular_wins']}-{r['regular_losses']}{'-' + str(r['regular_ties']) if r['regular_ties'] else ''}</td>
-            <td class="num">{r['median_wins']}-{r['median_losses']}</td>
-            <td class="num">{r['combined_wins']}-{r['combined_losses']}</td>
+            <td class="num col-secondary">{r['median_wins']}-{r['median_losses']}</td>
+            <td class="num col-secondary">{r['combined_wins']}-{r['combined_losses']}</td>
             <td class="num">{r['combined_pct'] * 100:.1f}%</td>
         </tr>"""
         for r in rows
@@ -381,11 +437,13 @@ def _render_median_standings(rows):
     <p class="section-caption">If every week also counted as a win/loss against the league median score</p>
     <div class="table-scroll"><table>
         <tr>
-            <th>Rank</th><th>Manager</th><th>Real Record</th><th>vs. Median</th>
-            <th>Combined</th><th>Combined %</th>
+            <th>Rank</th><th>Manager</th><th>Real Record</th><th class="col-secondary">vs. Median</th>
+            <th class="col-secondary">Combined</th><th>Combined %</th>
         </tr>
         {table_rows}
-    </table></div>
+    </table>
+    {RESPONSIVE_TABLE_TOGGLE}
+    </div>
     <p class="notes" style="margin-top: 10px;">
         Each week, the top half of scorers league-wide also get a bonus win against "the median" and the
         bottom half get a bonus loss - regardless of who they actually played. Beat both your real
@@ -399,23 +457,27 @@ def _render_draft_ratings(ratings):
     if not ratings:
         return "<p class='empty'>No draft data available (the league may not have used Sleeper's own draft tool, or ESPN's preseason rankings weren't available for this season).</p>"
 
+    # Quality/Value (the two components Draft Rating is built from) are marked col-secondary -
+    # the headline number and the pick count stay visible by default on a phone.
     rows = "".join(
         f"""<tr>
             <td>#{r['rank']}</td>
             <td>{r['manager_name']}</td>
             <td class="num"><strong>{r['draft_rating']:.1f}</strong></td>
-            <td class="num">{r['quality_score']:.1f}</td>
-            <td class="num">{r['value_score']:.1f}</td>
+            <td class="num col-secondary">{r['quality_score']:.1f}</td>
+            <td class="num col-secondary">{r['value_score']:.1f}</td>
             <td class="num">{r['num_picks']}</td>
         </tr>"""
         for r in ratings
     )
     return f"""
-    <p class="section-caption">70% player quality (ESPN-tier grade of every player drafted) + 30% draft value (how much better than ESPN's preseason rank they drafted, relative to the rest of the league) - both on a 0-10 scale</p>
+    <p class="section-caption">70% player quality (ESPN-tier grade of every player drafted) + 30% draft value (how much better than ESPN's preseason rank they drafted, relative to the rest of the league) - both on a 0-10 scale. <strong>What this means:</strong> the manager on top didn't just get lucky with one pick - they drafted well from top to bottom.</p>
     <div class="table-scroll"><table>
-        <tr><th>Rank</th><th>Manager</th><th>Draft Rating</th><th>Quality</th><th>Value</th><th>Picks</th></tr>
+        <tr><th>Rank</th><th>Manager</th><th>Draft Rating</th><th class="col-secondary">Quality</th><th class="col-secondary">Value</th><th>Picks</th></tr>
         {rows}
-    </table></div>
+    </table>
+    {RESPONSIVE_TABLE_TOGGLE}
+    </div>
     """
 
 
@@ -423,22 +485,26 @@ def _render_biggest_steals(steals):
     if not steals:
         return "<p class='empty'>No steals to show yet (need draft results plus ESPN preseason rankings for this season).</p>"
 
+    # Actual Pick/Expected Rank (the two inputs "Beat Rank By" is computed from) are marked
+    # col-secondary - Beat Rank By is the number that actually answers "how big a steal."
     rows = "".join(
         f"""<tr>
             <td>{s['player_name']} <span class="notes">({s['position']})</span></td>
             <td>{s['manager_name']}</td>
-            <td class="num">Pick {s['pick_no']}</td>
-            <td class="num">#{s['expected_rank']}</td>
+            <td class="num col-secondary">Pick {s['pick_no']}</td>
+            <td class="num col-secondary">#{s['expected_rank']}</td>
             <td class="num positive">+{s['discrepancy']}</td>
         </tr>"""
         for s in steals
     )
     return f"""
-    <p class="section-caption">Biggest gaps between a player's actual draft pick and ESPN's preseason expert-consensus rank (not crowd-sourced ADP - see CLAUDE.md) - a bigger number means they were still on the board long after experts expected them gone. Currently-injured players are excluded.</p>
+    <p class="section-caption">Biggest gaps between a player's actual draft pick and ESPN's preseason expert-consensus rank (not crowd-sourced ADP - see CLAUDE.md) - a bigger number means they were still on the board long after experts expected them gone. Currently-injured players are excluded. <strong>What this means:</strong> whoever drafted these players got a top talent at a discount - worth remembering next draft.</p>
     <div class="table-scroll"><table>
-        <tr><th>Player</th><th>Manager</th><th>Actual Pick</th><th>Expected Rank</th><th>Beat Rank By</th></tr>
+        <tr><th>Player</th><th>Manager</th><th class="col-secondary">Actual Pick</th><th class="col-secondary">Expected Rank</th><th>Beat Rank By</th></tr>
         {rows}
-    </table></div>
+    </table>
+    {RESPONSIVE_TABLE_TOGGLE}
+    </div>
     """
 
 
@@ -468,8 +534,65 @@ def _render_waiver_pickups(section):
 
     return f"""
     {this_week_html}
-    <p class="section-caption">Season-best pickups</p>
+    <p class="section-caption">Season-best pickups - "Impact" is how much better the player
+    performed than an average rostered player at their position while you had them; a positive
+    number means the pickup was a real difference-maker, not just a warm body filling a roster
+    spot.</p>
     <div class="table-scroll"><table>{header}{season_rows}</table></div>
+    """
+
+
+def _render_playoff_odds(section):
+    teams = (section or {}).get('teams') or []
+    if not teams:
+        return "<p class='empty'>Not enough data yet to simulate the rest of the season.</p>"
+
+    remaining = len(section.get('remaining_weeks') or [])
+    trials = section.get('trials', 0)
+    if remaining:
+        caption = (
+            f"A {trials:,}-trial simulation of the {remaining} remaining regular-season week"
+            f"{'s' if remaining != 1 else ''}, using each manager's own real scoring average and "
+            f"week-to-week variance so far - not just their current record. <strong>What this "
+            f"means:</strong> a team on a hot streak with tough games left can have lower odds "
+            f"than their record alone suggests, and vice versa."
+        )
+    else:
+        caption = (
+            f"The regular season is over, so playoff seeding below is final - the {trials:,}-trial "
+            f"simulation only covers the playoff bracket itself."
+        )
+
+    show_bye = any(t.get('bye_odds') is not None for t in teams)
+    show_champ = section.get('has_bracket_template') and any(t.get('championship_odds') is not None for t in teams)
+
+    header = "<tr><th>Manager</th><th>Record</th><th>Playoff Odds</th>"
+    if show_bye:
+        header += "<th class='col-secondary'>Bye Odds</th>"
+    header += "<th class='col-secondary'>Avg Seed</th>"
+    if show_champ:
+        header += "<th>Championship Odds</th>"
+    header += "</tr>"
+
+    rows = []
+    for t in teams:
+        row = f"""<tr>
+            <td>{t['manager_name']}</td>
+            <td>{t['current_record']}</td>
+            <td class="num"><strong>{t['playoff_odds']:.1f}%</strong></td>"""
+        if show_bye:
+            row += f"<td class='num col-secondary'>{t['bye_odds']:.1f}%</td>" if t.get('bye_odds') is not None else "<td class='num col-secondary'>-</td>"
+        row += f"<td class='num col-secondary'>{t['avg_seed']:.1f}</td>" if t.get('avg_seed') is not None else "<td class='num col-secondary'>-</td>"
+        if show_champ:
+            row += f"<td class='num'>{t['championship_odds']:.1f}%</td>" if t.get('championship_odds') is not None else "<td class='num'>-</td>"
+        row += "</tr>"
+        rows.append(row)
+
+    return f"""
+    <p class="section-caption">{caption}</p>
+    <div class="table-scroll"><table>{header}{''.join(rows)}</table>
+    {RESPONSIVE_TABLE_TOGGLE}
+    </div>
     """
 
 
@@ -573,21 +696,25 @@ function renderTopPerformers(week) {
         };
     }).sort((a, b) => b.winnerScore - a.winnerScore);
 
+    // Lost To/loser score/Margin are secondary on a phone - #, Winner, and their score are the
+    // headline read ("who won and by how much they scored"), the rest is supporting context.
     const body = rows.map((r, i) => `
         <tr>
             <td>${i + 1}</td>
             <td><strong>${r.winner}</strong></td>
             <td class="num">${r.winnerScore.toFixed(1)}</td>
-            <td>${r.loser}</td>
-            <td class="num">${r.loserScore.toFixed(1)}</td>
-            <td class="num">${r.margin.toFixed(1)}</td>
+            <td class="col-secondary">${r.loser}</td>
+            <td class="num col-secondary">${r.loserScore.toFixed(1)}</td>
+            <td class="num col-secondary">${r.margin.toFixed(1)}</td>
         </tr>
     `).join('');
     container.innerHTML = `
         <div class="table-scroll"><table>
-            <tr><th>#</th><th>Winner</th><th>Score</th><th>Lost To</th><th>Score</th><th>Margin</th></tr>
+            <tr><th>#</th><th>Winner</th><th>Score</th><th class="col-secondary">Lost To</th><th class="col-secondary">Score</th><th class="col-secondary">Margin</th></tr>
             ${body}
-        </table></div>
+        </table>
+        __RESPONSIVE_TABLE_TOGGLE__
+        </div>
     `;
 }
 
@@ -698,6 +825,7 @@ def _render_week_interactive_script(matchup_results, manager_names, weeks_availa
     js = js.replace('__WEEKS_AVAILABLE__', json.dumps(weeks_available))
     js = js.replace('__PLAYOFF_TEAMS_COUNT__', json.dumps(playoff_teams_count))
     js = js.replace('__CURRENT_WEEK__', json.dumps(current_week))
+    js = js.replace('__RESPONSIVE_TABLE_TOGGLE__', RESPONSIVE_TABLE_TOGGLE)
     return f"<script>{js}</script>"
 
 
@@ -718,23 +846,29 @@ def render_ai_overview_html(analysis_info, sections, faab_ledger, roster_to_mana
     top_performers_card = _card(
         "Top Performers",
         week_picker_html + '<p class="section-caption">Head-to-head matchup winners, ranked by winning score</p>'
-        + '<div id="topPerformersBody"><p class="empty">Loading...</p></div>'
+        + '<div id="topPerformersBody"><p class="empty">Loading...</p></div>',
+        section_id="top-performers",
     )
 
     bracket_card = _card(
         "Projected Playoff Bracket &amp; Standings",
         '<div id="standingsBody"><p class="empty">Loading...</p></div>'
-        + '<div id="bracketBody" style="margin-top: 18px;"><p class="empty">Loading...</p></div>'
+        + '<div id="bracketBody" style="margin-top: 18px;"><p class="empty">Loading...</p></div>',
+        section_id="bracket",
     )
 
+    # Section ids match the sidebar's Overview sub-nav (index.html/results_template.html's
+    # OVERVIEW_SECTIONS) so a sub-nav click can scroll straight to one instead of only ever
+    # landing at the top of this page.
     body = (
         top_performers_card
-        + _card("Biggest Upsets", _render_upsets(sections['upsets']))
-        + _card("Power Ranking Movers: Last Week vs This Week", _render_power_movers(sections['power_movers']))
-        + _card("Matchups to Watch", _render_matchups_to_watch(sections['matchups_to_watch']))
+        + _card("Biggest Upsets", _render_upsets(sections['upsets']), section_id="upsets")
+        + _card("Power Ranking Movers: Last Week vs This Week", _render_power_movers(sections['power_movers']), section_id="power-movers")
+        + _card("Matchups to Watch", _render_matchups_to_watch(sections['matchups_to_watch']), section_id="matchups-to-watch")
         + bracket_card
-        + _card("Median Standings", _render_median_standings(sections['median_standings']))
-        + _card("Top Waiver Pickups", _render_waiver_pickups(sections['waiver_pickups']))
+        + _card("Playoff Odds", _render_playoff_odds(sections.get('playoff_odds')), section_id="playoff-odds")
+        + _card("Median Standings", _render_median_standings(sections['median_standings']), section_id="median-standings")
+        + _card("Top Waiver Pickups", _render_waiver_pickups(sections['waiver_pickups']), section_id="waiver-pickups")
         + _render_faab_tracker(faab_ledger, roster_to_manager, manager_names)
     )
 
@@ -760,8 +894,8 @@ def render_draft_info_html(analysis_info, draft_ratings, biggest_steals):
     generated_at = datetime.now().strftime('%B %d, %Y at %I:%M %p')
 
     body = (
-        _card("Draft Rating", _render_draft_ratings(draft_ratings))
-        + _card("Biggest Steals", _render_biggest_steals(biggest_steals))
+        _card("Draft Rating", _render_draft_ratings(draft_ratings), section_id="draft-rating")
+        + _card("Biggest Steals", _render_biggest_steals(biggest_steals), section_id="biggest-steals")
     )
 
     return _page_shell(
@@ -846,6 +980,14 @@ _SHARED_STYLE = """<style>
     .positive { color: var(--good); }
     .negative { color: var(--bad); }
     .empty { color: var(--ink-muted); font-style: italic; }
+    /* Secondary columns on the widest tables (Median Standings, Draft Rating) hide by default
+       on a phone instead of forcing horizontal scroll, behind a "Show all columns" tap -
+       see RESPONSIVE_TABLE_TOGGLE below. */
+    .rtable-toggle { display: none; background: none; border: none; color: var(--accent); font-weight: 600; font-size: 0.82rem; cursor: pointer; padding: 6px 0 0; text-align: left; }
+    @media (max-width: 640px) {
+        .rtable-toggle { display: inline-block; }
+        table:not(.expanded) .col-secondary { display: none; }
+    }
     ul.upset-list, ul.matchup-list { list-style: none; padding: 0; margin: 0; }
     ul.upset-list li, ul.matchup-list li { padding: 12px 0; border-bottom: 1px solid var(--line); }
     ul.upset-list li:last-child, ul.matchup-list li:last-child { border-bottom: none; }

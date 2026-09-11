@@ -25,13 +25,19 @@
   to = "/index.html"
   status = 200
 
-# Headers for better caching
+# This app has no cache-busting in its filenames - a redeploy overwrites index.html and every
+# report/data file in place under the same name. A long max-age here (this used to be 1-2
+# hours, public) meant a returning visitor's browser wouldn't even ask the server if anything
+# changed until that window passed, so a bug fix or fresh analysis could be invisible to them
+# for hours unless they manually cleared their cache. `must-revalidate` with no max-age still
+# lets the browser cache the file, but forces a conditional GET (a fast 304 if unchanged) on
+# every load instead of blindly trusting a stale local copy.
 [[headers]]
   for = "/*.html"
   [headers.values]
-    Cache-Control = "public, max-age=3600"
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/*.json"
   [headers.values]
-    Cache-Control = "public, max-age=7200"
+    Cache-Control = "public, max-age=0, must-revalidate"

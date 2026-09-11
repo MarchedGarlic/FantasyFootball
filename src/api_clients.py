@@ -19,6 +19,11 @@ from urllib3.util.retry import Retry
 DEFAULT_TIMEOUT = 15  # seconds
 DEFAULT_MAX_WORKERS = 8
 
+# The only confirmed disagreement between ESPN's and Sleeper's team abbreviations (checked
+# against a real week's scoreboard vs. the full Sleeper player pool) - Washington. Every other
+# team's code matches. Keyed by ESPN's abbreviation, valued as Sleeper's.
+ESPN_TO_SLEEPER_TEAM = {'WSH': 'WAS'}
+
 
 def _build_session():
     session = requests.Session()
@@ -120,6 +125,65 @@ class ESPNAPI:
 
         return ranks or {}
 
+    def get_weekly_schedule(self, week, season, storage=None, cache_max_age=21600):
+        """Which NFL team played which that week, as {team_abbr: opponent_abbr} (both
+        directions included) - the input to src/start_sit.py's defense-vs-position calculation
+        and to knowing each rostered player's upcoming opponent. A completed week's schedule
+        never changes, but this is cached at a shorter 6h TTL than the season-long caches above
+        since it's also used for the *upcoming* week, whose game (bye weeks, flex scheduling)
+        can still move before kickoff.
+
+        Sleeper and ESPN don't always agree on team abbreviations (confirmed empirically:
+        ESPN's Washington is 'WSH', Sleeper's is 'WAS') - normalized here so every other module
+        can key off Sleeper's abbreviations (what `all_players[pid]['team']` uses) without
+        worrying about the mismatch.
+        """
+        cache_key = f"espn_schedule_{season}_wk{week}"
+        if storage is not None:
+            cached = storage.cache_get(cache_key, cache_max_age)
+            if cached is not None:
+                return cached
+
+        url = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+        params = {'week': week, 'seasontype': 2, 'year': season}
+        response = self.session.get(url, params=params, timeout=DEFAULT_TIMEOUT)
+        data = response.json() if response.status_code == 200 else None
+
+        schedule = {}
+        if data and isinstance(data, dict):
+            for event in data.get('events', []):
+                competitors = (event.get('competitions') or [{}])[0].get('competitors', [])
+                if len(competitors) != 2:
+                    continue
+                abbrevs = [ESPN_TO_SLEEPER_TEAM.get(
+                    c.get('team', {}).get('abbreviation'), c.get('team', {}).get('abbreviation')
+                ) for c in competitors]
+                if all(abbrevs):
+                    schedule[abbrevs[0]] = abbrevs[1]
+                    schedule[abbrevs[1]] = abbrevs[0]
+
+        if schedule and storage is not None:
+            storage.cache_set(cache_key, schedule)
+
+        return schedule
+
+    def get_weekly_schedule_bulk(self, weeks, season, storage=None, max_workers=DEFAULT_MAX_WORKERS):
+        """get_weekly_schedule() for multiple weeks concurrently - same bulk-fetch pattern as
+        SleeperAPI's matchup/transaction fetchers. Returns {week: {team: opponent}}, omitting
+        weeks with no schedule data (bye week is a "no game" gap and stays absent naturally)."""
+        results = {}
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_week = {
+                executor.submit(self.get_weekly_schedule, week, season, storage): week
+                for week in weeks
+            }
+            for future in as_completed(future_to_week):
+                week = future_to_week[future]
+                schedule = future.result()
+                if schedule:
+                    results[week] = schedule
+        return results
+
 
 class SleeperAPI:
     """Sleeper API wrapper for fantasy football league/roster/transaction data."""
@@ -196,34 +260,38 @@ class SleeperAPI:
 
         return data
 
-    def get_league_matchups_bulk(self, league_id, weeks, max_workers=DEFAULT_MAX_WORKERS):
-        """Fetch matchups for multiple weeks concurrently. Returns {week: matchups}, omitting
-        weeks with no data, in the same shape the old sequential loop produced."""
+    def _fetch_weeks_bulk(self, fetch_one_week, weeks, max_workers):
+        """Fetch per-week data concurrently via fetch_one_week(week). Returns {week: data},
+        omitting weeks with no data. A week whose request still fails after the Retry
+        adapter's retries are exhausted is logged and skipped rather than aborting every other
+        week's already-successful result."""
         results = {}
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_week = {
-                executor.submit(self.get_league_matchups, league_id, week): week
+                executor.submit(fetch_one_week, week): week
                 for week in weeks
             }
             for future in as_completed(future_to_week):
                 week = future_to_week[future]
-                matchups = future.result()
-                if matchups:
-                    results[week] = matchups
+                try:
+                    data = future.result()
+                except Exception as e:
+                    print(f"   [WARNING] Failed to fetch week {week}: {e}")
+                    continue
+                if data:
+                    results[week] = data
         return results
+
+    def get_league_matchups_bulk(self, league_id, weeks, max_workers=DEFAULT_MAX_WORKERS):
+        """Fetch matchups for multiple weeks concurrently. Returns {week: matchups}, omitting
+        weeks with no data, in the same shape the old sequential loop produced."""
+        return self._fetch_weeks_bulk(
+            lambda week: self.get_league_matchups(league_id, week), weeks, max_workers
+        )
 
     def get_league_transactions_bulk(self, league_id, weeks, max_workers=DEFAULT_MAX_WORKERS):
         """Fetch transactions for multiple weeks concurrently. Returns {week: transactions},
         omitting weeks with no data."""
-        results = {}
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_week = {
-                executor.submit(self.get_league_transactions, league_id, week): week
-                for week in weeks
-            }
-            for future in as_completed(future_to_week):
-                week = future_to_week[future]
-                transactions = future.result()
-                if transactions:
-                    results[week] = transactions
-        return results
+        return self._fetch_weeks_bulk(
+            lambda week: self.get_league_transactions(league_id, week), weeks, max_workers
+        )

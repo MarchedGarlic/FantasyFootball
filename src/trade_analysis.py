@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Optional
 
 from src.bokeh_mobile import make_bokeh_html_mobile_friendly
+from src.utils import get_manager_name
 
 
 def get_player_name_from_id(player_id, all_players=None):
@@ -147,7 +148,7 @@ def analyze_real_trades_only(transactions_data, team_power_data, roster_grade_da
                 if manager_id not in user_lookup:
                     continue
 
-                manager_name = user_lookup[manager_id].get('display_name', f'Manager {manager_id}')
+                manager_name = get_manager_name(user_lookup, manager_id)
                 acquired_ids = [pid for pid, rid in adds.items() if rid == roster_id]
                 gave_up_ids = [pid for pid, rid in drops.items() if rid == roster_id]
 
@@ -396,7 +397,7 @@ def analyze_waiver_pickups(transactions_data, user_lookup, roster_to_manager,
                 if manager_id not in user_lookup:
                     continue
 
-                manager_name = user_lookup[manager_id].get('display_name', f'Manager {manager_id}')
+                manager_name = get_manager_name(user_lookup, manager_id)
                 player_ids_added = [pid for pid, rid in adds.items() if rid == roster_id]
                 players_added = [get_player_name_from_id(pid, all_players) for pid in player_ids_added]
                 players_dropped = [get_player_name_from_id(pid, all_players) for pid, rid in drops.items() if rid == roster_id]
@@ -500,7 +501,7 @@ def calculate_improved_trade_impact(manager_id, trade_week, team_power_data, ros
     }
 
 
-def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup, matchup_data=None):
+def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup, matchup_data=None, weeks=None):
     """Calculate comprehensive manager grades based on trades, waivers, and lineup decisions"""
     print("\nCalculating Manager Performance Grades...")
     
@@ -563,31 +564,14 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
                 waiver_scores[manager_id] = []
             waiver_scores[manager_id].append(waiver_score)
     
-    # Calculate lineup performance (start/sit accuracy) - weight: 15%
-    # For now, simulate based on power rating performance vs league average
-    lineup_scores = {}
-    if team_power_data:
-        all_power_ratings = []
-        for manager_data in team_power_data.values():
-            all_power_ratings.extend(manager_data.get('weekly_power_ratings', {}).values())
-        
-        if all_power_ratings:
-            league_avg_power = sum(all_power_ratings) / len(all_power_ratings)
-            
-            for manager_id in manager_grades.keys():
-                if manager_id in team_power_data:
-                    manager_power_data = team_power_data[manager_id]['weekly_power_ratings']
-                    lineup_scores[manager_id] = []
-                    
-                    for week, power_rating in manager_power_data.items():
-                        # Lineup skill based on how well power translates to actual performance
-                        # Higher than average = good lineup decisions
-                        relative_performance = (power_rating - league_avg_power) / 20  # Normalize
-                        lineup_score = max(0, min(10, 5 + relative_performance))
-                        lineup_scores[manager_id].append(lineup_score)
-    
-    # Calculate weekly manager grades and records using real data
-    for week in range(1, 16):  # Weeks 1-15
+    # Populated inside the per-week loop below, then averaged into data['lineup_performance']
+    # in the final summary pass - same pattern trade_scores/waiver_scores already use.
+    lineup_scores_by_manager = defaultdict(list)
+
+    # Calculate weekly manager grades and records using real data. `weeks` should be the
+    # league's real analyzed range (main.py's _determine_analysis_weeks()) - falling back to
+    # 1-15 only protects callers that don't pass it, not this pipeline's real run.
+    for week in (weeks or range(1, 16)):
         # First pass: collect all scores for median calculation
         week_scores = []
         for manager_id in manager_grades.keys():
@@ -598,7 +582,33 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
         
         # Calculate median for combined record
         median_score = sorted(week_scores)[len(week_scores)//2] if week_scores else 100
-        
+
+        # This week's league-wide power-rating spread, for z-scoring each manager's power_score
+        # below - power ratings have no intrinsic 0-10 meaning on their own, only relative to how
+        # everyone else did that same week (same z-score-against-baseline convention as waiver/
+        # draft/trade scoring elsewhere in this app - see the bugfix note on power_score below).
+        week_power_mean = statistics.mean(week_scores) if week_scores else None
+        week_power_stdev = statistics.pstdev(week_scores) if len(week_scores) > 1 else 0.0
+
+        # This week's league-wide *raw fantasy score* spread (distinct from the cumulative power
+        # rating above), used for lineup_score below - how well a manager's actual lineup scored
+        # that single week relative to everyone else that week, not their season-long team
+        # strength (which power_score/base_score already covers). The old lineup_score z-scored
+        # each manager's *cumulative* power rating against a baseline pooled across every manager
+        # AND every week of the season - confirmed against real data that this made nearly every
+        # manager's lineup_performance cluster at ~8.5-9.0/10 regardless of real quality: a power
+        # rating is a running season-to-date average, so almost every manager's later-season
+        # values sit above a baseline dragged down by everyone's low early-season values, making
+        # "above the pooled average" nearly universal rather than a real per-week signal.
+        week_raw_scores = []
+        for manager_id in manager_grades.keys():
+            raw_weekly = team_power_data.get(manager_id, {}).get('weekly_scores', {})
+            raw_score = raw_weekly.get(week, raw_weekly.get(str(week), None))
+            if raw_score is not None:
+                week_raw_scores.append(raw_score)
+        week_raw_mean = statistics.mean(week_raw_scores) if week_raw_scores else None
+        week_raw_stdev = statistics.pstdev(week_raw_scores) if len(week_raw_scores) > 1 else 0.0
+
         for manager_id in manager_grades.keys():
             # Get real performance data
             power_weekly = team_power_data.get(manager_id, {}).get('weekly_power_ratings', {})
@@ -611,13 +621,37 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
             if power_data is None and grade_data is None:
                 continue
             
-            # Use defaults for missing data, but don't skip if we have at least one value
-            power_data = power_data if power_data is not None else 100
-            grade_data = grade_data if grade_data is not None else 25
-            
-            # Normalize to 0-10 scale using realistic ranges
-            power_score = max(0, min(10, (power_data - 80) / 20)) if power_data else 5
-            roster_score = max(0, min(10, (grade_data - 20) / 5)) if grade_data else 5
+            # Use defaults for missing data, but don't skip if we have at least one value.
+            # grade_data's neutral default is 5.0, not the old 25 - see the bugfix note below on
+            # why 25 was itself a symptom of the stale-scale bug, not a deliberate "roughly
+            # average" choice.
+            power_data = power_data if power_data is not None else week_power_mean
+            grade_data = grade_data if grade_data is not None else 5.0
+
+            # power_score/roster_score used to assume power ratings run ~80-280 and roster
+            # grades run ~20-70 ("(power_data - 80) / 20", "(grade_data - 20) / 5") - stale
+            # constants left over from an earlier scale, never updated when power_rankings.py and
+            # roster_grading.py were rewritten (CLAUDE.md). Real power ratings in a live league
+            # run roughly 90-200 and roster grades are already the same 0-10 ESPN-tier weighted
+            # average used everywhere else in this app - confirmed against real data: every
+            # manager's roster_score was silently clamping to 0 every single week (grade_data
+            # could never reach the old formula's assumed 20 floor), and power_score was
+            # compressed into roughly the bottom half of the 0-10 range no matter how good a team
+            # was. Together this was dragging every manager's overall grade down to ~3-4 instead
+            # of centering near 5, and made "Season Average" (a z-score-based figure from the
+            # chart's own separate recalculation) diverge sharply from "Overall Grade" (this raw
+            # average) in the hover tooltip - the same manager could show a Season Average of 8.3
+            # next to an Overall Grade of 4.0 with no indication these measure different things.
+            # Fixed the actual bug (the grade calculation) rather than papering over it by only
+            # relabeling the chart. power_score is z-scored against the league that same week
+            # (same convention lineup_score below uses, against real weekly scores instead of
+            # power ratings, and the same convention waiver/draft/trade scoring use elsewhere);
+            # roster_score needs no rescaling since grade_data is already 0-10 by construction.
+            if power_data is not None and week_power_stdev > 0:
+                power_score = max(0, min(10, 5 + (power_data - week_power_mean) / week_power_stdev * 2.5))
+            else:
+                power_score = 5.0
+            roster_score = max(0, min(10, grade_data))
             base_score = (power_score + roster_score) / 2
             
             # Trade performance for this week
@@ -630,10 +664,20 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
             if manager_id in waiver_scores and waiver_scores[manager_id]:
                 week_waiver_score = sum(waiver_scores[manager_id]) / len(waiver_scores[manager_id])
             
-            # Lineup performance for this week
-            week_lineup_score = 5.0  # Default neutral
-            if manager_id in lineup_scores and week <= len(lineup_scores[manager_id]):
-                week_lineup_score = lineup_scores[manager_id][week-1]
+            # Lineup performance for this week - a proxy for "how well did this manager's
+            # lineup do this specific week" (real per-player start/sit accuracy isn't tracked
+            # historically anywhere in this app - src/start_sit.py only ever recommends for the
+            # upcoming week). z-scored against real single-week scores league-wide that same
+            # week, not the cumulative power rating power_score already uses above - reusing the
+            # same input would make this 15%-weighted "lineup" component just a copy of
+            # power_score's 20%, not an independent signal.
+            raw_weekly = team_power_data.get(manager_id, {}).get('weekly_scores', {})
+            raw_score = raw_weekly.get(week, raw_weekly.get(str(week), None))
+            if raw_score is not None and week_raw_stdev > 0:
+                week_lineup_score = max(0, min(10, 5 + (raw_score - week_raw_mean) / week_raw_stdev * 2.5))
+            else:
+                week_lineup_score = 5.0
+            lineup_scores_by_manager[manager_id].append(week_lineup_score)
             
             # Calculate composite manager grade (0-10 scale)
             weekly_grade = (
@@ -645,16 +689,24 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
             
             manager_grades[manager_id]['weekly_grades'][week] = max(0, min(10, weekly_grade))
             
-            # Use real win/loss records from power data if available
+            # Use real win/loss records from power data if available. Only overwrite the
+            # running record on a week that actually has real cumulative win/loss data for
+            # this manager - a bye/eliminated-from-playoffs week (common once the real
+            # analyzed range extends into the fantasy playoffs, weeks 16+) has no matchup, and
+            # unconditionally doing `.get(week, 0)` on those weeks was resetting an otherwise
+            # correct record back to 0-0 whenever such a week was the last one processed.
             power_team_data = team_power_data.get(manager_id, {})
-            if 'cumulative_wins' in power_team_data and 'cumulative_losses' in power_team_data:
-                week_wins = power_team_data['cumulative_wins'].get(week, 0)
-                week_losses = power_team_data['cumulative_losses'].get(week, 0)
-                
+            cumulative_wins_by_week = power_team_data.get('cumulative_wins', {})
+            cumulative_losses_by_week = power_team_data.get('cumulative_losses', {})
+
+            if week in cumulative_wins_by_week and week in cumulative_losses_by_week:
+                week_wins = cumulative_wins_by_week[week]
+                week_losses = cumulative_losses_by_week[week]
+
                 # Update real record
                 manager_grades[manager_id]['record']['wins'] = week_wins
                 manager_grades[manager_id]['record']['losses'] = week_losses
-                
+
                 # Use combined record if available
                 combined_record = power_team_data.get('combined_record', {})
                 if combined_record:
@@ -665,11 +717,13 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
                     theoretical_wins = 1 if power_data > median_score else 0
                     combined_wins = week_wins + (theoretical_wins * week)  # Add theoretical wins for each week
                     combined_losses = (week * 2) - combined_wins  # Total possible games minus wins
-                    
+
                     manager_grades[manager_id]['combined_record']['wins'] = combined_wins
                     manager_grades[manager_id]['combined_record']['losses'] = combined_losses
-            else:
-                # Fallback to performance-based simulation
+            elif not cumulative_wins_by_week:
+                # No real power data for this manager for any week (not just this one) -
+                # fall back to a performance-based simulation rather than leaving their
+                # record at 0-0 for the whole season.
                 if weekly_grade > 5.5:
                     manager_grades[manager_id]['record']['wins'] += 1
                     manager_grades[manager_id]['combined_record']['wins'] += 1
@@ -687,8 +741,8 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
                 data['trade_performance'] = sum(trade_scores[manager_id]) / len(trade_scores[manager_id])
             if manager_id in waiver_scores and waiver_scores[manager_id]:
                 data['waiver_performance'] = sum(waiver_scores[manager_id]) / len(waiver_scores[manager_id])
-            if manager_id in lineup_scores and lineup_scores[manager_id]:
-                data['lineup_performance'] = sum(lineup_scores[manager_id]) / len(lineup_scores[manager_id])
+            if manager_id in lineup_scores_by_manager and lineup_scores_by_manager[manager_id]:
+                data['lineup_performance'] = sum(lineup_scores_by_manager[manager_id]) / len(lineup_scores_by_manager[manager_id])
         
         manager_name = data.get('name', manager_id)  # Get name or use ID as fallback
         print(f"     {manager_name}: Overall Grade {data['overall_grade']:.1f}/10 " +
@@ -702,7 +756,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     try:
         from bokeh.plotting import figure, show, output_file
         from bokeh.models import (ColumnDataSource, HoverTool, Legend, LegendItem,
-                                Button, CustomJS, Div)
+                                Button, CustomJS, Div, LabelSet)
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
         from sklearn.linear_model import LinearRegression
         import numpy as np
@@ -710,6 +764,7 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
+            collapsible_description_html, responsive_table_toggle_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh and/or sklearn not available for trade visualization")
@@ -718,7 +773,10 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     if not trade_impacts:
         print("\n⚠️  No trade data for visualization")
         return
-    
+
+    # Real last analyzed week, not a hardcoded "assume 15 weeks" guess.
+    last_week = max((impact['week'] for impact in trade_impacts), default=15)
+
     if output_dirs:
         plot_filename = os.path.join(output_dirs['html'], "trade_analysis.html")
     else:
@@ -957,13 +1015,13 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
         x_axis_label="Week",
         y_axis_label="Combined Impact Score",
         tools="pan,wheel_zoom,box_zoom,reset,save",
-        x_range=(0.5, 15.5),
+        x_range=(0.5, last_week + 0.5),
         y_range=(-30, 45)
     )
     style_figure(p)
-    
+
     # Add zero reference line
-    p.line([0.5, 15.5], [0, 0], line_color=LINE, line_width=1, line_dash='dashed', alpha=0.8)
+    p.line([0.5, last_week + 0.5], [0, 0], line_color=LINE, line_width=1, line_dash='dashed', alpha=0.8)
 
     # Create collapsible explanation panel
     explanation_text = f"""
@@ -997,17 +1055,20 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
 
     explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1200, height=0, visible=False)
 
-    # Create leaderboard
+    # Create leaderboard. "Total Gain"/"Total Trades"/"Success Rate" are marked col-secondary
+    # (hidden by default on a phone, behind the "Show all columns" toggle) - #, Manager, Avg
+    # Impact, and Trend are the four numbers that actually answer "is this manager good at
+    # trading," the rest is supporting detail.
     leaderboard_html = f"""
     <h3 style="{HEADING_STYLE}">Trade Performance Leaderboard</h3>
-    <table style="border-collapse: collapse; width: 100%; font-size: 13px; margin: 5px 0; color: {INK};">
+    <table id="trade-leaderboard-table" style="border-collapse: collapse; width: 100%; font-size: 13px; margin: 5px 0; color: {INK};">
     <tr style="background-color: {SURFACE_RAISED};">
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">#</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Manager</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Avg Impact</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Gain</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Trades</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Success Rate</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Gain</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Trades</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Success Rate</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Trend</th>
     </tr>
     """
@@ -1021,14 +1082,15 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; font-weight: 700; color: {rank_color};">{row[0]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[1]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[2]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[3]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[4]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[5]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[3]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[4]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[5]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[6]}</td>
         </tr>"""
 
     leaderboard_html += f"""
     </table>
+    {responsive_table_toggle_html("trade-leaderboard-table")}
     <div style="margin-top: 10px; font-size: 12px; color: {INK_MUTED};">
         <strong>Legend:</strong> Avg Impact = average net effect per trade &middot; Total Gain = sum of all trade impacts &middot;
         Success Rate = % of trades with positive impact &middot; Trend = overall performance direction
@@ -1054,12 +1116,24 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
     calc_explanation_html = f"""
     <h3 style="{HEADING_STYLE}">How Trade Impact Is Calculated</h3>
     <div style="{CALLOUT_STYLE}">
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 1:</strong> Grade every player acquired and every player given up (ESPN season stat-leader tiers, ~1-10 scale)</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 2:</strong> Value Acquired = sum of acquired players' grades</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 3:</strong> Value Given Up = sum of given-up players' grades</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Combined Impact = Value Acquired - Value Given Up</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Context only:</strong> Team Trend (hover) compares this manager's power rating/roster grade the week before vs. the week of the trade - it is not part of the score</p>
-        <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">Positive values mean the manager received more value than they gave up; negative values mean the opposite</p>
+        <p style="{DESCRIPTION_STYLE}">Net player value gained or given up in every trade - a manager above zero got more than they gave up; below zero, less.</p>
+        {collapsible_description_html(
+            short_html="",
+            full_extra_html=f'''
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;"><strong>Step 1:</strong> Grade every player acquired and every player given up (ESPN season stat-leader tiers, ~1-10 scale)</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 2:</strong> Value Acquired = sum of acquired players grades</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 3:</strong> Value Given Up = sum of given-up players grades</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Combined Impact = Value Acquired - Value Given Up</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Context only:</strong> Team Trend (hover) compares this manager\'s power rating/roster grade the week before vs. the week of the trade - it is not part of the score</p>
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                <strong style="color:{ACCENT};">What this means:</strong> a manager with several
+                points above the zero line has consistently won their trades - they are finding
+                value other managers are giving away. Well below zero means the opposite; it is
+                worth a look at whether they are trading need over value, or getting outmaneuvered.
+            </p>
+            ''',
+            toggle_id="trade-calc-expl",
+        )}
     </div>
     """
     calc_explanation_div = Div(text=calc_explanation_html, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
@@ -1102,6 +1176,17 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
 
         data_renderers.append(scatter)
         data_legend_items.append(LegendItem(label=f"{manager} ({len(data['weeks'])} trades)", renderers=[scatter]))
+
+        # Manager name next to every trade point - a real season's trade count is small enough
+        # (this league: 16) that labeling each one stays readable, unlike Waiver Analysis's
+        # hundreds of points. Always visible regardless of legend toggle state (see
+        # power_rankings.py's create_power_rating_plot for why: a LabelSet can't be wired into
+        # a Legend item's renderer list).
+        p.add_layout(LabelSet(
+            x='week', y='combined_impact', text='manager', source=source,
+            x_offset=8, y_offset=6, text_font_size='9px', text_color=color,
+            background_fill_color=SURFACE, background_fill_alpha=0.65,
+        ))
 
     # Legend renders *inside* the plot frame (not as an outside 'right' panel) - a side panel
     # adds its own fixed pixel width alongside the frame, which sizing_mode="stretch_width"
@@ -1162,9 +1247,9 @@ def create_trade_visualization(trade_impacts, transactions_data=None, output_dir
 
     reset_button = Button(label="Reset Zoom", sizing_mode="stretch_width", height=44,
                            stylesheets=[button_stylesheet("ghost")])
-    reset_button.js_on_event("button_click", CustomJS(args=dict(plot=p), code="""
+    reset_button.js_on_event("button_click", CustomJS(args=dict(plot=p, x_end=last_week + 0.5), code="""
         plot.x_range.start = 0.5;
-        plot.x_range.end = 15.5;
+        plot.x_range.end = x_end;
         plot.y_range.start = -30;
         plot.y_range.end = 45;
     """))
@@ -1213,6 +1298,7 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
+            collapsible_description_html, responsive_table_toggle_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh not available for waiver visualization")
@@ -1221,7 +1307,10 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     if not waiver_impacts:
         print("\n⚠️  No waiver data for visualization")
         return
-    
+
+    # Real last analyzed week, not a hardcoded "assume 15 weeks" guess.
+    last_week = max((impact['week'] for impact in waiver_impacts), default=15)
+
     if output_dirs:
         plot_filename = os.path.join(output_dirs['html'], "waiver_analysis.html")
     else:
@@ -1360,13 +1449,13 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
         x_axis_label="Week",
         y_axis_label="Position-Adjusted Score (std. deviations vs. position average)",
         tools="pan,wheel_zoom,box_zoom,reset,save",
-        x_range=(0.5, 15.5),
+        x_range=(0.5, last_week + 0.5),
         y_range=(-4, 4)
     )
     style_figure(p)
 
     # Add zero reference line
-    p.line([0.5, 15.5], [0, 0], line_color=LINE, line_width=1, line_dash='dashed', alpha=0.8)
+    p.line([0.5, last_week + 0.5], [0, 0], line_color=LINE, line_width=1, line_dash='dashed', alpha=0.8)
     
     # Create collapsible explanation panel
     explanation_text = f"""
@@ -1401,21 +1490,23 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
 
     explanation_div = Div(text=explanation_text, sizing_mode="stretch_width", max_width=1200, height=0, visible=False)
 
-    # Create leaderboard
+    # Create leaderboard. This is the widest leaderboard in the app (10 columns) - only #,
+    # Manager, Avg Impact, and Trend stay visible by default on a phone; the other six are
+    # supporting detail behind the "Show all columns" toggle.
     leaderboard_html = f"""
     <h3 style="{HEADING_STYLE}">Waiver Wire Performance Leaderboard</h3>
-    <table style="border-collapse: collapse; width: 100%; font-size: 13px; margin: 5px 0; color: {INK};">
+    <table id="waiver-leaderboard-table" style="border-collapse: collapse; width: 100%; font-size: 13px; margin: 5px 0; color: {INK};">
     <tr style="background-color: {SURFACE_RAISED};">
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">#</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Manager</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Avg Impact</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Gain</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Moves</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Success Rate</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Best Pickup</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Gain</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Total Moves</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Success Rate</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Best Pickup</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Trend</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">FAAB Spent</th>
-        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Impact/$</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">FAAB Spent</th>
+        <th class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Impact/$</th>
     </tr>
     """
 
@@ -1428,17 +1519,18 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; font-weight: 700; color: {rank_color};">{row[0]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[1]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[2]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[3]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[4]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[5]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[6]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[3]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[4]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[5]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[6]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[7]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[8]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[9]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[8]}</td>
+            <td class="col-secondary" style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[9]}</td>
         </tr>"""
 
     leaderboard_html += f"""
     </table>
+    {responsive_table_toggle_html("waiver-leaderboard-table")}
     <div style="margin-top: 10px; font-size: 12px; color: {INK_MUTED};">
         <strong>Legend:</strong> Avg Impact = average position-adjusted z-score per waiver move (std. deviations vs. the position's weekly average) &middot;
         Total Gain = sum of all pickups' position-adjusted scores &middot; Success Rate = % of moves with a positive score &middot;
@@ -1465,12 +1557,25 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     calc_explanation_html = f"""
     <h3 style="{HEADING_STYLE}">How Waiver Wire Impact Is Calculated</h3>
     <div style="{CALLOUT_STYLE}">
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 1:</strong> Find the weeks the pickup was actually rostered - from the week added through the week before you dropped or traded them (or the end of the season if you kept them)</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 2:</strong> For each of those weeks, look up their actual fantasy points scored</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 3:</strong> Compare that to every rostered player at the same position, league-wide, that same week (the mean and spread)</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Weekly Score = (their points - position mean) / position standard deviation, that week</p>
-        <p style="{DESCRIPTION_STYLE}"><strong>Step 5:</strong> Position-Adjusted Score = the average of every Weekly Score across the weeks they were rostered</p>
-        <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">Positive values mean the pickup outperformed a typical rostered player at their position while you had them; negative values mean they underperformed</p>
+        <p style="{DESCRIPTION_STYLE}">How much better (or worse) a pickup played than an average rostered player at their position, while you had them.</p>
+        {collapsible_description_html(
+            short_html="",
+            full_extra_html=f'''
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;"><strong>Step 1:</strong> Find the weeks the pickup was actually rostered - from the week added through the week before you dropped or traded them (or the end of the season if you kept them)</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 2:</strong> For each of those weeks, look up their actual fantasy points scored</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 3:</strong> Compare that to every rostered player at the same position, league-wide, that same week (the mean and spread)</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 4:</strong> Weekly Score = (their points - position mean) / position standard deviation, that week</p>
+            <p style="{DESCRIPTION_STYLE}"><strong>Step 5:</strong> Position-Adjusted Score = the average of every Weekly Score across the weeks they were rostered</p>
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px; font-style: italic;">Positive values mean the pickup outperformed a typical rostered player at their position while you had them; negative values mean they underperformed</p>
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                <strong style="color:{ACCENT};">What this means:</strong> a manager showing up here
+                often with positive scores has a good eye for the waiver wire - they are finding
+                usable players before anyone else notices. A pile of pickups near zero or negative
+                means those roster spots probably were not worth the churn.
+            </p>
+            ''',
+            toggle_id="waiver-calc-expl",
+        )}
     </div>
     """
     calc_explanation_div = Div(text=calc_explanation_html, sizing_mode="stretch_width", max_width=1200, height_policy="auto")
@@ -1574,9 +1679,9 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
 
     reset_button = Button(label="Reset Zoom", sizing_mode="stretch_width", height=44,
                            stylesheets=[button_stylesheet("ghost")])
-    reset_button.js_on_event("button_click", CustomJS(args=dict(plot=p), code="""
+    reset_button.js_on_event("button_click", CustomJS(args=dict(plot=p, x_end=last_week + 0.5), code="""
         plot.x_range.start = 0.5;
-        plot.x_range.end = 15.5;
+        plot.x_range.end = x_end;
         plot.y_range.start = -4;
         plot.y_range.end = 4;
     """))
@@ -1613,11 +1718,11 @@ def create_waiver_visualization(waiver_impacts, output_dirs=None):
     return plot_filename
 
 
-def create_manager_grade_visualization(manager_grades, output_dirs=None):
+def create_manager_grade_visualization(manager_grades, output_dirs=None, team_power_data=None):
     """Create comprehensive manager grade visualization with enhanced features"""
     try:
         from bokeh.plotting import figure, show, output_file
-        from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS, Div, DataTable, TableColumn
+        from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS, Div, DataTable, TableColumn, LabelSet
         from bokeh.layouts import column as bokeh_column, row as bokeh_row
         from sklearn.linear_model import LinearRegression
         import numpy as np
@@ -1625,6 +1730,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
             PANEL_STYLE, CALLOUT_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, LABEL_STYLE,
+            collapsible_description_html, responsive_table_toggle_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh or scikit-learn not available for manager grade visualization")
@@ -1633,7 +1739,13 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     if not manager_grades:
         print("\n⚠️  No manager grade data for visualization")
         return
-    
+
+    # Real last analyzed week, not a hardcoded "assume 15 weeks" guess.
+    last_week = max(
+        (int(w) for data in manager_grades.values() for w in data.get('weekly_grades', {})),
+        default=15
+    )
+
     if output_dirs:
         plot_filename = os.path.join(output_dirs['html'], "manager_grades.html")
     else:
@@ -1701,44 +1813,39 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             model.fit(X, y)
             slope = model.coef_[0]
             
-            # Extend trend line through week 15
-            trend_weeks = list(range(min(weeks), 16))
+            # Extend trend line through the real last analyzed week
+            trend_weeks = list(range(min(weeks), last_week + 1))
             trend_grades = model.predict(np.array(trend_weeks).reshape(-1, 1)).tolist()
         
-        # Calculate proper records using actual data structure
         avg_grades = [statistics.mean(enhanced_grades[:i+1]) for i in range(len(enhanced_grades))]
-        
-        # Use actual record data from manager_grades structure
-        actual_wins = data.get('record', {}).get('wins', 0)
-        actual_losses = data.get('record', {}).get('losses', 0)
-        combined_wins = data.get('combined_record', {}).get('wins', actual_wins)
-        combined_losses = data.get('combined_record', {}).get('losses', actual_losses)
-        
-        # Build weekly record progression from actual data
+
+        # Build the weekly record progression from real per-week data (team_power_data is keyed
+        # by the same manager_id as manager_grades, so no name-matching lookup is needed). This
+        # used to fabricate a progression instead of reconstructing the real one: regular record
+        # assumed a manager wins every week until hitting their final season win total then loses
+        # every week after ("wins_through_week = min(actual_wins, weeks_played)"), and combined
+        # record just clamped the final season-end total to weeks_played*2 - neither is what
+        # actually happened week to week. Real cumulative wins/losses (already used the same way
+        # by create_roster_grade_plot/create_power_rating_plot) and the real per-week median
+        # result give the genuine historical record at each week instead.
         records = []
         combined_records = []
-        
-        # Get power data for real records if available
-        power_data = None
-        for pid, pdata in manager_grades.items():
-            if pdata.get('name') == manager_name:
-                # Found matching manager, get their power data for records
-                for key, value in manager_grades.items():
-                    if key == pid:
-                        break
-                break
-        
-        for j, week in enumerate(weeks):
-            # Calculate cumulative records through this week
-            weeks_played = j + 1
-            wins_through_week = min(actual_wins, weeks_played)  
-            losses_through_week = weeks_played - wins_through_week
-            
-            combined_wins_through_week = min(combined_wins, weeks_played * 2)  # Max 2 per week
-            combined_losses_through_week = (weeks_played * 2) - combined_wins_through_week
-            
-            records.append(f"{wins_through_week}-{losses_through_week}")
-            combined_records.append(f"{combined_wins_through_week}-{combined_losses_through_week}")
+        power_team_data = (team_power_data or {}).get(manager_id, {})
+        weekly_median_results = power_team_data.get('weekly_median_results', {})
+        median_wins_so_far = 0
+        median_losses_so_far = 0
+
+        for week in weeks:
+            cumulative_wins = power_team_data.get('cumulative_wins', {}).get(week, 0)
+            cumulative_losses = power_team_data.get('cumulative_losses', {}).get(week, 0)
+            records.append(f"{cumulative_wins}-{cumulative_losses}")
+
+            median_result = weekly_median_results.get(week, weekly_median_results.get(str(week)))
+            if median_result == 'W':
+                median_wins_so_far += 1
+            elif median_result == 'L':
+                median_losses_so_far += 1
+            combined_records.append(f"{cumulative_wins + median_wins_so_far}-{cumulative_losses + median_losses_so_far}")
         
         team_data.append({
             'name': manager_name,
@@ -1797,7 +1904,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         x_axis_label="Week",
         y_axis_label="Manager Grade (0-10 Scale)",
         tools="pan,wheel_zoom,box_zoom,reset,save",
-        x_range=(0.5, 15.5),
+        x_range=(0.5, last_week + 0.5),
         y_range=(0, 10)
     )
     style_figure(p)
@@ -1832,7 +1939,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     data_legend_items = []
     trend_legend_items = []
     
-    for team in team_data:
+    for i, team in enumerate(team_data):
         # Main data points and connecting lines
         scatter = p.scatter(
             x='week', y='grade',
@@ -1869,7 +1976,27 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             trend_renderers.append(trend)
             trend_hover.renderers.append(trend)
             trend_legend_items.append((f"{team['name']} {trend_direction} ({team['slope']:+.3f}/wk)", [trend]))
-        
+
+        # Manager name next to the most recent point only (see power_rankings.py's
+        # create_power_rating_plot for why not every week). Always visible regardless of
+        # legend toggle state - a LabelSet can't be wired into a Legend item's renderer list.
+        last_point_source = ColumnDataSource(data={
+            'week': [team['source'].data['week'][-1]],
+            'grade': [team['source'].data['grade'][-1]],
+            'name': [team['name']],
+        })
+        # Anchored to the right of the label (x_offset negative, text_align right) so the text
+        # extends back toward the chart instead of off its right edge, where the season's final
+        # week - and therefore every one of these labels - sits. y_offset cycles per manager
+        # since every label shares that same final week and would otherwise stack on top of
+        # each other for managers with a similar current grade.
+        p.add_layout(LabelSet(
+            x='week', y='grade', text='name', source=last_point_source,
+            x_offset=-8, y_offset=[8, -20, 18, -32][i % 4], text_align='right',
+            text_font_size='9px', text_color=team['color'],
+            background_fill_color=SURFACE, background_fill_alpha=0.65,
+        ))
+
         data_legend_items.append((f"{team['name']} ({team['enhanced_overall']:.1f})", [scatter, line]))
     
     # Legends render *inside* the plot frame (not as outside side panels) - a side panel adds
@@ -1933,15 +2060,28 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
     explanation_text = f"""
     <div style="{PANEL_STYLE}">
         <h3 style="{HEADING_STYLE}">Manager Performance Grading Methodology</h3>
-        <p style="{DESCRIPTION_STYLE}">
-            Every manager gets a 0-10 overall grade blending four weighted components:
-            <strong>performance</strong> (40% - weekly scores relative to league average plus
-            consistency), <strong>trade analysis</strong> (25% - net impact of every trade),
-            <strong>waiver analysis</strong> (20% - success rate and impact of pickups), and
-            <strong>start/sit accuracy</strong> (15% - optimal lineup decisions vs. actual ones).
-        </p>
-        <p style="{LABEL_STYLE} margin-top: 8px;"><strong>Grade Scale:</strong> 8-10 Elite &middot; 6-8 Above Average &middot; 4-6 Average &middot; 2-4 Below Average &middot; 0-2 Poor</p>
-        <p style="{LABEL_STYLE}"><strong>Trend Analysis:</strong> Linear regression showing management skill development trajectory</p>
+        {collapsible_description_html(
+            short_html=f'<p style="{DESCRIPTION_STYLE}">A 0-10 grade for how well a manager has played the game overall - lineup decisions, trades, and waivers - not just their win-loss record.</p>',
+            full_extra_html=f'''
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                Blends four weighted components: <strong>performance</strong> (40% - weekly
+                scores relative to league average plus consistency), <strong>trade
+                analysis</strong> (25% - net impact of every trade), <strong>waiver
+                analysis</strong> (20% - success rate and impact of pickups), and
+                <strong>start/sit accuracy</strong> (15% - optimal lineup decisions vs. actual
+                ones).
+            </p>
+            <p style="{LABEL_STYLE} margin-top: 8px;"><strong>Grade Scale:</strong> 8-10 Elite &middot; 6-8 Above Average &middot; 4-6 Average &middot; 2-4 Below Average &middot; 0-2 Poor</p>
+            <p style="{LABEL_STYLE}"><strong>Trend Analysis:</strong> Linear regression showing management skill development trajectory</p>
+            <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                <strong style="color:{ACCENT};">What this means:</strong> a manager with a
+                mediocre record but a high grade is doing the right things and should turn it
+                around; a good record with a low grade suggests they are winning in spite of
+                their own decisions.
+            </p>
+            ''',
+            toggle_id="manager-grade-expl",
+        )}
     </div>
     """
 
@@ -1973,9 +2113,9 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         cb_obj.label = all_visible ? "Show All Trends" : "Hide All Trends";
     """)
     
-    reset_callback = CustomJS(args=dict(plot=p), code="""
+    reset_callback = CustomJS(args=dict(plot=p, x_end=last_week + 0.5), code="""
         plot.x_range.start = 0.5;
-        plot.x_range.end = 15.5;
+        plot.x_range.end = x_end;
         plot.y_range.start = 0;
         plot.y_range.end = 10;
     """)
@@ -2228,6 +2368,11 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
         
         <div class="methodology">
             <h3>Methodology</h3>
+            <p style="margin-bottom: 10px;">
+                <strong>What this means:</strong> every trade is scored by the actual players exchanged -
+                not by how the team happened to be trending that week. The trades below are the ones
+                where a manager gave up meaningfully more talent than they got back.
+            </p>
             <ul>
                 <li><strong>Combined Impact</strong> = Net Player Value = Value Acquired − Value Given Up</li>
                 <li><strong>Player value</strong> comes from ESPN's season stat-leader tiers (~1-10 scale per player)</li>
@@ -2330,6 +2475,11 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
 
         <div class="detailed-section">
             <h2>Worst Power Impact Trades</h2>
+            <p style="text-align: center; color: #8DA0BC; margin-bottom: 4px;">
+                Supplementary context, not a second "worst trades" ranking - the official ranking is
+                the Combined Impact list above. This just shows whether the manager's team was
+                already trending down around the same time they made this trade.
+            </p>
             <p style="text-align: center; color: #52607A; margin-bottom: 20px;">
                 Trades ranked by most negative impact on weekly scoring potential
             </p>
@@ -2373,6 +2523,10 @@ def create_worst_trades_html_report(worst_trades, output_dirs=None):
 
         <div class="detailed-section">
             <h2>Worst Roster Grade Impact Trades</h2>
+            <p style="text-align: center; color: #8DA0BC; margin-bottom: 4px;">
+                Also supplementary context, not an independent ranking - same caveat as the section
+                above, just measuring roster grade instead of power rating.
+            </p>
             <p style="text-align: center; color: #52607A; margin-bottom: 20px;">
                 Trades ranked by most negative impact on roster construction quality
             </p>

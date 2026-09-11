@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Dict, List
 
 from src.bokeh_mobile import make_bokeh_html_mobile_friendly
+from src.utils import get_manager_name
 
 
 def calculate_power_rating(scores, wins, losses, week_num, combined_wins=None, combined_losses=None):
@@ -52,7 +53,7 @@ def calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup, ou
     for roster in rosters:
         user_id = roster.get('owner_id')
         if user_id and user_id in user_lookup:
-            user_name = user_lookup[user_id].get('display_name', f'User {user_id}')
+            user_name = get_manager_name(user_lookup, user_id, prefix="User")
             team_power_data[user_id] = {
                 'name': user_name,
                 'weekly_scores': {},
@@ -68,8 +69,14 @@ def calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup, ou
     # (previously O(teams) per matchup, every week).
     roster_to_owner = {roster.get('roster_id'): roster.get('owner_id') for roster in rosters}
 
-    # Process each week's matchups
-    for week, matchups in all_weekly_matchups.items():
+    # Running totals, updated incrementally as weeks are processed below instead of being
+    # rebuilt by re-filtering the full history on every single week.
+    running = {user_id: {'scores': [], 'wins': 0, 'losses': 0} for user_id in team_power_data}
+
+    # Process each week's matchups, in real chronological order - all_weekly_matchups comes
+    # from a concurrent bulk fetch (src/api_clients.py), so dict insertion order isn't
+    # guaranteed to be week order, and the incremental running totals above depend on it being.
+    for week, matchups in sorted(all_weekly_matchups.items()):
         if not matchups:
             continue
             
@@ -121,16 +128,15 @@ def calculate_weekly_power_ratings(all_weekly_matchups, rosters, user_lookup, ou
                 team_power_data[user_id]['weekly_wins'][week] = 1 if week_results[user_id]['win'] else 0
                 team_power_data[user_id]['weekly_losses'][week] = 1 if week_results[user_id]['loss'] else 0
                 
-                # Calculate cumulative stats through this week
-                cumulative_scores = [team_power_data[user_id]['weekly_scores'][w] 
-                                   for w in sorted(team_power_data[user_id]['weekly_scores'].keys()) 
-                                   if w <= week]
-                cumulative_wins = sum([team_power_data[user_id]['weekly_wins'][w] 
-                                     for w in sorted(team_power_data[user_id]['weekly_wins'].keys()) 
-                                     if w <= week])
-                cumulative_losses = sum([team_power_data[user_id]['weekly_losses'][w] 
-                                       for w in sorted(team_power_data[user_id]['weekly_losses'].keys()) 
-                                       if w <= week])
+                # Cumulative stats through this week, carried forward incrementally rather than
+                # re-filtering every prior week's data from scratch each time.
+                running[user_id]['scores'].append(week_results[user_id]['score'])
+                running[user_id]['wins'] += 1 if week_results[user_id]['win'] else 0
+                running[user_id]['losses'] += 1 if week_results[user_id]['loss'] else 0
+
+                cumulative_scores = list(running[user_id]['scores'])
+                cumulative_wins = running[user_id]['wins']
+                cumulative_losses = running[user_id]['losses']
                 
                 team_power_data[user_id]['cumulative_scores'][week] = cumulative_scores
                 team_power_data[user_id]['cumulative_wins'][week] = cumulative_wins
@@ -201,13 +207,13 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
     """Create interactive Power Rating progression plot with toggleable trend lines"""
     try:
         from bokeh.plotting import figure, show, output_file
-        from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS
+        from bokeh.models import ColumnDataSource, HoverTool, Legend, Button, CustomJS, LabelSet
         from bokeh.layouts import column, row
         import numpy as np
         from src.bokeh_theme import (
             style_figure, style_legend, legend_toggle_button, button_stylesheet, dark_palette,
             SURFACE, SURFACE_RAISED, LINE, INK, INK_MUTED, ACCENT,
-            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE,
+            PANEL_STYLE, HEADING_STYLE, DESCRIPTION_STYLE, collapsible_description_html,
         )
     except ImportError:
         print("\n⚠️  Bokeh not available - install with: pip install bokeh")
@@ -230,7 +236,14 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         
         # Prepare data for interactive plot
         team_data = []
-        
+
+        # Computed once for the whole league instead of being re-sorted/re-scanned per team per
+        # week below - see compute_power_rank_history()'s own docstring for why this exists.
+        rank_by_week = {
+            week: {entry['user_id']: entry['rank'] for entry in entries}
+            for week, entries in compute_power_rank_history(team_power_data).items()
+        }
+
         for i, (user_id, data) in enumerate(team_power_data.items()):
             if not data['weekly_power_ratings']:
                 continue
@@ -256,51 +269,56 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
             combined_records = []
             power_ranking_spots = []
             
+            # Real per-week median result ('W'/'L' vs the league median score that week),
+            # already computed correctly by median_record_calculator.py and merged into
+            # team_power_data by main.py - used below instead of the fabricated
+            # "median_wins = min(cumulative_wins + 1, week)" placeholder this chart's hover
+            # data used to show, which had nothing to do with actually beating the median (a
+            # leftover "rough estimate" that was never replaced once the real median calculation
+            # existed - confirmed against real data: it doesn't move in step with the real
+            # median_wins figure the AI Overview's Median Standings section reports for the same
+            # manager/week).
+            weekly_median_results = data.get('weekly_median_results', {})
+            running_median_wins = 0
+            running_median_losses = 0
+
             for week in weeks:
                 cumulative_scores = data['cumulative_scores'].get(week, [])
                 cumulative_wins = data['cumulative_wins'].get(week, 0)
                 cumulative_losses = data['cumulative_losses'].get(week, 0)
-                
+
                 wins_data.append(cumulative_wins)
                 losses_data.append(cumulative_losses)
-                
+
                 # Calculate regular record (just wins-losses)
                 regular_records.append(f"{cumulative_wins}-{cumulative_losses}")
-                
-                # Calculate median record (simulated - wins against median score each week)
+
                 if cumulative_scores:
                     avg_scores.append(round(sum(cumulative_scores) / len(cumulative_scores), 1))
                     high_scores.append(max(cumulative_scores))
                     low_scores.append(min(cumulative_scores))
-                    
-                    # For median wins, estimate based on avg score vs league avg (simplified)
-                    median_wins = max(0, min(cumulative_wins + 1, week))  # Rough estimate
-                    median_losses = week - median_wins
-                    median_records.append(f"{median_wins}-{median_losses}")
-                    
-                    # Combined record is regular + median
-                    combined_wins = cumulative_wins + median_wins
-                    combined_losses = cumulative_losses + median_losses
-                    combined_records.append(f"{combined_wins}-{combined_losses}")
                 else:
                     avg_scores.append(0)
                     high_scores.append(0)
                     low_scores.append(0)
-                    median_records.append(f"0-{week}")
-                    combined_records.append(f"{cumulative_wins}-{cumulative_losses + week}")
+
+                # Cumulative median record, built from the real per-week result - not tied to
+                # cumulative_scores being present, since a manager can have a real median result
+                # for a week even if their score list for that exact week was empty upstream.
+                median_result = weekly_median_results.get(week, weekly_median_results.get(str(week)))
+                if median_result == 'W':
+                    running_median_wins += 1
+                elif median_result == 'L':
+                    running_median_losses += 1
+                median_records.append(f"{running_median_wins}-{running_median_losses}")
+
+                combined_wins = cumulative_wins + running_median_wins
+                combined_losses = cumulative_losses + running_median_losses
+                combined_records.append(f"{combined_wins}-{combined_losses}")
             
-            # Calculate power ranking spots for each week for this team
-            power_ranking_spots = []
-            for week in weeks:
-                week_ratings = []
-                for uid, team_info in team_power_data.items():
-                    if week in team_info['weekly_power_ratings']:
-                        week_ratings.append((uid, team_info['weekly_power_ratings'][week]))
-                
-                # Sort by rating (highest first) and find this team's position
-                week_ratings.sort(key=lambda x: x[1], reverse=True)
-                ranking_spot = next((idx + 1 for idx, (uid, _) in enumerate(week_ratings) if uid == user_id), 0)
-                power_ranking_spots.append(ranking_spot)
+            # This team's rank each week, looked up from the league-wide rank_by_week computed
+            # once above instead of being re-derived per team.
+            power_ranking_spots = [rank_by_week.get(week, {}).get(user_id, 0) for week in weeks]
             
             # Calculate trend line if sklearn available
             slope = 0
@@ -354,7 +372,15 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         if len(team_data) == 0:
             print("   • No power rating data available")
             return
-        
+
+        # Real per-league week range, not a hardcoded "assume 15 weeks" guess (the exact bug
+        # class CLAUDE.md section 3.3 documents as fixed elsewhere in the pipeline).
+        all_weeks_seen = sorted({
+            week for data in team_power_data.values()
+            for week in data.get('weekly_power_ratings', {})
+        })
+        last_week = all_weeks_seen[-1] if all_weeks_seen else 15
+
         # Create the interactive figure
         if output_dirs:
             plot_filename = os.path.join(output_dirs['html'], "power_rating_interactive.html")
@@ -371,7 +397,7 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
             x_axis_label="Week",
             y_axis_label="Power Rating",
             tools="pan,wheel_zoom,box_zoom,reset,save",
-            x_range=(0.5, 15.5)
+            x_range=(0.5, last_week + 0.5)
         )
         style_figure(p)
 
@@ -382,13 +408,25 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         explanation_text = f"""
         <div style="{PANEL_STYLE}">
             <h3 style="{HEADING_STYLE}">How Power Rating Works</h3>
-            <p style="{DESCRIPTION_STYLE}">
-                Each week's rating blends your scoring average, your high/low range, and your win
-                percentage - <code style="color:{ACCENT};">(avg&times;6 + (high+low)&times;2 + (win%&times;200)&times;2) &divide; 10</code>.
-                Higher values mean stronger overall performance. Dashed lines are each team's
-                trend (linear regression over the season). Click a name in the legend to hide or
-                show just that team, or use the buttons below to toggle everyone at once.
-            </p>
+            {collapsible_description_html(
+                short_html=f'<p style="{DESCRIPTION_STYLE}">Blends scoring average, high/low range, and win percentage into one number - higher means a stronger overall team.</p>',
+                full_extra_html=f'''
+                <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                    The exact formula: <code style="color:{ACCENT};">(avg&times;6 + (high+low)&times;2 + (win%&times;200)&times;2) &divide; 10</code>.
+                    Dashed lines are each team's trend (linear regression over the season). Click a
+                    name in the legend to hide or show just that team, or use the buttons below to
+                    toggle everyone at once.
+                </p>
+                <p style="{DESCRIPTION_STYLE} margin-top: 8px;">
+                    <strong style="color:{ACCENT};">What this means:</strong> the team on top of this
+                    chart is playing the best fantasy football overall - not just winning, but doing
+                    it with a strong scoring average and floor. A team with a losing record but a
+                    high power rating has been getting unlucky and is likely to turn it around; the
+                    reverse (a winning record, low rating) is a team living on the edge.
+                </p>
+                ''',
+                toggle_id="power-rating-expl",
+            )}
         </div>
         """
 
@@ -424,7 +462,7 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
         trend_legend_items = []
         
         # Add each team's data to the plot
-        for team in team_data:
+        for i, team in enumerate(team_data):
             # Plot the data points
             scatter_renderer = p.scatter(
                 x='week', y='rating',
@@ -464,7 +502,32 @@ def create_power_rating_plot(team_power_data, output_dirs=None):
                 
                 # Add to trend legend
                 trend_legend_items.append((f"{team['name']} Trend {trend_direction} ({team['slope']:+.1f}/wk)", [trend_renderer]))
-            
+
+            # Team name next to its most recent point only - labeling every week's point on an
+            # 18-week, 12-team chart would be unreadable, but a name at the end of each line
+            # gives an at-a-glance "current standings" read without relying on hover/legend.
+            # Small fixed font size since Bokeh has no media-query equivalent to shrink it on
+            # narrow screens - kept unobtrusive at any width instead. Always visible regardless
+            # of legend toggle state - Bokeh's Legend only accepts GlyphRenderers in an item's
+            # renderer list, so a LabelSet (an Annotation, not a GlyphRenderer) can't be wired
+            # to hide/show together with its line via the native click-to-hide legend.
+            last_point_source = ColumnDataSource(data={
+                'week': [team['source'].data['week'][-1]],
+                'rating': [team['source'].data['rating'][-1]],
+                'name': [team['name']],
+            })
+            # Anchored to the right of the label (x_offset negative, text_align right) so the
+            # text extends back toward the chart instead of off its right edge, where the
+            # season's final week - and therefore every one of these labels - sits. y_offset
+            # cycles per team since every label shares that same final week and would otherwise
+            # stack on top of each other for teams with a similar current rating.
+            p.add_layout(LabelSet(
+                x='week', y='rating', text='name', source=last_point_source,
+                x_offset=-8, y_offset=[8, -20, 18, -32][i % 4], text_align='right',
+                text_font_size='9px', text_color=team['color'],
+                background_fill_color=SURFACE, background_fill_alpha=0.65,
+            ))
+
             # Add to data legend
             data_legend_items.append((f"{team['name']}", [scatter_renderer, line_renderer]))
         
