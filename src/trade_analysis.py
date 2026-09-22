@@ -500,8 +500,11 @@ def calculate_improved_trade_impact(manager_id, trade_week, team_power_data, ros
     }
 
 
-def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup, matchup_data=None):
-    """Calculate comprehensive manager grades based on trades, waivers, and lineup decisions"""
+def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup, lineup_efficiency_data=None):
+    """Calculate comprehensive manager grades based on trades, waivers, and lineup decisions.
+
+    `lineup_efficiency_data` is the real actual-vs-optimal-lineup comparison from
+    `src/lineup_analysis.py::calculate_lineup_efficiency()` - see CLAUDE.md section 4.6."""
     print("\nCalculating Manager Performance Grades...")
     
     manager_grades = {}
@@ -533,6 +536,7 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
             'trade_performance': 0.0,
             'waiver_performance': 0.0,
             'lineup_performance': 0.0,
+            'lineup_efficiency_pct': 0.0,
             'overall_grade': 0.0,
             'record': {'wins': 0, 'losses': 0},
             'combined_record': {'wins': 0, 'losses': 0}
@@ -564,27 +568,48 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
             waiver_scores[manager_id].append(waiver_score)
     
     # Calculate lineup performance (start/sit accuracy) - weight: 15%
-    # For now, simulate based on power rating performance vs league average
-    lineup_scores = {}
-    if team_power_data:
-        all_power_ratings = []
-        for manager_data in team_power_data.values():
-            all_power_ratings.extend(manager_data.get('weekly_power_ratings', {}).values())
-        
-        if all_power_ratings:
-            league_avg_power = sum(all_power_ratings) / len(all_power_ratings)
-            
-            for manager_id in manager_grades.keys():
-                if manager_id in team_power_data:
-                    manager_power_data = team_power_data[manager_id]['weekly_power_ratings']
-                    lineup_scores[manager_id] = []
-                    
-                    for week, power_rating in manager_power_data.items():
-                        # Lineup skill based on how well power translates to actual performance
-                        # Higher than average = good lineup decisions
-                        relative_performance = (power_rating - league_avg_power) / 20  # Normalize
-                        lineup_score = max(0, min(10, 5 + relative_performance))
-                        lineup_scores[manager_id].append(lineup_score)
+    # Real actual-vs-optimal-lineup comparison (src/lineup_analysis.py), keyed by week so it can
+    # be looked up per week below instead of assumed to be in week order (see CLAUDE.md 4.6).
+    lineup_scores_by_week = {}
+    lineup_efficiency_pct = {}
+    lineup_season_score = {}
+    if lineup_efficiency_data:
+        all_efficiencies = [
+            week_data['efficiency']
+            for weeks in lineup_efficiency_data.values()
+            for week_data in weeks.values()
+        ]
+        league_avg_efficiency = (sum(all_efficiencies) / len(all_efficiencies)) if all_efficiencies else 1.0
+        league_std_efficiency = (statistics.pstdev(all_efficiencies)) if len(all_efficiencies) > 1 else 0.0
+
+        for manager_id, weeks in lineup_efficiency_data.items():
+            if manager_id not in manager_grades:
+                continue
+            lineup_scores_by_week[manager_id] = {}
+            efficiencies = [w['efficiency'] for w in weeks.values()]
+            lineup_efficiency_pct[manager_id] = sum(efficiencies) / len(efficiencies)
+
+            raw_z_scores = []
+            for week, week_data in weeks.items():
+                if league_std_efficiency > 0:
+                    z_score = (week_data['efficiency'] - league_avg_efficiency) / league_std_efficiency
+                else:
+                    z_score = 0.0
+                raw_z_scores.append(z_score)
+                # Clamped per week (like base_score/trade_score/waiver_score above) since this
+                # feeds straight into that week's own 0-10 weekly_grade snapshot below.
+                lineup_scores_by_week[manager_id][week] = max(0, min(10, 5 + z_score * 2.5))
+
+            # Season summary: clamp once, on the *mean of the raw (unclamped) weekly z-scores* -
+            # not the mean of the already-clamped weekly grades above. A manager with one
+            # catastrophic week (e.g. an empty/bye-only lineup) gets that week's z-score floored
+            # to 0 for the weekly chart, but averaging those floors would silently "forgive" the
+            # rest of that week's real severity and could rank them above a manager who was
+            # simply mediocre-but-consistent all season - confirmed against real league data
+            # (CLAUDE.md 4.6). Mirrors how src/trade_analysis.py's waiver z-scores are already
+            # averaged raw, then clamped once, in calculate_pickup_points_impact().
+            mean_raw_z = sum(raw_z_scores) / len(raw_z_scores)
+            lineup_season_score[manager_id] = max(0, min(10, 5 + mean_raw_z * 2.5))
     
     # Calculate weekly manager grades and records using real data
     for week in range(1, 16):  # Weeks 1-15
@@ -631,9 +656,12 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
                 week_waiver_score = sum(waiver_scores[manager_id]) / len(waiver_scores[manager_id])
             
             # Lineup performance for this week
-            week_lineup_score = 5.0  # Default neutral
-            if manager_id in lineup_scores and week <= len(lineup_scores[manager_id]):
-                week_lineup_score = lineup_scores[manager_id][week-1]
+            week_lineup_score = 5.0  # Default neutral (no lineup data for this week, e.g. bye)
+            manager_lineup_weeks = lineup_scores_by_week.get(manager_id, {})
+            if week in manager_lineup_weeks:
+                week_lineup_score = manager_lineup_weeks[week]
+            elif str(week) in manager_lineup_weeks:
+                week_lineup_score = manager_lineup_weeks[str(week)]
             
             # Calculate composite manager grade (0-10 scale)
             weekly_grade = (
@@ -687,8 +715,12 @@ def calculate_manager_grades(trade_impacts, waiver_impacts, team_power_data, ros
                 data['trade_performance'] = sum(trade_scores[manager_id]) / len(trade_scores[manager_id])
             if manager_id in waiver_scores and waiver_scores[manager_id]:
                 data['waiver_performance'] = sum(waiver_scores[manager_id]) / len(waiver_scores[manager_id])
-            if manager_id in lineup_scores and lineup_scores[manager_id]:
-                data['lineup_performance'] = sum(lineup_scores[manager_id]) / len(lineup_scores[manager_id])
+            if manager_id in lineup_season_score:
+                data['lineup_performance'] = lineup_season_score[manager_id]
+                # Raw efficiency (actual points / optimal points, 1.0 = perfect start/sit
+                # decisions every week) shown alongside the derived 0-10 score - same
+                # never-collapse-to-an-opaque-score philosophy as the FAAB numbers (CLAUDE.md 4.3).
+                data['lineup_efficiency_pct'] = lineup_efficiency_pct.get(manager_id, 0.0)
         
         manager_name = data.get('name', manager_id)  # Get name or use ID as fallback
         print(f"     {manager_name}: Overall Grade {data['overall_grade']:.1f}/10 " +
@@ -1746,6 +1778,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             'slope': slope,
             'overall_grade': data.get('overall_grade', 0),
             'enhanced_overall': sum(enhanced_grades) / len(enhanced_grades),
+            'lineup_efficiency_pct': data.get('lineup_efficiency_pct', 0.0),
             'source': ColumnDataSource(data={
                 'week': jittered_weeks,
                 'grade': enhanced_grades,
@@ -1758,7 +1791,8 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
                 'overall_grade': [data.get('overall_grade', 0)] * len(enhanced_grades),
                 'trade_performance': [data.get('trade_performance', 0)] * len(enhanced_grades),
                 'waiver_performance': [data.get('waiver_performance', 0)] * len(enhanced_grades),
-                'lineup_performance': [data.get('lineup_performance', 0)] * len(enhanced_grades)
+                'lineup_performance': [data.get('lineup_performance', 0)] * len(enhanced_grades),
+                'lineup_efficiency_pct': [data.get('lineup_efficiency_pct', 0.0)] * len(enhanced_grades)
             }),
             'trend_source': ColumnDataSource(data={
                 'trend_week': trend_weeks,
@@ -1784,6 +1818,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             i + 1,
             team['name'],
             f"{team['enhanced_overall']:.2f}",
+            f"{team['lineup_efficiency_pct'] * 100:.1f}%",
             f"{team['slope']:+.3f}",
             trend_icon
         ])
@@ -1813,7 +1848,8 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         ("Overall Grade", "@overall_grade{0.2f}/10"),
         ("Trade Performance", "@trade_performance{0.2f}/10"),
         ("Waiver Performance", "@waiver_performance{0.2f}/10"),
-        ("Lineup Performance", "@lineup_performance{0.2f}/10")
+        ("Lineup Performance", "@lineup_performance{0.2f}/10"),
+        ("Start/Sit Accuracy", "@lineup_efficiency_pct{0.0%} of optimal points started")
     ])
     
     # Separate hover for trend lines
@@ -1895,6 +1931,7 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">#</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: left; color: {INK_MUTED};">Manager</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Grade</th>
+        <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Start/Sit %</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Trend</th>
         <th style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">Direction</th>
     </tr>
@@ -1909,7 +1946,8 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px;">{row[1]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; font-weight: 700;">{row[2]}</td>
             <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[3]}</td>
-            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[4]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center; color: {INK_MUTED};">{row[4]}</td>
+            <td style="border-bottom: 1px solid {LINE}; padding: 9px 8px; text-align: center;">{row[5]}</td>
         </tr>"""
 
     leaderboard_html += "</table>"
@@ -1940,6 +1978,9 @@ def create_manager_grade_visualization(manager_grades, output_dirs=None):
             <strong>waiver analysis</strong> (20% - success rate and impact of pickups), and
             <strong>start/sit accuracy</strong> (15% - optimal lineup decisions vs. actual ones).
         </p>
+        <p style="{LABEL_STYLE}"><strong>Start/Sit %:</strong> each week's actual starting lineup's
+            points, divided by the most points that roster (starters + bench) could have scored
+            that week - 100% means you started your best possible lineup every week.</p>
         <p style="{LABEL_STYLE} margin-top: 8px;"><strong>Grade Scale:</strong> 8-10 Elite &middot; 6-8 Above Average &middot; 4-6 Average &middot; 2-4 Below Average &middot; 0-2 Poor</p>
         <p style="{LABEL_STYLE}"><strong>Trend Analysis:</strong> Linear regression showing management skill development trajectory</p>
     </div>

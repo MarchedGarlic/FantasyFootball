@@ -41,6 +41,7 @@ from src.visualizations import (
     create_power_ranking_leaderboard
 )
 from src.ai_overview import build_ai_overview, build_draft_info
+from src.lineup_analysis import calculate_lineup_efficiency
 from src.draft_analysis import (
     get_primary_draft,
     reconstruct_draft_results,
@@ -509,8 +510,14 @@ def run_analysis(username, season, league_id, storage=None, progress_cb=None):
         all_weekly_matchups, all_players, output_dirs,
         faab_ledger=faab_ledger,
     )
+    progress("Calculating lineup efficiency (start/sit accuracy)...")
+    lineup_efficiency_data = calculate_lineup_efficiency(
+        all_weekly_matchups, roster_to_manager, all_players,
+        league_info.get('roster_positions') or []
+    )
     manager_grades = calculate_manager_grades(
-        trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup
+        trade_impacts, waiver_impacts, team_power_data, roster_grade_data, user_lookup,
+        lineup_efficiency_data=lineup_efficiency_data
     )
     print_trade_analysis_results(trade_impacts, waiver_impacts)
 

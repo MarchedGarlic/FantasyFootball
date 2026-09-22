@@ -28,7 +28,8 @@ next candidate host — see §6.
 | `src/roster_grading.py` | ESPN-tier player grading; athlete/team/position `$ref` lookups are now parallelized and memoized. |
 | `src/power_rankings.py` | Weekly power ratings + `compute_power_rank_history()` (persisted per-week rank series, used by the AI Overview). |
 | `src/faab_analysis.py` | FAAB ledger reconstruction + relative-scarcity scoring (§4.3). Returns `{'enabled': False}` for non-FAAB leagues. |
-| `src/trade_analysis.py` | Trade (§4.1) and waiver (§4.5) impact scoring plus the Bokeh chart builders — chart chrome dark-themed and reworked in the 2026-09 v2 redesign (§10). |
+| `src/trade_analysis.py` | Trade (§4.1) and waiver (§4.5) impact scoring plus the Bokeh chart builders — chart chrome dark-themed and reworked in the 2026-09 v2 redesign (§10). `calculate_manager_grades()` also blends in real lineup efficiency (§4.6). |
+| `src/lineup_analysis.py` | Real start/sit accuracy (§4.6) — optimal lineup solved per week via `scipy.optimize.linear_sum_assignment` (Hungarian algorithm) over the league's actual `roster_positions`, compared against what was actually started. |
 | `src/bokeh_theme.py` | Shared dark-theme styling for every Bokeh report (§10) — figure/legend colors, button/select stylesheets (the real shadow-DOM-reaching mechanism), the dark-optimized categorical palette. |
 | `src/draft_analysis.py` | Draft Rating + Biggest Steals scoring (§5) — reconstructs actual draft results from Sleeper and scores them against ESPN's preseason rank. Rendered as its own "Draft Info" report/tab (§10), not part of the AI Overview. |
 | `src/ai_overview.py` | The seven deterministic AI Overview sections (§5) + HTML rendering, plus `build_draft_info()`/`render_draft_info_html()` for the separate Draft Info report. No LLM call. |
@@ -251,6 +252,72 @@ team-delta's tens-scale number):
 - The FAAB leaderboard's "Impact/$" efficiency ratio formula is unchanged (`total impact / total
   FAAB spent`) — same ratio semantics, just smaller displayed numbers now that the numerator is a
   z-score sum instead of a tens-scale delta sum.
+
+### 4.6 Start/sit accuracy fix (2026-09) — real optimal-lineup comparison, not team-wide noise
+
+**The problem.** The Manager Grades panel's methodology text has always described a
+"start/sit accuracy (15%) - optimal lineup decisions vs. actual ones" component, but
+`calculate_manager_grades()` never computed anything of the kind. It derived a "lineup score"
+from `(power_rating - league_avg_power) / 20` - the exact same team-wide-trend-as-proxy pattern
+§1's audit called out and §4.1/§4.5 replaced for trades and waivers, just never applied here. It
+also accepted a `matchup_data` parameter that was dead - `main.py` never even passed it. Found
+by testing the live Manager Grades report against real season data (`league_config.json`'s
+league) and noticing the "start/sit" numbers had no relationship to any actual lineup decision.
+
+**The fix.** New module `src/lineup_analysis.py`:
+1. `starting_slots_from_roster_positions()` reads the league's own `roster_positions` (top-level
+   on Sleeper's `/league/<id>` response, previously fetched into `league_info` and then only
+   ever read via its `settings` sub-key - the slot list itself had never been used anywhere) and
+   drops `BN`/`IR`/`TAXI`, leaving the real starting-lineup shape - including flex-style slots
+   (`FLEX`, `SUPER_FLEX`, `WRRB_FLEX`, etc., mapped to their eligible positions in
+   `FLEX_ELIGIBILITY`).
+2. `compute_optimal_lineup_points()` takes one team's full roster for one week (Sleeper's
+   matchup object already carries `players` - the whole roster, not just starters -
+   `players_points`, and each player's position from the already-loaded `all_players` map) and
+   solves the best-possible lineup as a maximum-weight assignment (slots × eligible players,
+   `scipy.optimize.linear_sum_assignment` - the Hungarian algorithm - on negated points) rather
+   than a greedy fill, since a greedy "best player first" pass can lock in a suboptimal
+   combination once later flex-eligible slots are considered.
+3. `calculate_lineup_efficiency()` runs that per manager per week across the whole season,
+   returning `actual_points` (sum of `players_points` over the real `starters`), `optimal_points`,
+   `points_left_on_bench`, and `efficiency = actual/optimal`.
+
+Verified against real data before wiring it in: hand-computed one team's week 1 optimal lineup
+from real Sleeper payloads and confirmed the solver reproduced it exactly (128.1 optimal vs.
+108.4 actual - the manager had started DJ Moore/Nico Collins/Tee Higgins over a healthy Javonte
+Williams, a real, explainable start/sit mistake), then ran the full season for a real 12-manager
+league and got a plausible, differentiated 78.9%-91.6% efficiency spread (industry-standard
+"lineup efficiency" studies put most managers in roughly that 85-95% range across a season).
+
+**Wiring.** `main.py` calls `calculate_lineup_efficiency()` right before
+`calculate_manager_grades()` and passes it in as `lineup_efficiency_data` (replacing the dead
+`matchup_data` parameter). Inside `calculate_manager_grades()`, each manager-week's `efficiency`
+is z-scored against the whole season's pooled manager-week efficiencies (not per-week, which
+would make the z-score's scale swing with how tight that single week's spread happened to be)
+and mapped to a 0-10 grade via `5 + z * 2.5` - the same mapping §4.5 already established for
+waiver z-scores, reused here rather than inventing a third formula.
+
+**A second bug found while verifying this against real data, not just synthetic input:** the
+season-summary `lineup_performance` stat was originally computed by averaging each week's
+*already-clamped* 0-10 grade. That silently rewards a manager who has one catastrophic week (e.g.
+an empty/bye-heavy lineup scoring 0 points) over a manager who is merely mediocre-but-consistent,
+because clamping the disaster week to a floor of 0 "forgives" how far below average it really was,
+while a mediocre manager's smaller-but-never-clamped shortfalls all still count in full. Confirmed
+on real data: a manager with an 83.5% season efficiency (including one real 0%-efficiency week)
+ranked *above* a manager with 87.8% season efficiency until this was fixed. The fix mirrors how
+§4.5's waiver z-scores are already handled correctly elsewhere in this same file - average the
+*raw, unclamped* per-week z-scores first, then clamp exactly once, at the end
+(`lineup_season_score` in `calculate_manager_grades()`) - rather than clamping every week and then
+averaging the clamped values. The per-week clamped grade is still used for that week's own
+`weekly_grades` chart point (a single week's snapshot is supposed to be bounded 0-10, same as
+`base_score`/`trade_score`/`waiver_score` there), only the season summary changed.
+
+**Surfaced in:** the Manager Grades chart's hover tooltip (`Lineup Performance` 0-10 score,
+`Start/Sit Accuracy` as `NN.N% of optimal points started` alongside it - the raw efficiency
+number is never collapsed away, same philosophy as §4.3's FAAB display) and a new "Start/Sit %"
+leaderboard column (`create_manager_grade_visualization()` in `src/trade_analysis.py`). The
+methodology panel's description of what "Start/Sit %" means was added since the number is now
+real.
 
 ## 5. AI Overview (deterministic)
 
